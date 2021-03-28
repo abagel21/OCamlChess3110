@@ -26,3 +26,6 @@ val get_owner : t -> owner_id
 
 (** [get_piece t] returns the piece_id of [t]. *)
 val get_piece : t -> piece_id
+
+(** [promote_piece t piece_id] promotes piece [t] to [piece_id] *)
+val promote_piece : t -> piece_id -> t
