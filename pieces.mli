@@ -14,6 +14,7 @@ type piece_id =
   | Pawn
   | Knight
   | Bishop
+  | Rook
   | Queen
   | King
 

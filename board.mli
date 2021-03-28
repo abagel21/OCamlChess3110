@@ -7,12 +7,21 @@ type r
  squares, castling rights, turn, en passant rights, and the previous board state*)
 type t
 
+(**[s] represents the move stack of a position, or all of the moves it took to reach this position.*)
+type s
 
-exception IllegalMove
+
+exception IllegalMove of string
 exception EmptyMoveStack
+exception IllegalSquare of string
 
 (**[init] returns the representation of the initial position of a chess game*)
 val init: t
+
+(**[get_piece str t] takes the [str] coordinate (rankcol) string square 
+representation and returns the piece on that square in [t] or throws 
+[IllegalSquare] if the square is not a valid chess square*)
+val get_piece : string -> t -> Piece
 
 (**[move] takes in a UCI format move and a board state and outputs the modified state if it is legal, otherwise throws [IllegalMove]*)
 val move : string -> t -> t
@@ -25,8 +34,11 @@ val eval_move : string -> t -> bool
 val undo_prev : t -> t
 
 (**[turn t] outputs a boolean variable representing the turn*)
-val turn : t -> bool
+val get_turn : t -> bool
 
 (**[to_string t] outputs the pretty-printed string of the board state*)
 val to_string : t -> string
+
+(**[promote a t] promotes the pawn in the eighth rank (from the perspective of the player [turn]) to a*)
+val promote : string -> t -> t
 end 
