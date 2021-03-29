@@ -20,7 +20,9 @@ representation and returns the piece on that square in [t] or throws
 [IllegalSquare] if the square is not a valid chess square*)
 val get_piece : string -> t -> Piece.t
 
-(**[move] takes in a UCI format move and a board state and outputs the modified state if it is legal, otherwise throws [IllegalMove]*)
+(**[move str pos] takes in a coordinate-based move [str] and returns the
+   new state after the move if it is legal, throws IllegalMove if the
+   move is illegal, throws IllegalSquare if one of the squares is out of*)
 val move : string -> t -> t
 
 (**[eval_move] returns true if the string move is legal in [t], otherwise false*)
@@ -36,5 +38,16 @@ val get_turn : t -> bool
 (**[to_string t] outputs the pretty-printed string of the board state*)
 val to_string : t -> string
 
-(**[promote a t] promotes the pawn in the eighth rank (from the perspective of the player [turn]) to a*)
+(**[promote a t] promotes the pawn in the eighth rank (from the perspective of
+ the player [turn]) to a*)
 val promote : string -> t -> t
+
+(**[equals t t] checks if two boards are equal and returns true if they are, 
+else false*)
+val equals : t -> t -> bool
+
+(**[fen_to_board fen board] takes in a fen representation of a board and 
+returns the board state equivalent.
+Precondition: [fen] is a valid FEN format string
+*)
+val fen_to_board : string -> t
