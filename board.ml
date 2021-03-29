@@ -125,17 +125,48 @@ let move_normal_piece pos from_sqr to_sqr =
 
 
 let rook_check_helper pos from_sqr to_sqr =
+  let a = true in
   match from_sqr, to_sqr with
   | (frank, fcol), (trank, tcol) -> 
     if frank = trank then
-      for i = frank to trank - 1 do
-        if get_piece_internal (i, fcol) <> None 
-          then throw IllegalMove("Pieces cannot move through other pieces") 
+      for i = fcol + 1 to tcol - 1 do
+        if get_piece_internal (frank, i) <> None 
+          then a = false
+      done 
+      in a
     else if fcol = tcol then
-        for i = fcol to tcol - 1 do
-          if get_piece_internal (frank, i) <> None 
-            then throw IllegalMove("Pieces cannot move through other pieces")
-    else throw IllegalMove("Rook must move horizontally or vertically")
+      begin
+        for i = frank + 1 to trank - 1 do
+          if get_piece_internal (i, fcol) <> None 
+            then a = false 
+        done
+      in a
+      end
+    else false
+    
+ 
+let bishop_check_helper pos from_sqr to_sqr = 
+  let a = true in
+  match from_sqr, to_sqr with
+  | (frank, fcol), (trank, tcol) -> 
+    if trank - frank <> tcol - fcol
+      then false
+  else
+    if (frank < trank) 
+      then
+        for i = frank + 1, j = fcol + 1 to trank, tcol do
+          if get_piece_internal (i , j) <> None
+            then a = false
+        done
+      else 
+        for i = frank -1, j = fcol - 1 to trank, tcol do
+          if get_piece_internal (i, j) <> None
+            then a = false
+        done
+      in a
+let queen_check_helper pos from_sqr to_sqr = 
+  rook_check_helper pos from_sqr to_sqr || bishop_check_helper from_sqr to_sqr
+let king_check_helper pos from_sqr to_sqr = failwith ""
 
 (**[is_check pos] returns true if the player [get_turn pos] is in check, else false*)
 let is_check pos =
@@ -151,17 +182,18 @@ let will_be_checked pos from_sqr to_sqr =
     if krank - frank = kcol - fcol then 
       (*check if attacked on diag*)
     else if 
-
+      failwith ""
+  else failwith ""
   
 
 let checked_move piece pos from_sqr to_sqr =
   match Piece.get_piece piece with 
-  | Pawn -> 
-  | Knight -> 
-  | Bishop ->
-  | Rook -> 
-  | Queen ->
-  | King ->
+  | Pawn -> failwith ""
+  | Knight -> failwith ""
+  | Bishop -> failwith ""
+  | Rook -> failwith ""
+  | Queen ->failwith ""
+  | King -> failwith ""
 
 
 let move_helper piece pos from_sqr to_sqr= 
@@ -171,10 +203,10 @@ let move_helper piece pos from_sqr to_sqr=
   match Piece.get_piece piece with 
   | Pawn -> 
   | Knight -> 
-  | Bishop
-  | Rook -> if rook_move_helper pos from_sqr to_sqr then move_normal_piece pos from_sqr to_sqr
-  | Queen
-  | King ->
+  | Bishop -> if bishop_check_helper from_sqr to_sqr then move_normal_piece pos_from_sqr to_sqr
+  | Rook -> if rook_check_helper pos from_sqr to_sqr then move_normal_piece pos from_sqr to_sqr
+  | Queen -> if queen_check_helper pos from_sqr to_sqr then move_normal piece pos from_sqr to_sqr
+  | King -> if king_check_helper pos from_Sqr to_Sqr then possibly_castle pos from_sqr to_sqr
 else throw IllegalMove((if get_turn pos then "White" else "Black") ^ " does not own this piece")
 
 
