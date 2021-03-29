@@ -1,14 +1,11 @@
-
+open Piece
 
 (**[r] represents just the squares of a chess board*)
 type r 
 
 (**[t] represents a full chess position, including the squares, pieces on those
- squares, castling rights, turn, en passant rights, and the previous board state*)
+ squares, castling rights, turn, en passant rights, and all previous board states*)
 type t
-
-(**[s] represents the move stack of a position, or all of the moves it took to reach this position.*)
-type s
 
 
 exception IllegalMove of string
@@ -21,7 +18,7 @@ val init: t
 (**[get_piece str t] takes the [str] coordinate (rankcol) string square 
 representation and returns the piece on that square in [t] or throws 
 [IllegalSquare] if the square is not a valid chess square*)
-val get_piece : string -> t -> Piece
+val get_piece : string -> t -> Piece.t
 
 (**[move] takes in a UCI format move and a board state and outputs the modified state if it is legal, otherwise throws [IllegalMove]*)
 val move : string -> t -> t
