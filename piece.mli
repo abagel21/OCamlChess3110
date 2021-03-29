@@ -1,10 +1,5 @@
-(** Representation of static chess pieces.
 
-    This module represents the chess pieces used by the game state and
-    board. *)
-
-(** The abstract type of values representing chess pieces *)
-type t
+type t 
 
 (** The type of owner identifier *)
 type owner_id = bool

@@ -21,6 +21,12 @@ exception IllegalSquare of string
 
 exception IllegalMove of string
 
+exception IllegalFen
+
+exception IllegalPiece
+
+exception EmptyMoveStack
+
 type square = int * int
 
 type t = {
@@ -73,6 +79,32 @@ let init_board_array =
       brook; bknight; bbishop; bking; bqueen; bbishop; bknight; brook;
     |];
   |]
+
+(**[init_empty_board_array] returns board array that is completely empty *)
+let init_empty_board_array =
+  [|
+    [| None; None; None; None; None; None; None; None |];
+    [| None; None; None; None; None; None; None; None |];
+    [| None; None; None; None; None; None; None; None |];
+    [| None; None; None; None; None; None; None; None |];
+    [| None; None; None; None; None; None; None; None |];
+    [| None; None; None; None; None; None; None; None |];
+    [| None; None; None; None; None; None; None; None |];
+    [| None; None; None; None; None; None; None; None |];
+  |]
+
+(**[init_empty] returns a board representation that is empty *)
+let init_empty =
+  {
+    board = init_empty_board_array;
+    castling = [| false; false; false; false |];
+    ep = (-1, -1);
+    turn = true;
+    move_stack = [];
+    checked = false;
+    wking = (-1, -1);
+    bking = (-1, -1);
+  }
 
 let init =
   {
@@ -306,6 +338,12 @@ let move_en_passant pos from_sqr to_sqr =
       pos.board.(trank + adj).(tcol) <- None;
       temp_pos
 
+let promote square pos piece =
+  match square with
+  | rank, col ->
+      pos.board.(rank).(col) <- piece;
+      pos
+
 (**[pawn_dbmv_chk pos from_sqr to_sqr trank fcol] takes in the current
    position, move from_sqr and to_sqr, and returns true if the square in
    front of [from_sqr] and [to_sqr] are unoccupied, else throws
@@ -348,24 +386,27 @@ let pawn_double_move_helper pos from_sqr to_sqr =
    (from_sqr, to_sqr) is a legal move for a pawn and executes it,
    returning the new state. Throws: IllegalMove if the move is illegal
    Requires: from_sqr is a pawn*)
-let pawn_valid_helper pos from_sqr to_sqr =
+let pawn_valid_helper pos from_sqr to_sqr new_p =
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
-      if
-        (get_turn pos && trank - frank = 1)
-        || (get_turn pos && trank - frank = -1)
-      then
-        if fcol <> tcol && to_sqr = pos.ep then
-          match get_piece_internal to_sqr pos with
-          | None -> move_en_passant pos from_sqr to_sqr
-          | Some k -> move_normal_piece pos from_sqr to_sqr
-        else if fcol = tcol then move_normal_piece pos from_sqr to_sqr
+      let next_pos =
+        if
+          (get_turn pos && trank - frank = 1)
+          || (get_turn pos && trank - frank = -1)
+        then
+          if fcol <> tcol && to_sqr = pos.ep then
+            match get_piece_internal to_sqr pos with
+            | None -> move_en_passant pos from_sqr to_sqr
+            | Some k -> move_normal_piece pos from_sqr to_sqr
+          else if fcol = tcol then move_normal_piece pos from_sqr to_sqr
+          else raise (IllegalMove "Illegal move for a pawn")
+        else if
+          (get_turn pos && trank - frank = 2)
+          || (get_turn pos && trank - frank = -2)
+        then pawn_double_move_helper pos from_sqr to_sqr
         else raise (IllegalMove "Illegal move for a pawn")
-      else if
-        (get_turn pos && trank - frank = 2)
-        || (get_turn pos && trank - frank = -2)
-      then pawn_double_move_helper pos from_sqr to_sqr
-      else raise (IllegalMove "Illegal move for a pawn")
+      in
+      promote to_sqr next_pos new_p
 
 (**[is_check pos] returns true if the player [get_turn pos] is in check,
    else false*)
@@ -398,12 +439,13 @@ let checked_move piece pos from_sqr to_sqr : t =
 
 (**[check_and_move piece pos from_sqr to_sqr] moves the piece [piece]
    from [from_sqr] to [to_sqr] in [pos] if it is a legal move for
-   [piece] and returns the new state if the move is legal, else returns
-   [pos] Precondition: [piece] is owned by the current player of [pos],
-   the current player of [pos] is not in check*)
-let check_and_move piece pos from_sqr to_sqr =
+   [piece], promotes the piece to [new_p] if it is a pawn, and returns
+   the new state if the move is legal, else returns [pos] Precondition:
+   [piece] is owned by the current player of [pos], the current player
+   of [pos] is not in check*)
+let check_and_move piece pos from_sqr to_sqr new_p =
   match Piece.get_piece piece with
-  | Pawn -> pawn_valid_helper pos from_sqr to_sqr
+  | Pawn -> pawn_valid_helper pos from_sqr to_sqr new_p
   | Knight ->
       if knight_valid_helper pos from_sqr to_sqr then
         move_normal_piece pos from_sqr to_sqr
@@ -428,21 +470,33 @@ let check_and_move piece pos from_sqr to_sqr =
 (**[move_helper piece pos from_sqr to_sqr] moves the piece [piece] from
    [from_sqr] to [to_sqr] if it is a legal move in [pos] and returns the
    new state if the move is legal, else returns [pos]*)
-let move_helper piece pos from_sqr to_sqr =
+let move_helper piece pos from_sqr to_sqr new_p =
   if get_owner piece = get_turn pos then
     if is_check pos then checked_move piece pos from_sqr to_sqr
-    else check_and_move piece pos from_sqr to_sqr
+    else check_and_move piece pos from_sqr to_sqr new_p
   else
     raise
       (IllegalMove
          ( (if get_turn pos then "White" else "Black")
          ^ " does not own this piece" ))
 
-let move str pos =
+(**[parse_promote_str str] returns the valid piece representation of
+   [str]. Throws [IllegalPiece] if the string is an illegal piece *)
+let parse_promote_str str pos =
+  let color = get_turn pos in
+  match str with
+  | "Q" -> if color then wqueen else bqueen
+  | "R" -> if color then wrook else brook
+  | "N" -> if color then wknight else bknight
+  | "B" -> if color then wbishop else bbishop
+  | _ -> raise IllegalPiece
+
+let move str promote_str pos =
   let trm_str = String.trim str in
   if verify_move_string trm_str then
     let from_sqr = sqr_from_str (String.sub trm_str 0 2) in
     let to_sqr = sqr_from_str (String.sub trm_str 2 2) in
+    let new_p = parse_promote_str promote_str pos in
     if from_sqr = to_sqr then
       raise
         (IllegalMove
@@ -454,12 +508,103 @@ let move str pos =
           raise
             (IllegalMove
                (trm_str ^ " does not contain a valid from square"))
-      | Some k -> move_helper k pos from_sqr to_sqr
+      | Some k -> move_helper k pos from_sqr to_sqr new_p
   else
     raise
       (IllegalMove
          (trm_str ^ " is not a valid coordinate string of a move"))
 
 let undo_prev pos = failwith "Unimplemented"
+
+(**[add_piece pos piece square] adds [piece] to [pos] at [square]*)
+let add_piece pos piece square =
+  match square with rank, col -> pos.board.(rank).(col) <- piece
+
+let letter chr =
+  match chr with 'a' .. 'z' -> true | 'A' .. 'Z' -> true | _ -> false
+
+let rec fen_to_board_helper str pos rank col ind =
+  let next_rank = if col = 7 then rank - 1 else rank in
+  let next_col = if col = 7 then 0 else col + 1 in
+  let nxt_ind = ind + 1 in
+  if rank < 0 then pos
+  else if letter str.[ind] then
+    letter_fen_matching str pos next_rank next_col nxt_ind
+  else
+    match str.[ind] with
+    | '/' -> fen_to_board_helper str pos (rank - 1) 0 nxt_ind
+    | '1' -> fen_to_board_helper str pos rank (col + 1) nxt_ind
+    | '2' -> fen_to_board_helper str pos rank (col + 2) nxt_ind
+    | '3' -> fen_to_board_helper str pos rank (col + 3) nxt_ind
+    | '4' -> fen_to_board_helper str pos rank (col + 4) nxt_ind
+    | '5' -> fen_to_board_helper str pos rank (col + 5) nxt_ind
+    | '6' -> fen_to_board_helper str pos rank (col + 6) nxt_ind
+    | '7' -> fen_to_board_helper str pos rank (col + 7) nxt_ind
+    | '8' -> fen_to_board_helper str pos (rank - 1) 0 nxt_ind
+    | _ -> raise IllegalFen
+
+and letter_fen_matching str pos rank col ind =
+  let piece =
+    match str.[ind] with
+    | 'p' -> bpawn
+    | 'r' -> brook
+    | 'n' -> bknight
+    | 'b' -> bbishop
+    | 'q' -> bqueen
+    | 'k' -> bking
+    | 'P' -> wpawn
+    | 'R' -> wrook
+    | 'N' -> wknight
+    | 'B' -> wbishop
+    | 'Q' -> wqueen
+    | 'K' -> wking
+    | _ -> raise IllegalFen
+  in
+  add_piece pos piece (rank, col);
+  fen_to_board_helper str pos rank col ind
+
+let fen_to_board str =
+  let pos = init_empty in
+  fen_to_board_helper str pos 7 0 0
+
+let to_string pos =
+  let rec to_string_helper pos rank col =
+    let color = get_turn pos in
+    let next_rank = if col = 7 then rank - 1 else rank in
+    let next_col = if col = 7 then 0 else col + 1 in
+    match get_piece_internal (rank, col) pos with
+    | None -> " |  " ^ to_string_helper pos next_rank next_col
+    | Some k -> (
+        match Piece.get_piece k with
+        | Pawn ->
+            " | "
+            ^ (if color then "P" else "p")
+            ^ to_string_helper pos next_rank next_col
+        | Knight ->
+            " | "
+            ^ (if color then "N" else "n")
+            ^ to_string_helper pos next_rank next_col
+        | Bishop ->
+            " | "
+            ^ (if color then "B" else "b")
+            ^ to_string_helper pos next_rank next_col
+        | Rook ->
+            " | "
+            ^ (if color then "R" else "r")
+            ^ to_string_helper pos next_rank next_col
+        | Queen ->
+            " | "
+            ^ (if color then "Q" else "q")
+            ^ to_string_helper pos next_rank next_col
+        | King ->
+            " | "
+            ^ (if color then "K" else "k")
+            ^ to_string_helper pos next_rank next_col )
+  in
+  to_string_helper pos 7 0
+
+let equals pos1 pos2 = failwith "unimplemented"
+
+let eval_move pos = failwith "unimplemented"
 
 (** charles - king, bishop, queen alex - pawn, knight, willbechecked *)
