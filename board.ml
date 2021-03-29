@@ -177,7 +177,7 @@ let move_helper piece pos from_sqr to_sqr=
   | Pawn -> 
   | Knight -> 
   | Bishop
-  | Rook -> if rook_move_helper pos from_sqr to_sqr then move_normal_piece pos from_sqr to_sqr
+  | Rook -> if rook_check_helper pos from_sqr to_sqr then move_normal_piece pos from_sqr to_sqr
   | Queen
   | King ->
 else throw IllegalMove((if get_turn pos then "White" else "Black") ^ " does not own this piece")
