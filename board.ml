@@ -152,15 +152,16 @@ let bishop_check_helper pos from_sqr to_sqr =
     if trank - frank <> tcol - fcol
       then false
   else
+    let b = trank-frank in 
     if (frank < trank) 
       then
-        for i = frank + 1, j = fcol + 1 to trank, tcol do
-          if get_piece_internal (i , j) <> None
+        for i = 1, to b - 1 do
+          if get_piece_internal (frank + i, fcol + 1) <> None
             then a = false
         done
       else 
-        for i = frank -1, j = fcol - 1 to trank, tcol do
-          if get_piece_internal (i, j) <> None
+        for i = b + 1 to -1 do
+          if get_piece_internal (frank + i, fcol + i) <> None
             then a = false
         done
       in a
