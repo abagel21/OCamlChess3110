@@ -159,6 +159,7 @@ let bishop_check_helper pos from_sqr to_sqr =
           if get_piece_internal (frank + i, fcol + 1) <> None
             then a = false
         done
+      in a
       else 
         for i = b + 1 to -1 do
           if get_piece_internal (frank + i, fcol + i) <> None
