@@ -9,6 +9,7 @@ turn=bool where true is white's turn and false is black's turn
 the string list of type r represents the move stack of the position,
 prev=t represents the previous position state*)
 (**RI=The t.board array is always full*)
+
 type r = (Piece option) array array
 
 type square = (int, int)
@@ -52,7 +53,7 @@ let init_board_array = () ->
   [|bpawn;bpawn;bpawn;bpawn;bpawn;bpawn;bpawn;bpawn|];
   [|brook; bknight; bbishop; bking; bqueen; bbishop; bknight; brook|]]
 
-let init = {
+let init : t = {
 board=init_board_array;
 castling=[true; true; true; true];
 ep=(-1, -1);
@@ -128,13 +129,17 @@ let rook_check_helper pos from_sqr to_sqr =
   match from_sqr, to_sqr with
   | (frank, fcol), (trank, tcol) -> 
     if frank = trank then
-      for i = frank to trank - 1 do
+      for i = fcol + 1 to tcol - 1 do
         if get_piece_internal (i, fcol) <> None 
           then throw IllegalMove("Pieces cannot move through other pieces") 
+      done
+      return true;
     else if fcol = tcol then
-        for i = fcol to tcol - 1 do
+        for i = frank + 1 to trank - 1 do
           if get_piece_internal (frank, i) <> None 
             then throw IllegalMove("Pieces cannot move through other pieces")
+        done
+        return true;
     else throw IllegalMove("Rook must move horizontally or vertically")
 
 (**[is_check pos] returns true if the player [get_turn pos] is in check, else false*)

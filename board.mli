@@ -1,4 +1,4 @@
-module type Board = sig
+
 
 (**[r] represents just the squares of a chess board*)
 type r 
@@ -41,4 +41,3 @@ val to_string : t -> string
 
 (**[promote a t] promotes the pawn in the eighth rank (from the perspective of the player [turn]) to a*)
 val promote : string -> t -> t
-end 
