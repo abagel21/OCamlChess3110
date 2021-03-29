@@ -181,14 +181,14 @@ let rook_valid_helper pos from_sqr to_sqr =
       if frank = trank then
         for i = fcol + 1 to tcol - 1 do
           match get_piece_internal (frank, i) pos with
-          | None -> a := !a && false
-          | Some k -> a := !a && true
+          | None -> a := !a && true
+          | Some k -> a := !a && false
         done
       else if fcol = tcol then
         for i = frank + 1 to trank - 1 do
           match get_piece_internal (i, fcol) pos with
-          | None -> a := !a && false
-          | Some k -> a := !a && true
+          | None -> a := !a && true
+          | Some k -> a := !a && false
         done;
       !a
 
@@ -203,15 +203,15 @@ let bishop_valid_helper pos from_sqr to_sqr =
         let b = trank - frank in
         if frank < trank then
           for i = 1 to b - 1 do
-            match get_piece_internal (frank + i, fcol + 1) pos with
-            | None -> a := !a && false
-            | Some k -> a := !a && true
+            match get_piece_internal (frank + i, fcol + i) pos with
+            | None -> a := !a && true
+            | Some k -> a := !a && false
           done
         else
           for i = b + 1 to -1 do
             match get_piece_internal (frank + i, fcol + i) pos with
-            | None -> a := !a && false
-            | Some k -> a := !a && true
+            | None -> a := !a && true
+            | Some k -> a := !a && false
           done;
         !a
 
@@ -311,7 +311,7 @@ let piece_causes_check pos square =
       | Queen -> queen_checks pos square
       | King -> false )
 
-(**[move_rook pos from_sqr to_sqr] moves a rook from [from_sqr] to
+(**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr] to
    [to_sqr]*)
 let move_normal_piece pos from_sqr to_sqr =
   match (from_sqr, to_sqr) with
