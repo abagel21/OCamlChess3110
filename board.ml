@@ -163,6 +163,11 @@ let is_check pos = pos.checked
    player*)
 let find_king_sqr pos color = if color then pos.wking else pos.bking
 
+let verify_enemy_or_empty pos to_sqr =
+  match get_piece_internal to_sqr pos with
+  | Some k -> get_turn pos <> get_color k
+  | None -> false  
+
 let checked_move piece pos from_sqr to_sqr =
   match Piece.get_piece piece with
   | Pawn -> failwith "Unimplemented"
@@ -175,6 +180,7 @@ let checked_move piece pos from_sqr to_sqr =
 (**[rook_valid_helper pos from_sqr to_sqr] verifies that the move
    (from_sqr, to_sqr) is a legal move for a rook. *)
 let rook_valid_helper pos from_sqr to_sqr =
+  if verify_enemy_or_empty pos to_sqr then 
   let a = ref true in
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
@@ -191,10 +197,13 @@ let rook_valid_helper pos from_sqr to_sqr =
           | Some k -> a := !a && false
         done;
       !a
+    else raise (IllegalMove "Cannot capture ally")
+
 
 (**[bishop_valid_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a bishop*)
 let bishop_valid_helper pos from_sqr to_sqr =
+  if verify_enemy_or_empty pos to_sqr then 
   let a = ref true in
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
@@ -214,17 +223,20 @@ let bishop_valid_helper pos from_sqr to_sqr =
             | Some k -> a := !a && false
           done;
         !a
+      else raise (IllegalMove "Cannot capture ally")
 
 (**[knight_valid_helper pos from_sqr to_sqr] ensures that the move
    (from_sqr, to_sqr) is legal for a knight and if so, executes the move
    and returns the new state. Throws: IllegalMove if the move is not
    legal for a knight *)
 let knight_valid_helper pos from_sqr to_sqr =
+  if verify_enemy_or_empty pos to_sqr then 
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
       if abs (frank - trank) = 1 && abs (fcol - tcol) = 2 then true
       else if abs (frank - trank) = 2 && abs (fcol - tcol) = 1 then true
       else raise (IllegalMove "Illegal move for knight")
+    else raise (IllegalMove "Cannot capture ally")
 
 (**[queen_check_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a queen*)
@@ -526,10 +538,7 @@ let possibly_castle pos from_sqr to_sqr =
         pos.board.(frank).(7) <- None;
         pos.board.(frank).(5) <- rook;
         add_move pos from_sqr to_sqr true
-   
         
-  
-
 (**[will_be_checked pos from_sqr to_sqr] checks whether the player's move would put themself in check*)
 let will_be_checked pos from_sqr to_sqr =
   let king = find_king_sqr pos (get_turn pos) in
@@ -587,7 +596,7 @@ let check_and_move piece pos from_sqr to_sqr new_p =
    [from_sqr] to [to_sqr] if it is a legal move in [pos] and returns the
    new state if the move is legal, else returns [pos]*)
 let move_helper piece pos from_sqr to_sqr new_p =
-  if get_owner piece = get_turn pos then
+  if get_color piece = get_turn pos then
     if is_check pos then checked_move piece pos from_sqr to_sqr
     else check_and_move piece pos from_sqr to_sqr new_p
   else
@@ -667,13 +676,13 @@ and letter_fen_matching str pos rank col ind =
     | 'n' -> bknight
     | 'b' -> bbishop
     | 'q' -> bqueen
-    | 'k' -> bking
+    | 'k' -> blking
     | 'P' -> wpawn
     | 'R' -> wrook
     | 'N' -> wknight
     | 'B' -> wbishop
     | 'Q' -> wqueen
-    | 'K' -> wking
+    | 'K' -> whking
     | _ -> raise IllegalFen
   in
   add_piece pos piece (rank, col);
