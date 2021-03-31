@@ -14,7 +14,7 @@ exception IllegalSquare of string
 exception IllegalPiece
 
 (**[init] returns the representation of the initial position of a chess game*)
-val init: t
+val init: unit -> t
 
 (**[get_piece str t] takes the [str] coordinate (rankcol) string square 
 representation and returns the piece on that square in [t] or throws 

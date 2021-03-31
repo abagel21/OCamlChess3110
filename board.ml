@@ -209,14 +209,27 @@ let bishop_valid_helper pos from_sqr to_sqr =
         else
           let b = trank - frank in
           if frank < trank then
-            for i = 1 to b - 1 do
+            if fcol < tcol then
+              for i = 1 to b - 1 do
+                match get_piece_internal (frank + i, fcol + i) pos with
+                | None -> a := !a && true
+                | Some k -> a := !a && false
+              done
+            else
+              for i = 1 to b - 1 do
+                match get_piece_internal (frank + i, fcol - i) pos with
+                | None -> a := !a && true
+                | Some k -> a := !a && false
+              done
+          else if fcol > tcol then
+            for i = b + 1 to -1 do
               match get_piece_internal (frank + i, fcol + i) pos with
               | None -> a := !a && true
               | Some k -> a := !a && false
             done
           else
             for i = b + 1 to -1 do
-              match get_piece_internal (frank + i, fcol + i) pos with
+              match get_piece_internal (frank + i, fcol - i) pos with
               | None -> a := !a && true
               | Some k -> a := !a && false
             done;
@@ -579,6 +592,7 @@ let parse_promote_str str pos =
   | "R" -> if color then wrook else brook
   | "N" -> if color then wknight else bknight
   | "B" -> if color then wbishop else bbishop
+  | "" -> if color then wpawn else bpawn
   | _ -> raise IllegalPiece
 
 let move str promote_str pos =
@@ -586,10 +600,7 @@ let move str promote_str pos =
   if verify_move_string trm_str then
     let from_sqr = sqr_from_str (String.sub trm_str 0 2) in
     let to_sqr = sqr_from_str (String.sub trm_str 2 2) in
-    let new_p =
-      if promote_str = "" then None
-      else parse_promote_str promote_str pos
-    in
+    let new_p = parse_promote_str promote_str pos in
     if from_sqr = to_sqr then
       raise
         (IllegalMove
@@ -681,15 +692,21 @@ let fen_to_board str =
 
 let to_string pos =
   let rec to_string_helper pos rank col =
-    let next_rank = if col = 7 then rank - 1 else rank in
-    let next_col = if col = 7 then 0 else col + 1 in
-    match get_piece_internal (rank, col) pos with
-    | None -> " |  " ^ to_string_helper pos next_rank next_col
-    | Some k ->
-        " | " ^ Piece.to_string k
-        ^ to_string_helper pos next_rank next_col
+    if col < 0 then ""
+    else
+      let next_col = if rank = 7 then col - 1 else col in
+      let next_rank = if rank = 7 then 0 else rank + 1 in
+      match get_piece_internal (rank, col) pos with
+      | None ->
+          " |  "
+          ^ (if rank = 7 then " |\n" else "")
+          ^ to_string_helper pos next_rank next_col
+      | Some k ->
+          " | " ^ Piece.to_string k
+          ^ (if rank = 7 then " |\n" else "")
+          ^ to_string_helper pos next_rank next_col
   in
-  to_string_helper pos 7 0
+  to_string_helper pos 0 7
 
 let equals pos1 pos2 = failwith "unimplemented"
 
