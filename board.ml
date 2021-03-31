@@ -29,12 +29,20 @@ exception EmptyMoveStack
 
 type square = int * int
 
+type move = {
+  from_sqr: square;
+  to_sqr: square;
+  en_passant: bool;
+  castling: bool;
+  promote: bool;
+}
+
 type t = {
   board : r;
   castling : bool array;
   ep : int * int;
   turn : bool;
-  move_stack : (square * square) list;
+  move_stack : move list;
   checked : bool;
   wking : square;
   bking : square;
@@ -311,8 +319,8 @@ let piece_causes_check pos square =
       | Queen -> queen_checks pos square
       | King -> false )
 
-(**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr] to
-   [to_sqr]*)
+(**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr]
+   to [to_sqr]*)
 let move_normal_piece pos from_sqr to_sqr =
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
@@ -321,7 +329,7 @@ let move_normal_piece pos from_sqr to_sqr =
       pos.board.(trank).(tcol) <- curr_piece;
       {
         pos with
-        move_stack = (from_sqr, to_sqr) :: pos.move_stack;
+        move_stack = {from_sqr, to_sqr, en_passant=false, castling=false, promote=false} :: pos.move_stack;
         turn = not pos.turn;
         checked = piece_causes_check pos to_sqr;
         ep = (-1, -1);
