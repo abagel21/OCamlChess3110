@@ -1,8 +1,9 @@
 open Piece
 
-(**TODO 1. Implement pawn movement (including en passant) 2. implement
-   castling 3. piece_causes_check 4. implement pins (if a move causes
-   the player to be in check) 5. Implement checkmate/draw checking*)
+(**TODO 1. Implement pawn movement (including en passant) Alex 4.
+   implement pins (if a move causes the player to be in check) 6. Finish
+   FEN function Alex 7. Testing board 8. Command Line 9. Move under
+   check 5. Implement checkmate/draw checking*)
 
 (*AF: the record {board, castling, ep, turn} represents a full chess
   position where board=[|[|a1...a8|];...;[|h1...h8|]|] represents the
@@ -470,17 +471,18 @@ let pawn_valid_helper pos from_sqr to_sqr new_p =
       let next_pos =
         if
           (get_turn pos && tcol - fcol = 1)
-          || (not (get_turn pos )&& tcol - fcol = -1)
+          || ((not (get_turn pos)) && tcol - fcol = -1)
         then
           if fcol <> tcol && to_sqr = pos.ep then
             match get_piece_internal to_sqr pos with
             | None -> move_en_passant pos from_sqr to_sqr
             | Some k -> move_normal_piece pos from_sqr to_sqr
-          else if frank = trank then move_normal_piece pos from_sqr to_sqr
+          else if frank = trank then
+            move_normal_piece pos from_sqr to_sqr
           else raise (IllegalMove "Illegal move for a pawn")
         else if
-          (get_turn pos && tcol- fcol= 2)
-          || (get_turn pos && tcol- fcol= -2)
+          (get_turn pos && tcol - fcol = 2)
+          || (get_turn pos && tcol - fcol = -2)
         then pawn_double_move_helper pos from_sqr to_sqr
         else raise (IllegalMove "Illegal move for a pawn")
       in
@@ -707,7 +709,6 @@ let fen_to_board str =
 
 let to_string pos =
   let rec to_string_helper pos rank col =
-    let color = get_turn pos in
     let next_rank = if col = 7 then rank - 1 else rank in
     let next_col = if col = 7 then 0 else col + 1 in
     match get_piece_internal (rank, col) pos with
@@ -721,5 +722,3 @@ let to_string pos =
 let equals pos1 pos2 = failwith "unimplemented"
 
 let eval_move pos = failwith "unimplemented"
-
-(** charles - king, bishop, queen alex - pawn, knight, willbechecked *)
