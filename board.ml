@@ -462,7 +462,7 @@ let pawn_valid_helper pos from_sqr to_sqr new_p =
       let next_pos =
         if
           (get_turn pos && tcol - fcol = 1)
-          || (get_turn pos && tcol - fcol = -1)
+          || (not (get_turn pos )&& tcol - fcol = -1)
         then
           if fcol <> tcol && to_sqr = pos.ep then
             match get_piece_internal to_sqr pos with
