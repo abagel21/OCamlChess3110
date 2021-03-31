@@ -1,11 +1,10 @@
-
-type t 
+type t
 
 (** The type of owner identifier *)
-type owner_id = bool
+type color_id = bool
 
 (** The type of piece identifier *)
-type piece_id = 
+type piece_id =
   | Pawn
   | Knight
   | Bishop
@@ -13,15 +12,15 @@ type piece_id =
   | Queen
   | King
 
-(** [make_piece owner_id piece_id] creates a piece of type [piece_id]
-  belonging to [owner_id]. *)
-val make_piece : owner_id -> piece_id -> t
+(** [make_piece c piece_id] creates a piece of type [piece_id] belonging
+    to player [c]. *)
+val make_piece : color_id -> piece_id -> t
 
-(** [get_owner t] returns the owner_id of [t]. *)
-val get_owner : t -> owner_id
+(** [get_color t] returns the color of [t]. *)
+val get_color : t -> color_id
 
-(** [get_piece t] returns the piece_id of [t]. *)
+(** [get_piece t] returns the type of piece of [t]. *)
 val get_piece : t -> piece_id
 
-(** [promote_piece t piece_id] promotes piece [t] to [piece_id] *)
-val promote_piece : t -> piece_id -> t
+(** [promote t piece_id] promotes piece [t] to [piece_id] *)
+val promote : t -> piece_id -> t
