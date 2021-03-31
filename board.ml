@@ -166,7 +166,7 @@ let find_king_sqr pos color = if color then pos.wking else pos.bking
 let verify_enemy_or_empty pos to_sqr =
   match get_piece_internal to_sqr pos with
   | Some k -> get_turn pos <> get_color k
-  | None -> false  
+  | None -> true  
 
 let checked_move piece pos from_sqr to_sqr =
   match Piece.get_piece piece with
