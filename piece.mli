@@ -24,3 +24,4 @@ val get_piece : t -> piece_id
 
 (** [promote t piece_id] promotes piece [t] to [piece_id] *)
 val promote : t -> piece_id -> t
+

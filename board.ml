@@ -446,21 +446,14 @@ let pawn_dbmv_chk pos from_sqr to_sqr trank fcol =
       in
       afree && bfree
 
-(**[pawn_double_move_helper pos from_sqr to_sqr] checks that the square
-   in front of and two squares in front of the pawn at [from_sqr] are
-   empty and executes the move if so, else throws IllegalMove. Requires:
-   from_sqr is a pawn*)
+(**[pawn_double_move_helper]*)
 let pawn_double_move_helper pos from_sqr to_sqr =
-  match (from_sqr, to_sqr) with
-  | (frank, fcol), (trank, tcol) ->
-      if
-        (get_turn pos && frank = 1)
-        || (get_turn pos = false && frank = 6)
-      then
-        if pawn_dbmv_chk pos from_sqr to_sqr trank fcol then
-          move_normal_piece pos from_sqr to_sqr
-        else raise (IllegalMove "Illegal move for a pawn")
+  match get_piece_internal to_sqr pos with
+  | None ->
+      if rook_valid_helper pos from_sqr to_sqr then
+        move_normal_piece pos from_sqr to_sqr
       else raise (IllegalMove "Illegal move for a pawn")
+  | Some k -> raise (IllegalMove "Illegal move for a pawn")
 
 (**[pawn_valid_helper pos from_sqr to_sqr] verifies that the move
    (from_sqr, to_sqr) is a legal move for a pawn and executes it,
@@ -471,7 +464,7 @@ let pawn_valid_helper pos from_sqr to_sqr new_p =
   | (frank, fcol), (trank, tcol) ->
       let next_pos =
         if
-          (get_turn pos && tcol - fcol = 1)
+          (get_turn pos && abs (tcol - fcol) = 1)
           || ((not (get_turn pos)) && tcol - fcol = -1)
         then
           if fcol <> tcol && to_sqr = pos.ep then
@@ -483,7 +476,7 @@ let pawn_valid_helper pos from_sqr to_sqr new_p =
           else raise (IllegalMove "Illegal move for a pawn")
         else if
           (get_turn pos && tcol - fcol = 2)
-          || (get_turn pos && tcol - fcol = -2)
+          || ((not (get_turn pos)) && tcol - fcol = -2)
         then pawn_double_move_helper pos from_sqr to_sqr
         else raise (IllegalMove "Illegal move for a pawn")
       in
