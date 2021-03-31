@@ -40,4 +40,4 @@ let fen_of_pieces =
 
 let to_string p =
   let str = List.assoc p.piece_id fen_of_pieces in
-  if p.color then str else String.uppercase_ascii str
+  if p.color then str else String.lowercase_ascii str
