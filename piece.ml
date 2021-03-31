@@ -3,13 +3,10 @@
     This module represents the chess pieces used by the game state and
     board. *)
 
-(** The abstract type of values representing chess pieces *)
-type t
+(** The type of player color. *)
+type color_id = bool
 
-(** The type of owner identifier *)
-type owner_id = bool
-
-(** The type of piece identifier *)
+(** The type of piece identifier. *)
 type piece_id =
   | Pawn
   | Knight
@@ -18,12 +15,16 @@ type piece_id =
   | Queen
   | King
 
-(** [make_piece owner_id piece_id] creates a piece of type [piece_id]
-    belonging to [owner_id]. *)
-let make_piece color id = failwith "unimplemented"
+(** The abstract type of values representing chess pieces. *)
+type t = {
+  color : color_id;
+  piece_id : piece_id;
+}
 
-let get_owner piece = failwith "unimplemented"
+let make_piece c id = { color = c; piece_id = id }
 
-let get_piece piece = failwith "unimplemented"
+let get_color piece = piece.color
 
-let promote_piece piece id = failwith "unimplemented"
+let get_piece piece = piece.piece_id
+
+let promote piece id = { piece with piece_id = id }
