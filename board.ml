@@ -46,7 +46,7 @@ let wknight = Some (make_piece true Knight)
 
 let wbishop = Some (make_piece true Bishop)
 
-let wking = Some (make_piece true King)
+let whking = Some (make_piece true King)
 
 let wqueen = Some (make_piece true Queen)
 
@@ -58,7 +58,7 @@ let bknight = Some (make_piece false Knight)
 
 let bbishop = Some (make_piece false Bishop)
 
-let bking = Some (make_piece false King)
+let blking = Some (make_piece false King)
 
 let bqueen = Some (make_piece false Queen)
 
@@ -67,7 +67,7 @@ let bpawn = Some (make_piece false Pawn)
 let init_board_array =
   [|
     [|
-      wrook; wknight; wbishop; wqueen; wking; wbishop; wknight; wrook;
+      wrook; wknight; wbishop; wqueen; whking; wbishop; wknight; wrook;
     |];
     [| wpawn; wpawn; wpawn; wpawn; wpawn; wpawn; wpawn; wpawn |];
     [| None; None; None; None; None; None; None; None |];
@@ -76,7 +76,7 @@ let init_board_array =
     [| None; None; None; None; None; None; None; None |];
     [| bpawn; bpawn; bpawn; bpawn; bpawn; bpawn; bpawn; bpawn |];
     [|
-      brook; bknight; bbishop; bking; bqueen; bbishop; bknight; brook;
+      brook; bknight; bbishop; blking; bqueen; bbishop; bknight; brook;
     |];
   |]
 
@@ -231,10 +231,46 @@ let knight_valid_helper pos from_sqr to_sqr =
 let queen_valid_helper pos from_sqr to_sqr =
   rook_valid_helper pos from_sqr to_sqr
   || bishop_valid_helper pos from_sqr to_sqr
-
+let check_castle pos fcol tcol = 
+  if get_turn pos then
+    if (fcol > tcol) then 
+      if pos.castling.(0)
+          then true
+          else raise(IllegalMove "King cannot castle here")
+    else 
+      if pos.castling.(1)
+          then true
+          else raise (IllegalMove "King cannot castle here")
+  else 
+    if (fcol > tcol) then 
+      if pos.castling.(2)
+        then true
+      else raise (IllegalMove "King cannot castle here")
+    else 
+      if pos.castling.(3)
+        then true
+      else raise (IllegalMove "King cannot castle here")
+     
 (**[king_valid_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a king*)
-let king_valid_helper pos from_sqr to_sqr = failwith ""
+let king_valid_helper pos from_sqr to_sqr = 
+  let frank = fst from_sqr in
+  let fcol = snd from_sqr in
+  let trank = fst to_sqr in
+  let tcol = fst to_sqr in
+    if bishop_valid_helper pos from_sqr to_sqr then
+      if abs(frank- trank + fcol - tcol) = 2
+        then true 
+        else raise (IllegalMove "King can only move on spot diagonally")
+    else if rook_valid_helper pos from_sqr to_sqr then
+      if abs(frank- trank + fcol - tcol)= 1
+        then true
+      else if (frank= trank) && abs (fcol - tcol) = 2
+        then check_castle pos fcol tcol
+      else false
+    else raise (IllegalMove "King cannot move in that direction")
+
+ 
 
 (**[pawn_checks pos square] returns true if the pawn on [square] checks
    the opposing player's king*)
@@ -310,22 +346,60 @@ let piece_causes_check pos square =
       | Rook -> rook_checks pos square
       | Queen -> queen_checks pos square
       | King -> false )
-
+let set_castling pos from_sqr =
+  match get_piece_internal from_sqr pos with
+  | None -> raise IllegalPiece("No piece here")
+  | Some k -> 
+    match Piece.get_piece k with
+    | Rook -> 
+      if fst from_sqr = 0 then 
+        if snd from_sqr = 0
+          then pos.castling.(0) <- false
+        else if snd from_sqr = 7
+          then pos.castling.(1) <- false
+        else pos.castling.(0) <- pos.castling.(0)
+      else if fst from_sqr = 7 then
+        if snd from_sqr = 0 
+          then pos.castling.(2) <-false
+        else if snd from_sqr = 7
+          then pos.castling.(3) <-false
+        else pos.castling.(0) <- pos.castling.(0)
+      else pos.castling.(0) <- pos.castling.(0)  
+    | _ -> pos.castling.(0) <- pos.castling.(0) 
+  
+let add_move pos  (from_sqr : square ) (to_sqr : square) k = 
+  if not k then
+  {
+  board = pos.board;
+  castling = pos.castling;
+  ep = (-1, -1);
+  turn = not pos.turn;
+  move_stack = (from_sqr, to_sqr) :: pos.move_stack;
+  checked = piece_causes_check pos to_sqr;
+  wking = pos.wking;
+  bking = pos.bking;
+} 
+  else 
+  {
+  board = pos.board;
+  castling = pos.castling;
+  ep = (-1, -1);
+  turn = not pos.turn;
+  move_stack = (from_sqr, to_sqr) :: pos.move_stack;
+  checked = piece_causes_check pos to_sqr;
+  wking = if(pos.turn) then to_sqr else pos.wking;
+  bking = if not pos.turn then to_sqr else pos.bking;
+} 
 (**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr] to
    [to_sqr]*)
 let move_normal_piece pos from_sqr to_sqr =
+  set_castling pos from_sqr;
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
       let curr_piece = pos.board.(frank).(fcol) in
       pos.board.(frank).(fcol) <- None;
       pos.board.(trank).(tcol) <- curr_piece;
-      {
-        pos with
-        move_stack = (from_sqr, to_sqr) :: pos.move_stack;
-        turn = not pos.turn;
-        checked = piece_causes_check pos to_sqr;
-        ep = (-1, -1);
-      }
+      add_move pos from_sqr to_sqr false
 
 (**[move_en_passant pos from_sqr to_sqr] executes the move from_sqr
    to_sqr as an en passant move and returns the modified state.
@@ -412,9 +486,51 @@ let pawn_valid_helper pos from_sqr to_sqr new_p =
    else false*)
 let is_check pos = pos.checked
 
-let possibly_castle pos from_square to_square = failwith "unimplemented"
+let set_castles1 pos = 
+  if (get_turn pos) then 
+    pos.castling.(0) <- false
+  else 
+    pos.castling.(2) <-false
+let set_castles2 pos = 
+  if (get_turn pos) then 
+      pos.castling.(1) <- false
+   else 
+    pos.castling.(3) <-false
 
-(**[will_be_checked pos from_sqr to_sqr] checks whether *)
+
+(**[possibly_castle pos from_sqr to_sqr] moves the king normally or castles dependinng on the call.*)
+let possibly_castle pos from_sqr to_sqr = 
+  set_castles1 pos;
+  set_castles2 pos;
+  let frank = fst from_sqr in let trank = fst to_sqr in
+  let fcol = snd from_sqr in let tcol = snd to_sqr in 
+  if frank <> trank || abs (fcol - tcol) <> 2
+    then 
+      let curr_piece = pos.board.(frank).(fcol) in
+        pos.board.(frank).(fcol) <- None;
+        pos.board.(trank).(tcol) <- curr_piece;
+        add_move pos from_sqr to_sqr true
+  else 
+    let curr_piece = pos.board.(frank).(fcol) in
+      if (fcol > tcol) then
+        let rook = pos.board.(frank).(0) in
+        pos.board.(frank).(fcol) <- None;
+        pos.board.(trank).(tcol) <- curr_piece;
+        pos.board.(frank).(0) <- None;
+        pos.board.(frank).(3) <- rook;
+        add_move pos from_sqr to_sqr true
+      else
+        let rook = pos.board.(frank).(7) in
+        pos.board.(frank).(fcol) <- None;
+        pos.board.(trank).(tcol) <- curr_piece;
+        pos.board.(frank).(7) <- None;
+        pos.board.(frank).(5) <- rook;
+        add_move pos from_sqr to_sqr true
+   
+        
+  
+
+(**[will_be_checked pos from_sqr to_sqr] checks whether the player's move would put themself in check*)
 let will_be_checked pos from_sqr to_sqr =
   let king = find_king_sqr pos (get_turn pos) in
   match (king, from_sqr) with
