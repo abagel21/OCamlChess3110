@@ -22,5 +22,5 @@ val get_color : t -> color_id
 (** [get_piece t] returns the type of piece of [t]. *)
 val get_piece : t -> piece_id
 
-(** [promote t piece_id] promotes piece [t] to [piece_id] *)
-val promote : t -> piece_id -> t
+(** [to_string t] returns the FEN representation of piece [t]. *)
+val to_string : t -> string
