@@ -63,23 +63,21 @@ let blking = Some (make_piece false King)
 let bqueen = Some (make_piece false Queen)
 
 let bpawn = Some (make_piece false Pawn)
-
-let init_board_array =
-  [|
-    [|
-      wrook; wknight; wbishop; wqueen; whking; wbishop; wknight; wrook;
-    |];
-    [| wpawn; wpawn; wpawn; wpawn; wpawn; wpawn; wpawn; wpawn |];
-    [| None; None; None; None; None; None; None; None |];
-    [| None; None; None; None; None; None; None; None |];
-    [| None; None; None; None; None; None; None; None |];
-    [| None; None; None; None; None; None; None; None |];
-    [| bpawn; bpawn; bpawn; bpawn; bpawn; bpawn; bpawn; bpawn |];
-    [|
-      brook; bknight; bbishop; blking; bqueen; bbishop; bknight; brook;
-    |];
-  |]
-
+let init_board_list =
+    [
+      [
+        wrook; wknight; wbishop; wqueen; whking; wbishop; wknight; wrook;
+      ];
+      [ wpawn; wpawn; wpawn; wpawn; wpawn; wpawn; wpawn; wpawn ];
+      [ None; None; None; None; None; None; None; None ];
+      [ None; None; None; None; None; None; None; None ];
+      [ None; None; None; None; None; None; None; None ];
+      [ None; None; None; None; None; None; None; None ];
+      [ bpawn; bpawn; bpawn; bpawn; bpawn; bpawn; bpawn; bpawn ];
+      [
+        brook; bknight; bbishop; blking; bqueen; bbishop; bknight; brook;
+      ];
+    ]
 (**[init_empty_board_array] returns board array that is completely empty *)
 let init_empty_board_array =
   [|
@@ -94,7 +92,7 @@ let init_empty_board_array =
   |]
 
 (**[init_empty] returns a board representation that is empty *)
-let init_empty =
+let init_empty ()=
   {
     board = init_empty_board_array;
     castling = [| false; false; false; false |];
@@ -106,9 +104,9 @@ let init_empty =
     bking = (-1, -1);
   }
 
-let init =
+let init () =
   {
-    board = init_board_array;
+    board = Array.of_list (List.map (Array.of_list) init_board_list);
     castling = [| true; true; true; true |];
     ep = (-1, -1);
     turn = true;
@@ -165,8 +163,9 @@ let find_king_sqr pos color = if color then pos.wking else pos.bking
 
 let verify_enemy_or_empty pos to_sqr =
   match get_piece_internal to_sqr pos with
-  | Some k -> get_turn pos <> get_color k
   | None -> true  
+  | Some k -> get_turn pos <> get_color k
+ 
 
 let checked_move piece pos from_sqr to_sqr =
   match Piece.get_piece piece with
@@ -180,7 +179,8 @@ let checked_move piece pos from_sqr to_sqr =
 (**[rook_valid_helper pos from_sqr to_sqr] verifies that the move
    (from_sqr, to_sqr) is a legal move for a rook. *)
 let rook_valid_helper pos from_sqr to_sqr =
-  if verify_enemy_or_empty pos to_sqr then 
+  if not (verify_enemy_or_empty pos to_sqr) then raise (IllegalMove "Cannot capture ally")
+  else
   let a = ref true in
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
@@ -196,14 +196,14 @@ let rook_valid_helper pos from_sqr to_sqr =
           | None -> a := !a && true
           | Some k -> a := !a && false
         done;
-      !a
-    else raise (IllegalMove "Cannot capture ally")
+      !a  
 
 
 (**[bishop_valid_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a bishop*)
 let bishop_valid_helper pos from_sqr to_sqr =
-  if verify_enemy_or_empty pos to_sqr then 
+  if not (verify_enemy_or_empty pos to_sqr) then raise (IllegalMove "Cannot capture ally")
+  else
   let a = ref true in
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
@@ -223,21 +223,20 @@ let bishop_valid_helper pos from_sqr to_sqr =
             | Some k -> a := !a && false
           done;
         !a
-      else raise (IllegalMove "Cannot capture ally")
 
 (**[knight_valid_helper pos from_sqr to_sqr] ensures that the move
    (from_sqr, to_sqr) is legal for a knight and if so, executes the move
    and returns the new state. Throws: IllegalMove if the move is not
    legal for a knight *)
 let knight_valid_helper pos from_sqr to_sqr =
-  if verify_enemy_or_empty pos to_sqr then 
+  if not (verify_enemy_or_empty pos to_sqr) then raise (IllegalMove "Cannot capture ally")
+  else 
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
       if abs (frank - trank) = 1 && abs (fcol - tcol) = 2 then true
       else if abs (frank - trank) = 2 && abs (fcol - tcol) = 1 then true
       else raise (IllegalMove "Illegal move for knight")
-    else raise (IllegalMove "Cannot capture ally")
-
+  
 (**[queen_check_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a queen*)
 let queen_valid_helper pos from_sqr to_sqr =
@@ -689,7 +688,7 @@ and letter_fen_matching str pos rank col ind =
   fen_to_board_helper str pos rank col ind
 
 let fen_to_board str =
-  let pos = init_empty in
+  let pos = init_empty ()in
   fen_to_board_helper str pos 7 0 0
 
 let to_string pos =
