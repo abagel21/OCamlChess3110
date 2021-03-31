@@ -461,18 +461,18 @@ let pawn_valid_helper pos from_sqr to_sqr new_p =
   | (frank, fcol), (trank, tcol) ->
       let next_pos =
         if
-          (get_turn pos && trank - frank = 1)
-          || (get_turn pos && trank - frank = -1)
+          (get_turn pos && tcol - fcol = 1)
+          || (get_turn pos && tcol - fcol = -1)
         then
           if fcol <> tcol && to_sqr = pos.ep then
             match get_piece_internal to_sqr pos with
             | None -> move_en_passant pos from_sqr to_sqr
             | Some k -> move_normal_piece pos from_sqr to_sqr
-          else if fcol = tcol then move_normal_piece pos from_sqr to_sqr
+          else if frank = trank then move_normal_piece pos from_sqr to_sqr
           else raise (IllegalMove "Illegal move for a pawn")
         else if
-          (get_turn pos && trank - frank = 2)
-          || (get_turn pos && trank - frank = -2)
+          (get_turn pos && tcol- fcol= 2)
+          || (get_turn pos && tcol- fcol= -2)
         then pawn_double_move_helper pos from_sqr to_sqr
         else raise (IllegalMove "Illegal move for a pawn")
       in
