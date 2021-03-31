@@ -1,9 +1,10 @@
 open Piece
 
-(**TODO 1. Implement pawn movement (including en passant) Alex 4.
-   implement pins (if a move causes the player to be in check) 6. Finish
-   FEN function Alex 7. Testing board 8. Command Line 9. Move under
-   check 5. Implement checkmate/draw checking*)
+(**TODO 1. implement piece to_string 2. Implement pawn movement
+   (including en passant) Alex 4. implement pins (if a move causes the
+   player to be in check) 6. Finish FEN function Alex 7. Testing board
+   8. Command Line 9. Move under check 5. Implement checkmate/draw
+   checking*)
 
 (*AF: the record {board, castling, ep, turn} represents a full chess
   position where board=[|[|a1...a8|];...;[|h1...h8|]|] represents the
