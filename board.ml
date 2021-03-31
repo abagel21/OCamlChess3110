@@ -363,28 +363,34 @@ let set_castling pos from_sqr =
           else pos.castling.(0) <- pos.castling.(0)
       | _ -> pos.castling.(0) <- pos.castling.(0) )
 
-let add_move pos (from_sqr : square) (to_sqr : square) k =
+(**[is_castling pos from_sqr to_sqr k] returns true if the move is a
+   castling move, else false*)
+let is_castling pos from_sqr to_sqr k =
   match (from_sqr, to_sqr) with
   | (_, fcol), (_, tcol) ->
-      let wking = if k && pos.turn then to_sqr else pos.wking in
-      let bking = if not pos.turn then to_sqr else pos.bking in
+      if k && abs (fcol - tcol) > 1 then true else false
+
+(**[add_move pos from_sqr to_sqr k] returns a new position given that
+   the board array is already shifted*)
+let add_move pos (from_sqr : square) (to_sqr : square) k =
+  let wking = if k && pos.turn then to_sqr else pos.wking in
+  let bking = if not pos.turn then to_sqr else pos.bking in
+  {
+    pos with
+    turn = not pos.turn;
+    move_stack =
       {
-        pos with
-        turn = not pos.turn;
-        move_stack =
-          {
-            from_sqr;
-            to_sqr;
-            en_passant = false;
-            promote = false;
-            castling =
-              (if k && abs (fcol - tcol) > 1 then true else false);
-          }
-          :: pos.move_stack;
-        checked = piece_causes_check pos to_sqr;
-        bking;
-        wking;
+        from_sqr;
+        to_sqr;
+        en_passant = false;
+        promote = false;
+        castling = is_castling pos from_sqr to_sqr k;
       }
+      :: pos.move_stack;
+    checked = piece_causes_check pos to_sqr;
+    bking;
+    wking;
+  }
 
 (**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr]
    to [to_sqr]*)
@@ -408,6 +414,8 @@ let move_en_passant pos from_sqr to_sqr =
       pos.board.(trank + adj).(tcol) <- None;
       temp_pos
 
+(**[promote square pos piece] promotes the piece on [square] in [pos] to
+   [piece]*)
 let promote square pos piece =
   match square with
   | rank, col ->
@@ -604,7 +612,10 @@ let move str promote_str pos =
   if verify_move_string trm_str then
     let from_sqr = sqr_from_str (String.sub trm_str 0 2) in
     let to_sqr = sqr_from_str (String.sub trm_str 2 2) in
-    let new_p = parse_promote_str promote_str pos in
+    let new_p =
+      if promote_str = "" then None
+      else parse_promote_str promote_str pos
+    in
     if from_sqr = to_sqr then
       raise
         (IllegalMove
@@ -631,6 +642,12 @@ let add_piece pos piece square =
 let letter chr =
   match chr with 'a' .. 'z' -> true | 'A' .. 'Z' -> true | _ -> false
 
+(**[fen_parse_other str pos] takes in a position with board array parsed
+   from [str] and adds the en passant, castling, and turn information*)
+let fen_parse_other str pos = failwith "unimplemented"
+
+(**[fen_to_board_helper str pos rank col ind] is a recursive helper for
+   turning a FEN string into a board*)
 let rec fen_to_board_helper str pos rank col ind =
   let next_rank = if col = 7 then rank - 1 else rank in
   let next_col = if col = 7 then 0 else col + 1 in
@@ -652,6 +669,8 @@ let rec fen_to_board_helper str pos rank col ind =
     | _ -> raise IllegalFen
 
 and letter_fen_matching str pos rank col ind =
+  let nk = ref (-1, -1) in
+  let king_color = false in
   let piece =
     match str.[ind] with
     | 'p' -> bpawn
@@ -659,17 +678,28 @@ and letter_fen_matching str pos rank col ind =
     | 'n' -> bknight
     | 'b' -> bbishop
     | 'q' -> bqueen
-    | 'k' -> blking
+    | 'k' ->
+        nk := (rank, col);
+        blking
     | 'P' -> wpawn
     | 'R' -> wrook
     | 'N' -> wknight
     | 'B' -> wbishop
     | 'Q' -> wqueen
-    | 'K' -> whking
+    | 'K' ->
+        nk := (rank, col);
+        whking
     | _ -> raise IllegalFen
   in
   add_piece pos piece (rank, col);
-  fen_to_board_helper str pos rank col ind
+  let new_pos =
+    {
+      pos with
+      bking = (if king_color then pos.bking else !nk);
+      wking = (if king_color then !nk else pos.wking);
+    }
+  in
+  fen_to_board_helper str new_pos rank col ind
 
 let fen_to_board str =
   let pos = init_empty () in
@@ -682,32 +712,9 @@ let to_string pos =
     let next_col = if col = 7 then 0 else col + 1 in
     match get_piece_internal (rank, col) pos with
     | None -> " |  " ^ to_string_helper pos next_rank next_col
-    | Some k -> (
-        match Piece.get_piece k with
-        | Pawn ->
-            " | "
-            ^ (if color then "P" else "p")
-            ^ to_string_helper pos next_rank next_col
-        | Knight ->
-            " | "
-            ^ (if color then "N" else "n")
-            ^ to_string_helper pos next_rank next_col
-        | Bishop ->
-            " | "
-            ^ (if color then "B" else "b")
-            ^ to_string_helper pos next_rank next_col
-        | Rook ->
-            " | "
-            ^ (if color then "R" else "r")
-            ^ to_string_helper pos next_rank next_col
-        | Queen ->
-            " | "
-            ^ (if color then "Q" else "q")
-            ^ to_string_helper pos next_rank next_col
-        | King ->
-            " | "
-            ^ (if color then "K" else "k")
-            ^ to_string_helper pos next_rank next_col )
+    | Some k ->
+        " | " ^ Piece.to_string k
+        ^ to_string_helper pos next_rank next_col
   in
   to_string_helper pos 7 0
 
