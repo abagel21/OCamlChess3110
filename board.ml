@@ -424,29 +424,7 @@ let promote square pos piece =
       pos.board.(rank).(col) <- piece;
       pos
 
-(**[pawn_dbmv_chk pos from_sqr to_sqr trank fcol] takes in the current
-   position, move from_sqr and to_sqr, and returns true if the square in
-   front of [from_sqr] and [to_sqr] are unoccupied, else throws
-   IllegalMove*)
-let pawn_dbmv_chk pos from_sqr to_sqr trank fcol =
-  match (from_sqr, to_sqr) with
-  | (frank, fcol), (trank, tcol) ->
-      let afree =
-        match get_piece_internal to_sqr pos with
-        | None -> true
-        | Some k -> false
-      in
-      let between_rank =
-        if get_turn pos then trank - 1 else trank + 1
-      in
-      let bfree =
-        match get_piece_internal (between_rank, fcol) pos with
-        | None -> true
-        | Some k -> false
-      in
-      afree && bfree
-
-(**[pawn_double_move_helper]*)
+(**[pawn_double_move_helper pos from_sqr to_sqr]*)
 let pawn_double_move_helper pos from_sqr to_sqr =
   match get_piece_internal to_sqr pos with
   | None ->
@@ -475,8 +453,8 @@ let pawn_valid_helper pos from_sqr to_sqr new_p =
             move_normal_piece pos from_sqr to_sqr
           else raise (IllegalMove "Illegal move for a pawn")
         else if
-          (get_turn pos && tcol - fcol = 2)
-          || ((not (get_turn pos)) && tcol - fcol = -2)
+          (get_turn pos && tcol - fcol = 2 && fcol = 1)
+          || ((not (get_turn pos)) && tcol - fcol = -2 && fcol = 6)
         then pawn_double_move_helper pos from_sqr to_sqr
         else raise (IllegalMove "Illegal move for a pawn")
       in
