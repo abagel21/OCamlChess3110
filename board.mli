@@ -52,3 +52,4 @@ returns the board state equivalent.
 Precondition: [fen] is a valid FEN format string
 *)
 val fen_to_board : string -> t
+
