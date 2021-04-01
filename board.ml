@@ -23,7 +23,7 @@ exception IllegalSquare of string
 
 exception IllegalMove of string
 
-exception IllegalFen
+exception IllegalFen of string
 
 exception IllegalPiece
 
@@ -143,6 +143,8 @@ let verify_move_string (str : string) =
   let valid_tc = to_col > 0 && to_col <= 8 in
   length && valid_fr && valid_fc && valid_tr && valid_tc
 
+(**[get_piece_internal square pos] retrieves the piece at [rank, col] in
+   [pos.board]. Requires: rank, col are within bounds for [pos.board]*)
 let get_piece_internal square pos =
   match square with rank, col -> pos.board.(rank).(col)
 
@@ -163,6 +165,175 @@ let verify_enemy_or_empty pos to_sqr =
   match get_piece_internal to_sqr pos with
   | None -> true
   | Some k -> get_turn pos <> get_color k
+
+(**[first_piece pos rank col rankinc colinc] returns the first piece
+   along the line designated by rank = rank + rankinc, col = col +
+   colinc*)
+let rec first_piece pos rank col rankinc colinc =
+  if rank > 7 || rank < 0 || col > 7 || col < 0 then None
+  else
+    match get_piece_internal (rank, col) pos with
+    | None ->
+        first_piece pos (rank + rankinc) (col + colinc) rankinc colinc
+    | Some k -> Some k
+
+(**[is_horiz_attacker piece color] returns true if [piece] attacks
+   horizontally per the rules of chess*)
+let is_horiz_attacker piece color =
+  match piece with
+  | None -> false
+  | Some k -> (
+      match Piece.get_piece k with
+      | Rook -> get_color k = color
+      | Queen -> get_color k = color
+      | _ -> false )
+
+let is_diag_attacker piece color =
+  match piece with
+  | None -> false
+  | Some k -> (
+      match Piece.get_piece k with
+      | Bishop -> get_color k = color
+      | Queen -> get_color k = color
+      | _ -> false )
+
+(**[perp_attack pos rank col color] returns true if there is a piece
+   horizontally or vertically attacking the square at (rank, col) of
+   [color]*)
+let perp_attack pos rank col color =
+  let left_attack =
+    is_horiz_attacker
+      (first_piece pos rank col ~-1 0)
+      (not (get_turn pos))
+  in
+  let right_attack =
+    is_horiz_attacker
+      (first_piece pos rank col 1 0)
+      (not (get_turn pos))
+  in
+  let up_attack =
+    is_horiz_attacker
+      (first_piece pos rank col 0 1)
+      (not (get_turn pos))
+  in
+  let down_attack =
+    is_horiz_attacker
+      (first_piece pos rank col 0 ~-1)
+      (not (get_turn pos))
+  in
+  left_attack || right_attack || up_attack || down_attack
+
+(**[diag_attack pos rank col color] returns true if there is a piece
+   diagonally attacking the square at (rank, col) of [color]*)
+let diag_attack pos rank col color =
+  let upleft =
+    is_diag_attacker (first_piece pos rank col 1 1) (not (get_turn pos))
+  in
+  let upright =
+    is_diag_attacker
+      (first_piece pos rank col ~-1 1)
+      (not (get_turn pos))
+  in
+  let botleft =
+    is_diag_attacker
+      (first_piece pos rank col ~-1 ~-1)
+      (not (get_turn pos))
+  in
+  let botright =
+    is_diag_attacker
+      (first_piece pos rank col 1 ~-1)
+      (not (get_turn pos))
+  in
+  upleft || upright || botleft || botright
+
+(**[is_pawn_attacker piece color] returns true if [piece] is a pawn of
+   [color]*)
+let is_pawn_attacker piece color =
+  match piece with
+  | None -> false
+  | Some k -> (
+      match Piece.get_piece k with
+      | Pawn -> get_color k = color
+      | _ -> false )
+
+(**[diag_attack pos rank col color] returns true if there is a pawn
+   attacking the square at (rank, col) of [color]*)
+let pawn_attack pos rank col color =
+  let colinc = if color then ~-1 else 1 in
+  let rt_valid = if rank - 1 < 0 then false else true in
+  let lft_valid = if rank + 1 > 7 then false else true in
+  if col + colinc > 7 || col + colinc < 0 then false
+  else
+    let right =
+      if rt_valid then
+        is_pawn_attacker
+          (get_piece_internal (rank - 1, col + colinc) pos)
+          color
+      else false
+    in
+    let left =
+      if lft_valid then
+        is_pawn_attacker
+          (get_piece_internal (rank + 1, col + colinc) pos)
+          color
+      else false
+    in
+    right || left
+
+(**[is_knight_attacker piece color] returns true if [piece] is a knight
+   of [color]*)
+let is_knight_attacker piece color =
+  match piece with
+  | None -> false
+  | Some k -> (
+      match Piece.get_piece k with
+      | Knight -> get_color k = color
+      | _ -> false )
+
+(**[sqr_inbounds sqr] returns true if [sqr] is inbounds, else false*)
+let sqr_inbounds sqr =
+  match sqr with
+  | rank, col -> rank >= 0 && rank <= 7 && col >= 0 && col <= 7
+
+(**[check_valid_sqrs pos psble_knight valid_sqr color] returns true if
+   any square in [psble_knight] is [color]*)
+let rec check_valid_sqrs pos psble_knight valid_sqr color =
+  match (psble_knight, valid_sqr) with
+  | [], [] -> false
+  | kh :: kt, vh :: vt ->
+      ( if vh then is_knight_attacker (get_piece_internal kh pos) color
+      else false )
+      || check_valid_sqrs pos kt vt color
+  | _ -> false
+
+(**[diag_attack pos rank col color] returns true if there is a knight
+   attacking the square at (rank, col) of [color]*)
+let knight_attack pos rank col color =
+  let psble_knight =
+    [
+      (rank + 1, col - 2);
+      (rank + 2, col - 1);
+      (rank + 2, col + 1);
+      (rank + 1, col + 2);
+      (rank - 1, col - 2);
+      (rank - 2, col - 1);
+      (rank - 2, col + 1);
+      (rank - 1, col + 2);
+    ]
+  in
+  let valid_sqr = List.map sqr_inbounds psble_knight in
+  check_valid_sqrs pos psble_knight valid_sqr color
+
+(**[attacked_square pos sqr color] returns true if [sqr] is attacked by
+   a piece of [color] in [pos]*)
+let attacked_square pos sqr color =
+  match sqr with
+  | rank, col ->
+      let perp = perp_attack pos rank col color in
+      let diag = diag_attack pos rank col color in
+      let pawn = pawn_attack pos rank col color in
+      let knight = knight_attack pos rank col color in
+      perp || diag || pawn || knight
 
 let checked_move piece pos from_sqr to_sqr =
   match Piece.get_piece piece with
@@ -624,40 +795,83 @@ let undo_prev pos = failwith "Unimplemented"
 let add_piece pos piece square =
   match square with rank, col -> pos.board.(rank).(col) <- piece
 
+(**[letter chr] returns true if [chr] is a lowercase or uppercase
+   letter, else false*)
 let letter chr =
   match chr with 'a' .. 'z' -> true | 'A' .. 'Z' -> true | _ -> false
 
+(**[fen_parse_castling str pos endex] takes in the second half of a fen
+   string, a partially constructed position, and the index where the
+   castling rights string ends and returns a boolean array of length 4
+   storing the castling rights*)
+let fen_parse_castling str pos endex =
+  let boolArr = [| false; false; false; false |] in
+  for i = 2 to endex do
+    match str.[i] with
+    | 'K' -> boolArr.(1) <- true
+    | 'Q' -> boolArr.(0) <- true
+    | 'q' -> boolArr.(2) <- true
+    | 'k' -> boolArr.(3) <- true
+    | _ -> ()
+  done;
+  boolArr
+
 (**[fen_parse_other str pos] takes in a position with board array parsed
    from [str] and adds the en passant, castling, and turn information*)
-let fen_parse_other str pos = failwith "unimplemented"
+let fen_parse_other str pos =
+  let turn = if str.[0] = 'w' then true else false in
+  let endingIndex = ref 0 in
+  for i = 2 to 7 do
+    if str.[i] = ' ' then endingIndex := i
+  done;
+  let castling = fen_parse_castling str pos !endingIndex in
+  let passant_square = String.sub str !endingIndex 2 in
+  let ep = sqr_from_str passant_square in
+  {
+    pos with
+    turn;
+    castling;
+    ep;
+    checked =
+      attacked_square pos
+        (if turn then pos.wking else pos.bking)
+        (not turn);
+  }
 
 (**[fen_to_board_helper str pos rank col ind] is a recursive helper for
-   turning a FEN string into a board*)
+   turning a FEN string into a board. It returns a new position with the
+   edited board and positional values. Throws: IllegalFen if the FEN
+   contains illegal characters*)
 let rec fen_to_board_helper str pos rank col ind =
-  let next_rank = if col = 7 then rank - 1 else rank in
-  let next_col = if col = 7 then 0 else col + 1 in
   let nxt_ind = ind + 1 in
-  if rank < 0 then pos
+  if col = 0 && rank = 8 then
+    fen_parse_other
+      (String.sub str nxt_ind (String.length str - nxt_ind))
+      pos
   else if letter str.[ind] then
-    letter_fen_matching str pos next_rank next_col nxt_ind
+    letter_fen_matching str pos rank col ind nxt_ind
   else
     match str.[ind] with
-    | '/' -> fen_to_board_helper str pos (rank - 1) 0 nxt_ind
-    | '1' -> fen_to_board_helper str pos rank (col + 1) nxt_ind
-    | '2' -> fen_to_board_helper str pos rank (col + 2) nxt_ind
-    | '3' -> fen_to_board_helper str pos rank (col + 3) nxt_ind
-    | '4' -> fen_to_board_helper str pos rank (col + 4) nxt_ind
-    | '5' -> fen_to_board_helper str pos rank (col + 5) nxt_ind
-    | '6' -> fen_to_board_helper str pos rank (col + 6) nxt_ind
-    | '7' -> fen_to_board_helper str pos rank (col + 7) nxt_ind
-    | '8' -> fen_to_board_helper str pos (rank - 1) 0 nxt_ind
-    | _ -> raise IllegalFen
+    | '/' -> fen_to_board_helper str pos 0 (col - 1) nxt_ind
+    | '1' -> fen_to_board_helper str pos (rank + 1) col nxt_ind
+    | '2' -> fen_to_board_helper str pos (rank + 2) col nxt_ind
+    | '3' -> fen_to_board_helper str pos (rank + 3) col nxt_ind
+    | '4' -> fen_to_board_helper str pos (rank + 4) col nxt_ind
+    | '5' -> fen_to_board_helper str pos (rank + 5) col nxt_ind
+    | '6' -> fen_to_board_helper str pos (rank + 6) col nxt_ind
+    | '7' -> fen_to_board_helper str pos (rank + 7) col nxt_ind
+    | '8' -> fen_to_board_helper str pos rank col nxt_ind
+    | _ ->
+        raise
+          (IllegalFen
+             ( Char.escaped str.[ind]
+             ^ " is not a valid FEN number or symbol" ))
 
-and letter_fen_matching str pos rank col ind =
+and letter_fen_matching str pos rank col prevind nextind =
   let nk = ref (-1, -1) in
   let king_color = false in
   let piece =
-    match str.[ind] with
+    match str.[prevind] with
     | 'p' -> bpawn
     | 'r' -> brook
     | 'n' -> bknight
@@ -674,7 +888,10 @@ and letter_fen_matching str pos rank col ind =
     | 'K' ->
         nk := (rank, col);
         whking
-    | _ -> raise IllegalFen
+    | _ ->
+        raise
+          (IllegalFen
+             (Char.escaped str.[prevind] ^ " is not a valid FEN letter"))
   in
   add_piece pos piece (rank, col);
   let new_pos =
@@ -684,11 +901,11 @@ and letter_fen_matching str pos rank col ind =
       wking = (if king_color then !nk else pos.wking);
     }
   in
-  fen_to_board_helper str new_pos rank col ind
+  fen_to_board_helper str new_pos (rank + 1) col nextind
 
 let fen_to_board str =
   let pos = init_empty () in
-  fen_to_board_helper str pos 7 0 0
+  fen_to_board_helper str pos 0 7 0
 
 let to_string pos =
   let rec to_string_helper pos rank col =
@@ -696,17 +913,18 @@ let to_string pos =
     else
       let next_col = if rank = 7 then col - 1 else col in
       let next_rank = if rank = 7 then 0 else rank + 1 in
+      let rank_label = Char.escaped (Char.chr (Char.code '1' + col)) in
       match get_piece_internal (rank, col) pos with
       | None ->
           " |  "
-          ^ (if rank = 7 then " |\n" else "")
+          ^ (if rank = 7 then " | " ^ rank_label ^ "\n" else "")
           ^ to_string_helper pos next_rank next_col
       | Some k ->
           " | " ^ Piece.to_string k
-          ^ (if rank = 7 then " |\n" else "")
+          ^ (if rank = 7 then " | " ^ rank_label ^ "\n" else "")
           ^ to_string_helper pos next_rank next_col
   in
-  to_string_helper pos 0 7
+  to_string_helper pos 0 7 ^ "   a   b   c   d   e   f   g   h"
 
 let equals pos1 pos2 = failwith "unimplemented"
 

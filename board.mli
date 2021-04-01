@@ -47,7 +47,7 @@ val to_string : t -> string
 else false*)
 val equals : t -> t -> bool
 
-(**[fen_to_board fen board] takes in a fen representation of a board and 
+(**[fen_to_board fen] takes in a fen representation of a board and 
 returns the board state equivalent.
 Precondition: [fen] is a valid FEN format string
 *)
