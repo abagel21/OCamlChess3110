@@ -6,17 +6,6 @@ open Piece
    8. Command Line 9. Move under check 5. Implement checkmate/draw
    checking*)
 
-(*AF: the record {board, castling, ep, turn} represents a full chess
-  position where board=[|[|a1...a8|];...;[|h1...h8|]|] represents the
-  squares of the board, castling=[qw;kw;qb;kb] such that qw is a boolean
-  representing whether white has queenside castling and the rest follow,
-  ep=(int, int) where the first int is the row and the second int is the
-  column of the en passant square, turn=bool where true is white's turn
-  and false is black's turn the string list of type r represents the
-  move stack of the position, prev=t represents the previous position
-  state*)
-(*RI=The t.board array is always full*)
-
 type r = Piece.t option array array
 
 exception IllegalSquare of string
@@ -39,6 +28,18 @@ type move = {
   promote : bool;
 }
 
+(*AF: the record {board, castling, ep, turn, move_stack, checked, wking,
+  bking} represents a full chess position where
+  board=[|[|a1...a8|];...;[|h1...h8|]|] represents the squares of the
+  board, castling=[qw;kw;qb;kb] such that qw is a boolean representing
+  whether white has queenside castling and the rest follow, ep=(int,
+  int) where the first int is the row and the second int is the column
+  of the en passant square, turn=bool where true is white's turn and
+  false is black's turn the string list of type r represents the move
+  stack of the position, move_stack is a list of moves made so far,
+  checked is a boolean where true means the player is in check, wking
+  and bking represent the square each king occupies*)
+(*RI=The t.board array is always full*)
 type t = {
   board : r;
   castling : bool array;
@@ -114,9 +115,11 @@ let init () =
     bking = (7, 4);
   }
 
+(**[get_turn pos] returns true if it is white's move and false
+   otherwise.*)
 let get_turn pos = pos.turn
 
-let get_piece str pos =
+let get_piece_helper str pos =
   let trm_str = String.trim str in
   if String.length trm_str = 2 then
     let rank = Char.code str.[0] - Char.code 'a' in
@@ -126,6 +129,16 @@ let get_piece str pos =
     else pos.board.(rank).(col)
   else raise (IllegalSquare (str ^ " is not a legal square"))
 
+(**[get_piece str pos] returns the FEN representation of the piece at
+   the coordinate in [str], "no piece" if empty, or throws an
+   [IllegalSquare] if [str] is not a valid coordinate*)
+let get_piece str pos =
+  match get_piece_helper str pos with
+  | Some k -> Piece.to_string k
+  | None -> "NA"
+  
+(**[get_castling pos] returns the array of valid and invalid castles*)
+let get_castling pos = pos.castling 
 let rank_rep = [ 'a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h' ]
 
 (**[verify_move_string str] checks whether [str] is a valid coordinate
@@ -148,6 +161,8 @@ let verify_move_string (str : string) =
 let get_piece_internal square pos =
   match square with rank, col -> pos.board.(rank).(col)
 
+(**[sqr_from_str] returns the square representation of the coordinate in
+   [str]*)
 let sqr_from_str str =
   let rank = Char.code str.[0] - Char.code 'a' in
   let col = Char.code str.[1] - Char.code '1' in
@@ -157,6 +172,8 @@ let sqr_from_str str =
    player*)
 let find_king_sqr pos color = if color then pos.wking else pos.bking
 
+(**[verify_enemy_or_empty pos to_sqr] returns true if [to_sqr] is empty
+   or occupied by an enemy piece*)
 let verify_enemy_or_empty pos to_sqr =
   match get_piece_internal to_sqr pos with
   | None -> true
@@ -182,8 +199,9 @@ let is_horiz_attacker piece color =
       match Piece.get_piece k with
       | Rook -> get_color k = color
       | Queen -> get_color k = color
-      | _ -> false )
-
+      | _ -> false)
+(**[is_diag_attacker piece color] returns true if [piece] attacks 
+    diagonally per the rules of chess*)
 let is_diag_attacker piece color =
   match piece with
   | None -> false
@@ -191,7 +209,7 @@ let is_diag_attacker piece color =
       match Piece.get_piece k with
       | Bishop -> get_color k = color
       | Queen -> get_color k = color
-      | _ -> false )
+      | _ -> false)
 
 (**[perp_attack pos rank col color] returns true if there is a piece
    horizontally or vertically attacking the square at (rank, col) of
@@ -252,7 +270,7 @@ let is_pawn_attacker piece color =
   | Some k -> (
       match Piece.get_piece k with
       | Pawn -> get_color k = color
-      | _ -> false )
+      | _ -> false)
 
 (**[pawn_attack pos rank col color] returns true if there is a pawn
    attacking the square at (rank, col) of [color]*)
@@ -286,7 +304,7 @@ let is_knight_attacker piece color =
   | Some k -> (
       match Piece.get_piece k with
       | Knight -> get_color k = color
-      | _ -> false )
+      | _ -> false)
 
 (**[sqr_inbounds sqr] returns true if [sqr] is inbounds, else false*)
 let sqr_inbounds sqr =
@@ -299,8 +317,8 @@ let rec check_valid_sqrs pos psble_knight valid_sqr color =
   match (psble_knight, valid_sqr) with
   | [], [] -> false
   | kh :: kt, vh :: vt ->
-      ( if vh then is_knight_attacker (get_piece_internal kh pos) color
-      else false )
+      (if vh then is_knight_attacker (get_piece_internal kh pos) color
+      else false)
       || check_valid_sqrs pos kt vt color
   | _ -> false
 
@@ -511,7 +529,7 @@ let piece_causes_check pos square =
       | Bishop -> bishop_checks pos square
       | Rook -> rook_checks pos square
       | Queen -> queen_checks pos square
-      | King -> false )
+      | King -> false)
 
 let set_castling pos from_sqr =
   match get_piece_internal from_sqr pos with
@@ -528,7 +546,7 @@ let set_castling pos from_sqr =
             else if fst from_sqr = 7 then pos.castling.(3) <- false
             else pos.castling.(0) <- pos.castling.(0)
           else pos.castling.(0) <- pos.castling.(0)
-      | _ -> pos.castling.(0) <- pos.castling.(0) )
+      | _ -> pos.castling.(0) <- pos.castling.(0))
 
 (**[is_castling pos from_sqr to_sqr k] returns true if the move is a
    castling move, else false*)
@@ -630,7 +648,7 @@ let pawn_valid_helper pos from_sqr to_sqr new_p =
         else raise (IllegalMove "Illegal move for a pawn")
       in
       promote to_sqr next_pos new_p
-
+(**[is_in_check pos] returns true if the current player is in check*)
 let is_in_check pos = pos.checked
 
 let set_castles1 pos =
@@ -654,7 +672,7 @@ let possibly_castle pos from_sqr to_sqr =
     let curr_piece = pos.board.(frank).(fcol) in
     pos.board.(frank).(fcol) <- None;
     pos.board.(trank).(tcol) <- curr_piece;
-    add_move pos from_sqr to_sqr true )
+    add_move pos from_sqr to_sqr true)
   else
     let curr_piece = pos.board.(frank).(fcol) in
     if frank > trank then (
@@ -663,7 +681,7 @@ let possibly_castle pos from_sqr to_sqr =
       pos.board.(trank).(tcol) <- curr_piece;
       pos.board.(0).(fcol) <- None;
       pos.board.(3).(fcol) <- rook;
-      add_move pos from_sqr to_sqr true )
+      add_move pos from_sqr to_sqr true)
     else
       let rook = pos.board.(7).(fcol) in
       pos.board.(frank).(fcol) <- None;
@@ -711,7 +729,7 @@ let will_be_checked pos from_sqr to_sqr =
       | _ ->
           if attacked_square pos from_sqr (not (get_turn pos)) then
             mv_and_chck pos from_sqr to_sqr
-          else false )
+          else false)
 
 (**[check_and_move piece pos from_sqr to_sqr] moves the piece [piece]
    from [from_sqr] to [to_sqr] in [pos] if it is a legal move for
@@ -768,8 +786,8 @@ let move_helper piece pos from_sqr to_sqr new_p =
   else
     raise
       (IllegalMove
-         ( (if get_turn pos then "White" else "Black")
-         ^ " does not own this piece" ))
+         ((if get_turn pos then "White" else "Black")
+         ^ " does not own this piece"))
 
 (**[parse_promote_str str] returns the valid piece representation of
    [str]. Throws [IllegalPiece] if the string is an illegal piece *)
@@ -857,7 +875,7 @@ let fen_parse_other str pos =
               attacked_square pos
                 (if get_turn pos then pos.wking else pos.bking)
                 (not (get_turn pos));
-          } )
+          })
 
 (**[fen_to_board_helper str pos rank col ind] is a recursive helper for
    turning a FEN string into a board. It returns a new position with the
@@ -881,8 +899,8 @@ let rec fen_to_board_helper str pos rank col ind =
     | _ ->
         raise
           (IllegalFen
-             ( Char.escaped str.[ind]
-             ^ " is not a valid FEN number or symbol" ))
+             (Char.escaped str.[ind]
+             ^ " is not a valid FEN number or symbol"))
 
 and letter_fen_matching str pos rank col prevind nextind =
   let nk = ref (-1, -1) in

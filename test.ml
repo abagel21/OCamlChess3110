@@ -2,8 +2,27 @@ open OUnit2
 open Board
 open Piece
 
-let init_tests = []
+let make_col board colid = 
+  let row = ref "" in
+  for i = 1 to 8 do
+    row := !row ^ (Board.get_piece (colid ^ string_of_int i) board)
+  done; 
+  !row
 
+let init_pos_test name board colid expected = 
+  let col = make_col board colid in 
+  name >:: fun _ -> assert_equal (col) expected
+
+let board = init () 
+
+let init_tests = [
+  init_pos_test "First col is RPNANANANApr" board "a" "RPNANANANApr";
+  init_pos_test "Second col is NPNANANANApn" board "b" "NPNANANANApn";
+  init_pos_test "Third col is BPNANANANApb" board "c" "BPNANANANApb" ;
+  init_pos_test "Fourth col is QPNANANANApq" board "d" "QPNANANANApq";
+  init_pos_test "Fifth col is KPNANANANApk" board "e" "KPNANANANApk";
+  (*Cols 6-8 are repeats of 1-3*)
+]
 (**[move_throws board from_sqr to_sqr expected] creates an OUnit test
    asserting that movement of a piece at [from_sqr] to [to_sqr] throws
    [IllegalMove of error]*)
