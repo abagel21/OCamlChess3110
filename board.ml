@@ -111,8 +111,8 @@ let init () =
     turn = true;
     move_stack = [];
     checked = false;
-    wking = (0, 4);
-    bking = (7, 4);
+    wking = (4, 0);
+    bking = (4, 7);
   }
 
 (**[get_turn pos] returns true if it is white's move and false
@@ -200,6 +200,7 @@ let is_horiz_attacker piece color =
       | Rook -> get_color k = color
       | Queen -> get_color k = color
       | _ -> false)
+
 (**[is_diag_attacker piece color] returns true if [piece] attacks 
     diagonally per the rules of chess*)
 let is_diag_attacker piece color =
@@ -559,7 +560,7 @@ let is_castling pos from_sqr to_sqr k =
    the board array is already shifted*)
 let add_move pos (from_sqr : square) (to_sqr : square) k =
   let wking = if k && pos.turn then to_sqr else pos.wking in
-  let bking = if not pos.turn then to_sqr else pos.bking in
+  let bking = if k && not pos.turn then to_sqr else pos.bking in
   {
     pos with
     turn = not pos.turn;
