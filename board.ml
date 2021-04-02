@@ -450,7 +450,7 @@ let king_valid_helper pos from_sqr to_sqr =
 (**[pawn_checks pos square] returns true if the pawn on [square] checks
    the opposing player's king*)
 let pawn_checks pos square =
-  let ksquare = find_king_sqr pos (get_turn pos) in
+  let ksquare = find_king_sqr pos (not (get_turn pos)) in
   match (square, ksquare) with
   | (rank, col), (krank, kcol) ->
       krank = rank + 1 && (krank = col - 1 || krank = col + 1)
@@ -458,7 +458,7 @@ let pawn_checks pos square =
 (**[knight_checks pos square] returns true if the knight on [square]
    checks the opposing player's king*)
 let knight_checks pos square =
-  let ksquare = find_king_sqr pos (get_turn pos) in
+  let ksquare = find_king_sqr pos (not (get_turn pos)) in
   match (square, ksquare) with
   | (rank, col), (krank, kcol) ->
       if krank > rank then
@@ -478,7 +478,7 @@ let knight_checks pos square =
 (**[bishop_checks pos square] returns true if the bishop on [square]
    checks the opposing player's king*)
 let bishop_checks pos square =
-  let ksquare = find_king_sqr pos (get_turn pos) in
+  let ksquare = find_king_sqr pos (not (get_turn pos)) in
   match (square, ksquare) with
   | (rank, col), (krank, kcol) ->
       if abs (krank - rank) = abs (kcol - col) then
@@ -488,7 +488,7 @@ let bishop_checks pos square =
 (**[rook_checks pos square] returns true if the rook on [square] checks
    the opposing player's king*)
 let rook_checks pos square =
-  let ksquare = find_king_sqr pos (get_turn pos) in
+  let ksquare = find_king_sqr pos (not (get_turn pos)) in
   match (square, ksquare) with
   | (rank, col), (krank, kcol) ->
       if krank = rank || kcol = col then
@@ -498,7 +498,7 @@ let rook_checks pos square =
 (**[queen_checks pos square] returns true if the queen on [square]
    checks the opposing player's king*)
 let queen_checks pos square =
-  let ksquare = find_king_sqr pos (get_turn pos) in
+  let ksquare = find_king_sqr pos (not (get_turn pos)) in
   match (square, ksquare) with
   | (rank, col), (krank, kcol) ->
       if
