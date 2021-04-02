@@ -333,15 +333,6 @@ let attacked_square pos sqr color =
       let knight = knight_attack pos rank col color in
       perp || diag || pawn || knight
 
-let checked_move piece pos from_sqr to_sqr =
-  match Piece.get_piece piece with
-  | Pawn -> failwith "Unimplemented"
-  | Knight -> failwith "Unimplemented"
-  | Bishop -> failwith "Unimplemented"
-  | Rook -> failwith "Unimplemented"
-  | Queen -> failwith "Unimplemented"
-  | King -> failwith "Unimplemented"
-
 (**[rook_valid_helper pos from_sqr to_sqr] verifies that the move
    (from_sqr, to_sqr) is a legal move for a rook. *)
 let rook_valid_helper pos from_sqr to_sqr =
