@@ -969,6 +969,12 @@ let to_string pos =
   in
   to_string_helper pos 0 7 ^ "   a   b   c   d   e   f   g   h"
 
+  let rec move_list tuple_list board = 
+    match tuple_list with
+    | (a, b) :: k -> move_list k (move a b board)
+    | _ -> board
+
+
 let equals pos1 pos2 = failwith "unimplemented"
 
 let eval_move pos = failwith "unimplemented"
