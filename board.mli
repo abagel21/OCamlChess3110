@@ -17,9 +17,9 @@ exception IllegalPiece
 val init: unit -> t
 
 (**[get_piece str t] takes the [str] coordinate (rankcol) string square 
-representation and returns the piece on that square in [t] or throws 
+representation and returns the name of the piece on that square in [t] or throws 
 [IllegalSquare] if the square is not a valid chess square*)
-val get_piece : string -> t -> Piece.t option
+val get_piece : string -> t -> string
 
 (**[move str promote_str pos] takes in a coordinate-based move [str] and a \
   promotion string [promote_str] and returns the new state after the move 

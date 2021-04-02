@@ -135,7 +135,7 @@ let get_piece_helper str pos =
 let get_piece str pos =
   match get_piece_helper str pos with
   | Some k -> Piece.to_string k
-  | None -> "No piece"
+  | None -> "NA"
 
 let rank_rep = [ 'a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h' ]
 
