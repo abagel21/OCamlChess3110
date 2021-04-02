@@ -40,6 +40,7 @@ val undo_prev : t -> t
 (**[turn t] outputs a boolean variable representing the turn*)
 val get_turn : t -> bool
 
+val get_castling : t -> bool array
 (**[to_string t] outputs the pretty-printed string of the board state*)
 val to_string : t -> string
 

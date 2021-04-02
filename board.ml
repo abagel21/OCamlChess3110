@@ -136,7 +136,9 @@ let get_piece str pos =
   match get_piece_helper str pos with
   | Some k -> Piece.to_string k
   | None -> "NA"
-
+  
+(**[get_castling pos] returns the array of valid and invalid castles*)
+let get_castling pos = pos.castling 
 let rank_rep = [ 'a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h' ]
 
 (**[verify_move_string str] checks whether [str] is a valid coordinate
