@@ -590,12 +590,14 @@ let move_en_passant pos from_sqr to_sqr =
       pos.board.(trank + adj).(tcol) <- None;
       temp_pos
 
-(**[promote square pos piece] promotes the piece on [square] in [pos] to
-   [piece]*)
+(**[promote square pos piece] promotes the pawn on [square] in [pos] to
+   [piece]. Requires: the piece on [square] is a pawn, [square] is
+   inbounds*)
 let promote square pos piece =
   match square with
   | rank, col ->
-      pos.board.(rank).(col) <- piece;
+      if (get_turn pos && col = 7) || ((not (get_turn pos)) && col = 0)
+      then pos.board.(rank).(col) <- piece;
       pos
 
 (**[pawn_double_move_helper pos from_sqr to_sqr]*)
@@ -638,9 +640,7 @@ let pawn_valid_helper pos from_sqr to_sqr new_p =
       in
       promote to_sqr next_pos new_p
 
-(**[is_check pos] returns true if the player [get_turn pos] is in check,
-   else false*)
-let is_check pos = pos.checked
+let is_in_check pos = pos.checked
 
 let set_castles1 pos =
   if get_turn pos then pos.castling.(0) <- false
@@ -691,9 +691,9 @@ let rmv_piece pos sqr =
 let add_piece pos sqr piece =
   match sqr with rank, col -> pos.board.(rank).(col) <- piece
 
-(**[rmv_and_chck pos sqr] returns true if removing the piece at [sqr]
+(**[mv_and_chck pos sqr] returns true if removing the piece at [sqr]
    results in the king being in check, else false*)
-let rmv_and_chck pos from_sqr to_sqr =
+let mv_and_chck pos from_sqr to_sqr =
   let piece = get_piece_internal from_sqr pos in
   rmv_piece pos from_sqr;
   add_piece pos to_sqr piece;
@@ -719,22 +719,8 @@ let will_be_checked pos from_sqr to_sqr =
       | King -> attacked_square pos to_sqr (not (get_turn pos))
       | _ ->
           if attacked_square pos from_sqr (not (get_turn pos)) then
-            rmv_and_chck pos from_sqr to_sqr
+            mv_and_chck pos from_sqr to_sqr
           else false )
-
-(**[checked_move piece pos from_sqr to_sqr] moves the piece [piece] from
-   [from_sqr] to [to_sqr] in [pos] if it is a legal move for [piece] and
-   returns the new state if the move is legal, else returns [pos]
-   Precondition: [piece] is owned by the current player of [pos], the
-   current player of [pos] is in check *)
-let checked_move piece pos from_sqr to_sqr : t =
-  match Piece.get_piece piece with
-  | Pawn -> failwith ""
-  | Knight -> failwith ""
-  | Bishop -> failwith ""
-  | Rook -> failwith ""
-  | Queen -> failwith ""
-  | King -> failwith ""
 
 (**[check_and_move piece pos from_sqr to_sqr] moves the piece [piece]
    from [from_sqr] to [to_sqr] in [pos] if it is a legal move for
@@ -766,6 +752,16 @@ let check_and_move piece pos from_sqr to_sqr new_p =
         possibly_castle pos from_sqr to_sqr
       else pos
 
+(**[checked_move piece pos from_sqr to_sqr] moves the piece [piece] from
+   [from_sqr] to [to_sqr] in [pos] if it is a legal move for [piece] and
+   returns the new state if the move is legal, else returns [pos]
+   Precondition: [piece] is owned by the current player of [pos], the
+   current player of [pos] is in check *)
+let checked_move piece pos from_sqr to_sqr new_p : t =
+  if mv_and_chck pos from_sqr to_sqr then
+    check_and_move piece pos from_sqr to_sqr new_p
+  else raise (IllegalMove "You are in check!")
+
 (**[move_helper piece pos from_sqr to_sqr] moves the piece [piece] from
    [from_sqr] to [to_sqr] if it is a legal move in [pos] and returns the
    new state if the move is legal, else returns [pos]*)
@@ -773,7 +769,8 @@ let move_helper piece pos from_sqr to_sqr new_p =
   if get_color piece = get_turn pos then
     if not (verify_enemy_or_empty pos to_sqr) then
       raise (IllegalMove "Cannot capture ally")
-    else if is_check pos then checked_move piece pos from_sqr to_sqr
+    else if is_in_check pos then
+      checked_move piece pos from_sqr to_sqr new_p
     else if will_be_checked pos from_sqr to_sqr then
       raise (IllegalMove "Moving this piece would place you in check")
     else check_and_move piece pos from_sqr to_sqr new_p

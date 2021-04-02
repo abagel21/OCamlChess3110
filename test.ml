@@ -27,6 +27,161 @@ let queen_tests = []
 (*FENs for pawn tests*)
 let pawn_tests = []
 
+let check_true name fen move_str =
+  let pos = fen_to_board fen in
+  let next_pos = move move_str "" pos in
+  name >:: fun _ -> assert_equal true (is_in_check next_pos)
+
+(**bishop FENs and movestrings for is_check tests*)
+let b1 = "rnbqkbnr/pp2p1pp/8/2pP4/3P4/8/PPP1BPPP/RNBQK1NR w KQkq - 0 3"
+
+let b1move = "e2h5"
+
+let b1move2 = "e2b5"
+
+let b2 =
+  "rnbqkbnr/pp4pp/4p3/3P4/2p5/3P1P2/PPP1B1PP/RNBQ1RK1 b Qkq - 0 3"
+
+let b2move = "f8c5"
+
+let b3 =
+  "rnbqkbnr/p5pp/1p2p3/2p5/3P4/3P2P1/PPP1BP1P/RNBQ1R1K b Qkq - 0 3"
+
+let b3move = "c8b7"
+
+let b4 =
+  "rn1qkbnr/p2b2pp/1p6/2pK4/3P4/3P2P1/PPP1BP1P/RNBQ1R2 b kq - 0 3"
+
+let b4move = "d7c6"
+
+let b4move2 = "d7e6"
+
+let b5 = "rn2kbnr/p5pp/1p6/2pK4/3P4/3b2P1/PPP1BP1P/RNBQ1R2 b kq - 0 3"
+
+let b5move = "d3e4"
+
+let b5move2 = "d3c4"
+
+let bishop_check_tests =
+  [
+    check_true "bottom right white bishop checks successfully" b1 b1move;
+    check_true "bottom left white bishop checks successfully" b1 b1move2;
+    check_true "top left black bishop checks successfully" b2 b2move;
+    check_true "top left black bishop light squares checks successfully"
+      b3 b3move;
+    check_true
+      "top left black bishop one square away checks successfully" b4
+      b4move;
+    check_true
+      "top right black bishop one square away checks successfully" b4
+      b4move2;
+    check_true
+      "bottom right black bishop one square away checks successfully" b5
+      b5move;
+    check_true
+      "bottom left black bishop one square away checks successfully" b5
+      b5move2;
+  ]
+
+(*knight FENs and movestrings for is_check tests*)
+let right = "7K/8/8/2ppp3/2pkp2N/2ppp3/8/8 w - - 0 1"
+
+let rmv1 = "h4f5"
+
+let rmv2 = "h4f3"
+
+let left = "7k/8/8/3PPP2/n2PKP2/3PPP2/8/8 b - - 0 1"
+
+let lmv1 = "a4c5"
+
+let lmv2 = "a4c3"
+
+let top = "4n2k/8/8/3PPP2/3PKP2/3PPP2/8/8 b - - 0 1"
+
+let tmv1 = "e8f6"
+
+let tmv2 = "e8d6"
+
+let bottom = "7K/8/2ppp3/2pkp3/2ppp3/8/8/3N4 w - - 0 1"
+
+let bmv1 = "d1e3"
+
+let bmv2 = "d1c3"
+
+let knight_check_tests =
+  [
+    check_true "right top middle white knight checks black king" right
+      rmv1;
+    check_true "right bottom middle white knight checks black king"
+      right rmv2;
+    check_true "left top middle black knight checks white king" left
+      lmv1;
+    check_true "left bottom middle black knight checks white king" left
+      lmv2;
+    check_true "top right black knight checks white king" top tmv1;
+    check_true "top left black knight checks white king" top tmv2;
+    check_true "bottom right white knight checks black king" bottom bmv1;
+    check_true "bottom left white knight checks black king" bottom bmv2;
+  ]
+
+(*pawn FENs and movestrings for is_check tests*)
+let w1 = "rn1q1bnr/pp2pppp/2p5/5b2/1k1PN3/8/PPP2PPP/R1BQKBNR w KQ - 1 5"
+
+let w1move = "c2c3"
+
+let w2move = "a2a3"
+
+let b1 = "rn1kqbnr/pp1ppppp/2p5/4Kb2/3PN3/8/PPP2PPP/R1BQ1BNR w kq - 1 5"
+
+let b1move = "d7d6"
+
+let b2move = "f7f6"
+
+let dw =
+  "rn1k1bnr/pp1ppppp/2p5/1k2qb2/3PN3/8/PPP2PPP/R1BQKNNR w KQ - 1 5"
+
+let dwmove = "c2c4"
+
+let pawn_check_tests =
+  [
+    check_true "right white pawn check works" w1 w1move;
+    check_true "left white pawn check works" w1 w1move;
+    check_true "right black pawn check works" w1 w1move;
+    check_true "left black pawn check works" w1 w1move;
+    check_true "double move white pawn check works" dw dwmove;
+  ]
+
+(*rook FENs and movestrings for is_check tests*)
+let r1 = "5k2/3R4/6p1/7R/7p/7r/1r4P1/4K3 b - - 0 1"
+
+let rmove1 = "b2b1"
+
+let rmove2 = "h3h1"
+
+let rmove3 = "b2e2"
+
+let r2 = "5k2/3R4/6p1/7R/7p/7r/1r4P1/4K3 w - - 0 1"
+
+let r2move1 = "h5h8"
+
+let r2move2 = "d7d8"
+
+let r2move3 = "d7f7"
+
+let rook_check_tests =
+  [
+    check_true "left black rook checks correctly" r1 rmove1;
+    check_true "left black rook checks correctly" r1 rmove2;
+    check_true "top black rook checks correctly" r1 rmove3;
+    check_true "right white rook checks correctly" r2 r2move1;
+    check_true "left white rook checks correctly" r2 r2move2;
+    check_true "bottom white rook checks correctly" r2 r2move3;
+  ]
+
+let check_tests =
+  List.flatten
+    [ bishop_check_tests; knight_check_tests; rook_check_tests ]
+
 (**[move_no_throw asserts that a move completes successfully without
    throwing an error]*)
 let move_no_throw name board move_str =
@@ -118,7 +273,7 @@ let move_tests = List.flatten [ pin_tests ]
 let undo_move_tests = []
 
 let board_tests =
-  List.flatten [ init_tests; move_tests; undo_move_tests ]
+  List.flatten [ init_tests; move_tests; undo_move_tests; check_tests ]
 
 let suite =
   "test suite for chess engine & game" >::: List.flatten [ board_tests ]
