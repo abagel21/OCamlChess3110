@@ -31,9 +31,11 @@ let rec game_loop board () =
          let mod_board = play_move str board in
          ANSITerminal.erase Screen;
          print_endline (Board.to_string board ^ "\n");
+         if (is_in_check mod_board) then ANSITerminal.print_string [ ANSITerminal.red ]((turn mod_board) ^ " is in check")
+         else ();   
          game_loop mod_board ()
        with IllegalMove k ->
-         ANSITerminal.print_string [ ANSITerminal.red ] k);
+         ANSITerminal.print_string [ ANSITerminal.red ] k );
       print_endline "";
       game_loop board ()
 
