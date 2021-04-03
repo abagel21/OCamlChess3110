@@ -28,11 +28,14 @@ val get_piece : string -> t -> string
 
 (** [move str promote_str pos] takes in a coordinate-based move [str]
     and a promotion string [promote_str] and returns the new state after
-    the move if it is legal on board [pos], throws IllegalMove if the
-    move is illegal. Raies: [IllegalSquare str] if one of the squares is
-    out of bounds. Requires: str is a valid coordinate-based move of the
-    form '[a-g][1-8][a-g][1-8]' and [promote_str] is either the empty
-    string or one of "Q", "K", "R", "B", or "N". *)
+    the move if it is legal on board [pos].
+
+    Raises: [IllegalMove] if the move is illegal, or [IllegalSquare str]
+    if one of the squares is out of bounds.
+
+    Requires: str is a valid coordinate-based move of the form
+    '[a-g][1-8][a-g][1-8]' and [promote_str] is either the empty string
+    or one of "Q", "K", "R", "B", or "N". *)
 val move : string -> string -> t -> t
 
 (** [eval_move] returns whether the string move is legal in [t]. *)
