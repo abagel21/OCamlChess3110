@@ -302,10 +302,9 @@ let is_knight_attacker piece color =
       | Knight -> get_color k = color
       | _ -> false)
 
-(**[sqr_inbounds sqr] returns true if [sqr] is inbounds, else false*)
-let sqr_inbounds sqr =
-  match sqr with
-  | rank, col -> rank >= 0 && rank <= 7 && col >= 0 && col <= 7
+(** [sqr_inbounds sqr] returns whether [sqr] is inbounds. *)
+let sqr_inbounds (rank, col) =
+  rank >= 0 && rank <= 7 && col >= 0 && col <= 7
 
 (**[check_valid_sqrs pos psble_knight valid_sqr color] returns true if
    any square in [psble_knight] is [color]*)
@@ -630,7 +629,7 @@ let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
     move_stack =
       List.rev
         ((convert_sqrs_to_string from_sqr to_sqr, promote_str)
-        :: List.rev pos.move_stack);
+         :: List.rev pos.move_stack);
   }
 
 (**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr]
