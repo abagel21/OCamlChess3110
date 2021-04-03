@@ -424,7 +424,7 @@ let bishop_valid_helper pos from_sqr to_sqr =
             | None -> a := !a && true
             | Some k -> a := !a && false
           done;
-          !a
+        !a
 
 (**[knight_valid_helper pos from_sqr to_sqr] ensures that the move
    (from_sqr, to_sqr) is legal for a knight and if so, executes the move
@@ -440,11 +440,8 @@ let knight_valid_helper pos from_sqr to_sqr =
 (**[queen_check_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a queen*)
 let queen_valid_helper pos from_sqr to_sqr =
-  try rook_valid_helper pos from_sqr to_sqr
-  with IllegalMove "Illegal move for a rook" -> (
-    try bishop_valid_helper pos from_sqr to_sqr
-    with IllegalMove "Illegal move for a bishop" ->
-      raise (IllegalMove "Illegal move for a qu"))
+  rook_valid_helper pos from_sqr to_sqr
+  || bishop_valid_helper pos from_sqr to_sqr
 
 let check_castle pos frank trank =
   if get_turn pos then
