@@ -719,7 +719,7 @@ let set_castles2 pos =
 
 (**[possibly_castle pos from_sqr to_sqr] moves the king normally or
    castles depending on the call.*)
-let possibly_castle pos from_sqr to_sqr promote_str =
+let possibly_castle pos from_sqr to_sqr  =
   set_castles1 pos;
   set_castles2 pos;
   let frank = fst from_sqr in
@@ -730,7 +730,7 @@ let possibly_castle pos from_sqr to_sqr promote_str =
     let curr_piece = pos.board.(frank).(fcol) in
     pos.board.(frank).(fcol) <- None;
     pos.board.(trank).(tcol) <- curr_piece;
-    add_move pos from_sqr to_sqr true promote_str)
+    add_move pos from_sqr to_sqr true "")
   else
     let curr_piece = pos.board.(frank).(fcol) in
     if frank > trank then (
@@ -739,14 +739,14 @@ let possibly_castle pos from_sqr to_sqr promote_str =
       pos.board.(trank).(tcol) <- curr_piece;
       pos.board.(0).(fcol) <- None;
       pos.board.(3).(fcol) <- rook;
-      add_move pos from_sqr to_sqr true promote_str)
+      add_move pos from_sqr to_sqr true "")
     else
       let rook = pos.board.(7).(fcol) in
       pos.board.(frank).(fcol) <- None;
       pos.board.(trank).(tcol) <- curr_piece;
       pos.board.(7).(fcol) <- None;
       pos.board.(5).(tcol) <- rook;
-      add_move pos from_sqr to_sqr true promote_str
+      add_move pos from_sqr to_sqr true ""
 
 (**[will_be_checked pos from_sqr to_sqr] checks whether the player's
    move would put themself in check*)
@@ -776,24 +776,24 @@ let check_and_move piece pos from_sqr to_sqr new_p promote_str =
       promote to_sqr next_pos new_p
   | Knight ->
       if knight_valid_helper pos from_sqr to_sqr then
-        move_normal_piece pos from_sqr to_sqr promote_str
+        move_normal_piece pos from_sqr to_sqr ""
       else raise (IllegalMove "Illegal move for a knight")
   | Bishop ->
       if bishop_valid_helper pos from_sqr to_sqr then
-        move_normal_piece pos from_sqr to_sqr promote_str
+        move_normal_piece pos from_sqr to_sqr ""
       else raise (IllegalMove "Illegal move for a bishop")
   | Rook ->
       if rook_valid_helper pos from_sqr to_sqr then
-        move_normal_piece pos from_sqr to_sqr promote_str
+        move_normal_piece pos from_sqr to_sqr ""
       else raise (IllegalMove "Illegal move for a rook")
   | Queen ->
       if queen_valid_helper pos from_sqr to_sqr then
-        move_normal_piece pos from_sqr to_sqr promote_str
+        move_normal_piece pos from_sqr to_sqr ""
       else raise (IllegalMove "Illegal move for a queen")
   | King ->
       if king_valid_helper pos from_sqr to_sqr then
         if not (will_be_checked pos from_sqr to_sqr) then
-          possibly_castle pos from_sqr to_sqr promote_str
+          possibly_castle pos from_sqr to_sqr 
         else raise (IllegalMove "Cannot move yourself into check")
       else raise (IllegalMove "Illegal move for a king")
 
