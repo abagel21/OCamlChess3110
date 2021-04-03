@@ -138,7 +138,7 @@ let rank_rep = [ 'a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h' ]
 
 (**[verify_move_string str] checks whether [str] is a valid coordinate
    representation chess move. 'e2e4' is valid, 'p1p3' is not. Ranks must
-   be in {a-h} and columns must be in {1-8}*)
+   be in "a".."h" and columns must be in 1..8. *)
 let verify_move_string (str : string) =
   let length = String.length str = 4 in
   let from_rank = str.[0] in
@@ -990,9 +990,9 @@ and letter_fen_matching str pos rank col prevind nextind =
   in
   fen_to_board_helper str new_pos (rank + 1) col nextind
 
-let fen_to_board str =
+let fen_to_board fen =
   let pos = init_empty () in
-  fen_to_board_helper str pos 0 7 0
+  fen_to_board_helper fen pos 0 7 0
 
 let to_string pos =
   let rec to_string_helper pos rank col =
@@ -1013,8 +1013,8 @@ let to_string pos =
   in
   to_string_helper pos 0 7 ^ "   a   b   c   d   e   f   g   h"
 
-let rec move_list tuple_list board =
-  match tuple_list with
+let rec move_list moves board =
+  match moves with
   | (a, b) :: k -> move_list k (move a b board)
   | _ -> board
 
