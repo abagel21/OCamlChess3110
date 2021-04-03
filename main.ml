@@ -21,15 +21,18 @@ let rec game_loop board () =
     "Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate the \
      square to move from and to respectively or enter 'QUIT' to exit";
   match read_line () with
-  | "QUIT" -> ()
+  | "QUIT" ->
+      ANSITerminal.print_string [ ANSITerminal.cyan ]
+        "Thanks for playing\n";
+      exit 0
   | str ->
-      ( try
-          let mod_board = play_move str board in
-          ANSITerminal.erase Screen;
-          print_endline (Board.to_string board ^ "\n");
-          game_loop mod_board ()
-        with IllegalMove k ->
-          ANSITerminal.print_string [ ANSITerminal.red ] k );
+      (try
+         let mod_board = play_move str board in
+         ANSITerminal.erase Screen;
+         print_endline (Board.to_string board ^ "\n");
+         game_loop mod_board ()
+       with IllegalMove k ->
+         ANSITerminal.print_string [ ANSITerminal.red ] k);
       print_endline "";
       game_loop board ()
 
@@ -43,12 +46,12 @@ let rec start () =
       let board = Board.init () in
       game_loop board ()
   | str ->
-      ( try
-          let board = fen_to_board str in
-          game_loop board ()
-        with IllegalFen k ->
-          ANSITerminal.print_string [ ANSITerminal.red ]
-            ("This is not a proper FEN: " ^ k) );
+      (try
+         let board = fen_to_board str in
+         game_loop board ()
+       with IllegalFen k ->
+         ANSITerminal.print_string [ ANSITerminal.red ]
+           ("This is not a proper FEN: " ^ k));
       print_endline "";
       start ()
 
