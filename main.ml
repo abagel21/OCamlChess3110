@@ -4,7 +4,8 @@ open Board
 let turn board =
   match Board.get_turn board with true -> "White" | false -> "Black"
 
-let print board = print_endline(Board.to_string board ^ "\n")
+let print board = print_endline (Board.to_string board ^ "\n")
+
 (** [play_move str board] parses a standard chess move in UCI long
     algebraic notation from [str] and moves the piece on [board] *)
 let play_move str board =
@@ -31,17 +32,17 @@ let rec game_loop board () =
       print old_board;
       game_loop old_board ()
   | str ->
-      (try
-         let mod_board = play_move str board in
-         ANSITerminal.erase Screen;
-         print mod_board;
-         if is_in_check mod_board then
-           ANSITerminal.print_string [ ANSITerminal.red ]
-             (turn mod_board ^ " is in check\n")
-         else ();
-         game_loop mod_board ()
-       with IllegalMove k ->
-         ANSITerminal.print_string [ ANSITerminal.red ] k);
+      ( try
+          let mod_board = play_move str board in
+          ANSITerminal.erase Screen;
+          print mod_board;
+          if is_in_check mod_board then
+            ANSITerminal.print_string [ ANSITerminal.red ]
+              (turn mod_board ^ " is in check\n")
+          else ();
+          game_loop mod_board ()
+        with IllegalMove k ->
+          ANSITerminal.print_string [ ANSITerminal.red ] k );
       print_endline "";
       game_loop board ()
 
@@ -55,20 +56,25 @@ let rec start () =
       let board = Board.init () in
       print board;
       game_loop board ()
-  | str -> begin
-      try let board = fen_to_board str in game_loop board ()
-      with 
-      | IllegalFen k ->
-        ANSITerminal.print_string [ ANSITerminal.red ]
-          ("This is not a proper FEN: " ^ k)
-       | Invalid_argument l -> 
-        ANSITerminal.print_string [ ANSITerminal.red ]
-          ("This is not a proper command.")
+  | str ->
+      begin
+        try
+          let board = fen_to_board str in
+          print board;
+          game_loop board ()
+        with
+        | IllegalFen k ->
+            ANSITerminal.print_string [ ANSITerminal.red ]
+              ("This is not a proper FEN: " ^ k)
+        | Invalid_argument l ->
+            ANSITerminal.print_string [ ANSITerminal.red ]
+              "This is not a proper command."
       end;
       print_endline "";
       start ()
 
-(** [main ()] delivers initial instructions and triggers the board setup. *)
+(** [main ()] delivers initial instructions and triggers the board
+    setup. *)
 let main () =
   ANSITerminal.print_string
     [ ANSITerminal.magenta ]
