@@ -354,14 +354,26 @@ let rook_valid_helper pos from_sqr to_sqr =
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
       if frank = trank || fcol = tcol then
-        if frank = trank then
+        if frank = trank && fcol < tcol then
           for i = fcol + 1 to tcol - 1 do
             match get_piece_internal (frank, i) pos with
             | None -> a := !a && true
             | Some k -> a := !a && false
           done
-        else if fcol = tcol then
+        else if frank = trank && tcol < fcol then
+          for i = tcol + 1 to fcol - 1 do
+            match get_piece_internal (frank, i) pos with
+            | None -> a := !a && true
+            | Some k -> a := !a && false
+          done
+        else if fcol = tcol  && frank < trank then
           for i = frank + 1 to trank - 1 do
+            match get_piece_internal (i, fcol) pos with
+            | None -> a := !a && true
+            | Some k -> a := !a && false
+          done
+        else if fcol = tcol  && frank > trank then
+          for i = trank + 1 to frank - 1 do
             match get_piece_internal (i, fcol) pos with
             | None -> a := !a && true
             | Some k -> a := !a && false
