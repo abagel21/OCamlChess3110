@@ -15,6 +15,7 @@ exception EmptyMoveStack
 exception IllegalSquare of string
 
 exception IllegalPiece
+exception IllegalFen of string
 
 (** [init ()] returns the representation of initial position of a chess
     game. *)

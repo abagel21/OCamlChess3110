@@ -659,15 +659,10 @@ let move_en_passant pos from_sqr to_sqr promote_str =
    [piece]. Requires: the piece on [square] is a pawn, [square] is
    inbounds*)
 let promote square pos piece =
-  let pcstring =
-    match piece with None -> "None" | Some k -> Piece.to_string k
-  in
   match square with
   | rank, col ->
-      if (get_turn pos && col = 7) || ((not (get_turn pos)) && col = 0)
-      then print_endline "PROMOTING TO";
-      print_endline pcstring;
-      pos.board.(rank).(col) <- piece;
+      if (get_turn pos && col = 0) || ((not (get_turn pos)) && col = 7)
+      then pos.board.(rank).(col) <- piece;
       pos
 
 (**[pawn_double_move_helper pos from_sqr to_sqr]*)
