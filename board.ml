@@ -1029,6 +1029,15 @@ let undo_prev pos =
   | h :: k -> move_list (List.rev k) (init ())
   | _ -> init ()
 
+let extract pos turn =
+  let a = ref [] in
+  for i = 0 to turn - 2 do
+    a := List.nth pos.move_stack i :: !a
+  done;
+  List.rev !a
+
+let revert_prev pos turn = move_list (extract pos turn) (init ())
+
 let equals pos1 pos2 = failwith "unimplemented"
 
 let eval_move pos = failwith "unimplemented"

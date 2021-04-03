@@ -76,3 +76,7 @@ val move_list : (string * string) list -> t -> t
 (** [is_in_check pos] returns whether the current player is in check in
     board state [pos]. *)
 val is_in_check : t -> bool
+
+(** [revert_prev board x] returns the game at turn x Requires: x is less
+    than than or equal to the current turn *)
+val revert_prev : t -> int -> t

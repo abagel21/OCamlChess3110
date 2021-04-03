@@ -32,18 +32,27 @@ let rec game_loop board () =
       let old_board = undo_prev board in
       print_board old_board;
       game_loop old_board ()
+  | "revert" -> (
+      print_endline "Enter the turn to return to";
+      let temp = read_line () in
+      try
+        let turn = int_of_string temp in
+        let old_board = revert_prev board turn in
+        print_board old_board;
+        game_loop old_board ()
+      with exn -> game_loop board ())
   | str ->
-      ( try
-          let mod_board = play_move str board in
-          ANSITerminal.erase Screen;
-          print_board mod_board;
-          if is_in_check mod_board then
-            ANSITerminal.print_string [ ANSITerminal.red ]
-              (turn mod_board ^ " is in check\n")
-          else ();
-          game_loop mod_board ()
-        with IllegalMove k ->
-          ANSITerminal.print_string [ ANSITerminal.red ] k );
+      (try
+         let mod_board = play_move str board in
+         ANSITerminal.erase Screen;
+         print_board mod_board;
+         if is_in_check mod_board then
+           ANSITerminal.print_string [ ANSITerminal.red ]
+             (turn mod_board ^ " is in check\n")
+         else ();
+         game_loop mod_board ()
+       with IllegalMove k ->
+         ANSITerminal.print_string [ ANSITerminal.red ] k);
       print_endline "";
       game_loop board ()
 
