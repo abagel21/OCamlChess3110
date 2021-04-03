@@ -190,7 +190,7 @@ let is_horiz_attacker piece color =
       match Piece.get_piece k with
       | Rook -> get_color k = color
       | Queen -> get_color k = color
-      | _ -> false)
+      | _ -> false )
 
 (**[is_diag_attacker piece color] returns true if [piece] attacks
    diagonally per the rules of chess*)
@@ -201,7 +201,7 @@ let is_diag_attacker piece color =
       match Piece.get_piece k with
       | Bishop -> get_color k = color
       | Queen -> get_color k = color
-      | _ -> false)
+      | _ -> false )
 
 (**[perp_attack pos rank col color] returns true if there is a piece
    horizontally or vertically attacking the square at (rank, col) of
@@ -262,7 +262,7 @@ let is_pawn_attacker piece color =
   | Some k -> (
       match Piece.get_piece k with
       | Pawn -> get_color k = color
-      | _ -> false)
+      | _ -> false )
 
 (**[pawn_attack pos rank col color] returns true if there is a pawn
    attacking the square at (rank, col) of [color]*)
@@ -296,7 +296,7 @@ let is_knight_attacker piece color =
   | Some k -> (
       match Piece.get_piece k with
       | Knight -> get_color k = color
-      | _ -> false)
+      | _ -> false )
 
 (** [sqr_inbounds sqr] returns whether [sqr] is inbounds. *)
 let sqr_inbounds (rank, col) =
@@ -308,8 +308,8 @@ let rec check_valid_sqrs pos psble_knight valid_sqr color =
   match (psble_knight, valid_sqr) with
   | [], [] -> false
   | kh :: kt, vh :: vt ->
-      (if vh then is_knight_attacker (get_piece_internal kh pos) color
-      else false)
+      ( if vh then is_knight_attacker (get_piece_internal kh pos) color
+      else false )
       || check_valid_sqrs pos kt vt color
   | _ -> false
 
@@ -474,7 +474,8 @@ let pawn_checks pos square =
   let ksquare = find_king_sqr pos (not (get_turn pos)) in
   match (square, ksquare) with
   | (rank, col), (krank, kcol) ->
-      krank = rank + 1 && (kcol = col - 1 || krank = col + 1)
+      (krank = rank + 1 || krank = rank - 1)
+      && if get_turn pos then kcol = col + 1 else kcol = col - 1
 
 (**[knight_checks pos square] returns true if the knight on [square]
    checks the opposing player's king*)
@@ -519,7 +520,14 @@ let rook_checks pos square =
 (**[queen_checks pos square] returns true if the queen on [square]
    checks the opposing player's king*)
 let queen_checks pos square =
-  rook_checks pos square|| bishop_checks pos square
+  let ksquare = find_king_sqr pos (not (get_turn pos)) in
+  match (square, ksquare) with
+  | (rank, col), (krank, kcol) ->
+      if
+        krank = rank || kcol = col
+        || abs (krank - rank) = abs (kcol - col)
+      then queen_valid_helper pos square ksquare
+      else false
 
 (**[piece_causes_check pos square] checks if the piece on [square]
    causes check for the opposing king*)
@@ -534,7 +542,7 @@ let piece_causes_check pos square =
       | Bishop -> bishop_checks pos square
       | Rook -> rook_checks pos square
       | Queen -> queen_checks pos square
-      | King -> false)
+      | King -> false )
 
 let set_castling pos from_sqr =
   match get_piece_internal from_sqr pos with
@@ -551,7 +559,7 @@ let set_castling pos from_sqr =
             else if fst from_sqr = 7 then pos.castling.(3) <- false
             else pos.castling.(0) <- pos.castling.(0)
           else pos.castling.(0) <- pos.castling.(0)
-      | _ -> pos.castling.(0) <- pos.castling.(0))
+      | _ -> pos.castling.(0) <- pos.castling.(0) )
 
 (**[is_castling pos from_sqr to_sqr k] returns true if the move is a
    castling move, else false*)
@@ -612,15 +620,14 @@ let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
     pos with
     turn = not pos.turn;
     checked =
-      (piece_causes_check pos to_sqr)
-      || causes_discovery { pos with turn = turn_check } from_sqr to_sqr
-      ;
+      piece_causes_check pos to_sqr
+      || causes_discovery { pos with turn = turn_check } from_sqr to_sqr;
     bking;
     wking;
     move_stack =
       List.rev
-        ((convert_sqrs_to_string from_sqr to_sqr, promote_str)
-        :: List.rev pos.move_stack);
+        ( (convert_sqrs_to_string from_sqr to_sqr, promote_str)
+        :: List.rev pos.move_stack );
   }
 
 (**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr]
@@ -721,7 +728,7 @@ let possibly_castle pos from_sqr to_sqr promote_str =
     let curr_piece = pos.board.(frank).(fcol) in
     pos.board.(frank).(fcol) <- None;
     pos.board.(trank).(tcol) <- curr_piece;
-    add_move pos from_sqr to_sqr true promote_str)
+    add_move pos from_sqr to_sqr true promote_str )
   else
     let curr_piece = pos.board.(frank).(fcol) in
     if frank > trank then (
@@ -730,7 +737,7 @@ let possibly_castle pos from_sqr to_sqr promote_str =
       pos.board.(trank).(tcol) <- curr_piece;
       pos.board.(0).(fcol) <- None;
       pos.board.(3).(fcol) <- rook;
-      add_move pos from_sqr to_sqr true promote_str)
+      add_move pos from_sqr to_sqr true promote_str )
     else
       let rook = pos.board.(7).(fcol) in
       pos.board.(frank).(fcol) <- None;
@@ -750,7 +757,7 @@ let will_be_checked pos from_sqr to_sqr =
       | _ ->
           if attacked_square pos from_sqr (not (get_turn pos)) then
             mv_and_chck pos from_sqr to_sqr (get_turn pos)
-          else false)
+          else false )
 
 (**[check_and_move piece pos from_sqr to_sqr] moves the piece [piece]
    from [from_sqr] to [to_sqr] in [pos] if it is a legal move for
@@ -820,8 +827,8 @@ let move_helper piece pos from_sqr to_sqr new_p promote_str =
   else
     raise
       (IllegalMove
-         ((if get_turn pos then "White" else "Black")
-         ^ " does not own this piece"))
+         ( (if get_turn pos then "White" else "Black")
+         ^ " does not own this piece" ))
 
 (**[parse_promote_str str] returns the valid piece representation of
    [str]. Throws [IllegalPiece] if the string is an illegal piece *)
@@ -907,7 +914,7 @@ let fen_parse_other str pos =
               attacked_square pos
                 (if get_turn pos then pos.wking else pos.bking)
                 (not (get_turn pos));
-          })
+          } )
 
 (**[fen_to_board_helper str pos rank col ind] is a recursive helper for
    turning a FEN string into a board. It returns a new position with the
@@ -931,8 +938,8 @@ let rec fen_to_board_helper str pos rank col ind =
     | _ ->
         raise
           (IllegalFen
-             (Char.escaped str.[ind]
-             ^ " is not a valid FEN number or symbol"))
+             ( Char.escaped str.[ind]
+             ^ " is not a valid FEN number or symbol" ))
 
 and letter_fen_matching str pos rank col prevind nextind =
   let nk = ref (-1, -1) in

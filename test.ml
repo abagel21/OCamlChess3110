@@ -210,15 +210,16 @@ let queen_tests =
       "d3" "q";
     move_no_throw "black queen captures white pawn works" qf1 qf1move5
       "g4" "q";
-    move_throws "black queen moves past black piece" qf1 qf1move6 "";
+    move_throws "black queen moves past black piece" qf1 qf1move6
+      "Illegal move for a queen";
     move_throws "black queen tries to capture black pawn" qf1 qf1move7
       "Cannot capture ally";
     move_throws "black queen tries to move past black piece" qf1
-      qf1move8 "";
+      qf1move8 "Illegal move for a queen";
     move_throws "black queen tries to capture black queen" qf1 qf1move9
       "Cannot capture ally";
     move_throws "black queen tries to move past black queen" qf1
-      qf1move10 "";
+      qf1move10 "Illegal move for a queen";
   ]
 
 let promote_tester name board move_str promote_str =
@@ -351,6 +352,14 @@ let check_true name fen move_str =
   let next_pos = move move_str "Q" pos in
   name >:: fun _ -> assert_equal true (is_in_check next_pos)
 
+(**[check_false name fen move_str] creates an OUnit test asserting that
+   performing [move_str] on the position created from [fen] does not
+   result in the following player being in check *)
+let check_false name fen move_str =
+  let pos = fen_to_board fen in
+  let next_pos = move move_str "" pos in
+  name >:: fun _ -> assert_equal false (is_in_check next_pos)
+
 (**bishop FENs and movestrings for is_check tests*)
 let b1 = "rnbqkbnr/pp2p1pp/8/2pP4/3P4/8/PPP1BPPP/RNBQK1NR w KQkq - 0 3"
 
@@ -461,6 +470,8 @@ let dw =
 
 let dwmove = "c2c4"
 
+let w2 = "rn1q1bnr/pp2pppp/2p5/5b2/PkPPN3/8/1P3PPP/R1BQKBNR w KQ - 1 5"
+
 let pawn_check_tests =
   [
     check_true "right white pawn check works" w1 w1move;
@@ -468,6 +479,14 @@ let pawn_check_tests =
     check_true "right black pawn check works" w1 w1move;
     check_true "left black pawn check works" w1 w1move;
     check_true "double move white pawn check works" dw dwmove;
+    check_false
+      "pawn next to and diagonal ahead right of black king doesn't \
+       cause check"
+      w2 "c4c5";
+    check_false
+      "pawn next to and diagonal ahead left of black king doesn't \
+       cause check"
+      w2 "a4a5";
   ]
 
 (*rook FENs and movestrings for is_check tests*)
@@ -532,7 +551,12 @@ let discovery_check_tests =
 
 let check_tests =
   List.flatten
-    [ bishop_check_tests; knight_check_tests; rook_check_tests ]
+    [
+      bishop_check_tests;
+      knight_check_tests;
+      rook_check_tests;
+      pawn_check_tests;
+    ]
 
 (*Positions for bishop pins*)
 let bishop_pin1 = "8/8/6b1/8/8/3N4/8/1K6 w - - 0 1"
@@ -613,7 +637,14 @@ let pin_tests =
 
 let move_tests =
   List.flatten
-    [ knight_tests; bishop_tests; rook_tests; pawn_tests; pin_tests ]
+    [
+      knight_tests;
+      bishop_tests;
+      rook_tests;
+      pawn_tests;
+      queen_tests;
+      pin_tests;
+    ]
 
 let undo_move_tests = []
 
