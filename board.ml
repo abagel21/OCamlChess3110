@@ -474,7 +474,7 @@ let pawn_checks pos square =
   let ksquare = find_king_sqr pos (not (get_turn pos)) in
   match (square, ksquare) with
   | (rank, col), (krank, kcol) ->
-      krank = rank + 1 && (krank = col - 1 || krank = col + 1)
+      krank = rank + 1 && (kcol = col - 1 || krank = col + 1)
 
 (**[knight_checks pos square] returns true if the knight on [square]
    checks the opposing player's king*)
@@ -619,14 +619,15 @@ let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
     pos with
     turn = not pos.turn;
     checked =
-      piece_causes_check pos to_sqr
-      || causes_discovery { pos with turn = turn_check } from_sqr to_sqr;
+      (piece_causes_check pos to_sqr)
+      || causes_discovery { pos with turn = turn_check } from_sqr to_sqr
+      ;
     bking;
     wking;
     move_stack =
       List.rev
         ((convert_sqrs_to_string from_sqr to_sqr, promote_str)
-         :: List.rev pos.move_stack);
+        :: List.rev pos.move_stack);
   }
 
 (**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr]
