@@ -597,7 +597,7 @@ let mv_and_chck pos from_sqr to_sqr color =
     if
       attacked_square pos
         (if color then pos.wking else pos.bking)
-        (not (get_turn pos))
+        (not color)
     then true
     else false
   in
@@ -608,19 +608,20 @@ let mv_and_chck pos from_sqr to_sqr color =
 (**[causes_discovery pos from_sqr to_sqr] returns true if moving the
    piece on [from_sqr] to [to_sqr] causes check for the opposing king *)
 let causes_discovery pos from_sqr to_sqr =
-  mv_and_chck pos from_sqr to_sqr (not (get_turn pos))
+  mv_and_chck pos from_sqr to_sqr (get_turn pos)
 
 (**[add_move pos from_sqr to_sqr k] returns a new position given that
    the board array is already shifted*)
 let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
   let wking = if k && pos.turn then to_sqr else pos.wking in
   let bking = if k && not pos.turn then to_sqr else pos.bking in
+  let turn_check = not (get_turn pos) in
   {
     pos with
     turn = not pos.turn;
     checked =
       piece_causes_check pos to_sqr
-      || causes_discovery pos from_sqr to_sqr;
+      || causes_discovery { pos with turn = turn_check } from_sqr to_sqr;
     bking;
     wking;
     move_stack =
