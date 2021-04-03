@@ -80,3 +80,5 @@ val is_in_check : t -> bool
 (** [revert_prev board x] returns the game at turn x Requires: x is less
     than than or equal to the current turn *)
 val revert_prev : t -> int -> t
+
+val get_turn_num : t -> int
