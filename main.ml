@@ -16,7 +16,6 @@ let play_move str board =
 let rec game_loop board () =
   let player_turn = turn board in
   print_endline (player_turn ^ " to move:");
-  print_endline (Board.to_string board ^ "\n");
   print_endline
     "Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate the \
      square to move from and to respectively, enter 'undo' to undo the \
@@ -46,6 +45,7 @@ let rec start () =
   match read_line () with
   | "start" ->
       let board = Board.init () in
+      print_endline(Board.to_string board);
       game_loop board ()
   | str ->
       (try
