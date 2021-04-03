@@ -20,13 +20,7 @@ exception EmptyMoveStack
 
 type square = int * int
 
-type move = {
-  from_sqr : square;
-  to_sqr : square;
-  en_passant : bool;
-  castling : bool;
-  promote : bool;
-}
+type move = string * string
 
 (*AF: the record {board, castling, ep, turn, move_stack, checked, wking,
   bking} represents a full chess position where
@@ -45,10 +39,10 @@ type t = {
   castling : bool array;
   ep : int * int;
   turn : bool;
-  move_stack : move list;
   checked : bool;
   wking : square;
   bking : square;
+  move_list : move list;
 }
 
 let wrook = Some (make_piece true Rook)
@@ -97,10 +91,10 @@ let init_empty () =
     castling = [| false; false; false; false |];
     ep = (-1, -1);
     turn = true;
-    move_stack = [];
     checked = false;
     wking = (-1, -1);
     bking = (-1, -1);
+    move_list = [];
   }
 
 let init () =
@@ -109,10 +103,10 @@ let init () =
     castling = [| true; true; true; true |];
     ep = (-1, -1);
     turn = true;
-    move_stack = [];
     checked = false;
     wking = (4, 0);
     bking = (4, 7);
+    move_list = [];
   }
 
 (**[get_turn pos] returns true if it is white's move and false
@@ -136,9 +130,10 @@ let get_piece str pos =
   match get_piece_helper str pos with
   | Some k -> Piece.to_string k
   | None -> "NA"
-  
+
 (**[get_castling pos] returns the array of valid and invalid castles*)
-let get_castling pos = pos.castling 
+let get_castling pos = pos.castling
+
 let rank_rep = [ 'a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h' ]
 
 (**[verify_move_string str] checks whether [str] is a valid coordinate
@@ -201,8 +196,8 @@ let is_horiz_attacker piece color =
       | Queen -> get_color k = color
       | _ -> false)
 
-(**[is_diag_attacker piece color] returns true if [piece] attacks 
-    diagonally per the rules of chess*)
+(**[is_diag_attacker piece color] returns true if [piece] attacks
+   diagonally per the rules of chess*)
 let is_diag_attacker piece color =
   match piece with
   | None -> false
@@ -556,6 +551,15 @@ let is_castling pos from_sqr to_sqr k =
   | (_, fcol), (_, tcol) ->
       if k && abs (fcol - tcol) > 1 then true else false
 
+let convert_sqrs_to_string sqr1 sqr2 =
+  match (sqr1, sqr2) with
+  | (a, b), (c, d) ->
+      ( String.make 1 (Char.lowercase_ascii (char_of_int (a + 97)))
+        ^ string_of_int (b + 1)
+        ^ String.make 1 (Char.lowercase_ascii (char_of_int (c + 97)))
+        ^ string_of_int (d + 1),
+        "" )
+
 (**[add_move pos from_sqr to_sqr k] returns a new position given that
    the board array is already shifted*)
 let add_move pos (from_sqr : square) (to_sqr : square) k =
@@ -564,18 +568,13 @@ let add_move pos (from_sqr : square) (to_sqr : square) k =
   {
     pos with
     turn = not pos.turn;
-    move_stack =
-      {
-        from_sqr;
-        to_sqr;
-        en_passant = false;
-        promote = false;
-        castling = is_castling pos from_sqr to_sqr k;
-      }
-      :: pos.move_stack;
     checked = piece_causes_check pos to_sqr;
     bking;
     wking;
+    move_list =
+      List.rev
+        (convert_sqrs_to_string from_sqr to_sqr
+        :: List.rev pos.move_list);
   }
 
 (**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr]
@@ -649,6 +648,7 @@ let pawn_valid_helper pos from_sqr to_sqr new_p =
         else raise (IllegalMove "Illegal move for a pawn")
       in
       promote to_sqr next_pos new_p
+
 (**[is_in_check pos] returns true if the current player is in check*)
 let is_in_check pos = pos.checked
 
@@ -825,8 +825,6 @@ let move str promote_str pos =
       (IllegalMove
          (trm_str ^ " is not a valid coordinate string of a move"))
 
-let undo_prev pos = failwith "Unimplemented"
-
 (**[add_piece pos piece square] adds [piece] to [pos] at [square]*)
 let add_piece pos piece square =
   match square with rank, col -> pos.board.(rank).(col) <- piece
@@ -969,11 +967,16 @@ let to_string pos =
   in
   to_string_helper pos 0 7 ^ "   a   b   c   d   e   f   g   h"
 
-  let rec move_list tuple_list board = 
-    match tuple_list with
-    | (a, b) :: k -> move_list k (move a b board)
-    | _ -> board
+let rec move_list tuple_list board =
+  match tuple_list with
+  | (a, b) :: k -> move_list k (move a b board)
+  | _ -> board
 
+let undo_prev pos =
+  let flip = List.rev pos.move_list in
+  match flip with
+  | h :: k -> move_list (List.rev k) (init ())
+  | _ -> init ()
 
 let equals pos1 pos2 = failwith "unimplemented"
 
