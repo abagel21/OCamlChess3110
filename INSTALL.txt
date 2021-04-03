@@ -1,0 +1,14 @@
+In order to run our system, you will require ANSITerminal and OUnit2. 
+If you do not have these packages installed in OPAM, run the following command:
+
+`opam install ounit2 && opam install ansiterminal`
+
+In order to run the project, first run
+
+`make build`
+
+and then to begin the console interactive experience run
+
+`make play`
+
+From here you will be prompted via the console with how to interact with the game state.

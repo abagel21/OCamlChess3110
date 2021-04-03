@@ -336,6 +336,15 @@ let knight_attack pos rank col color =
   let valid_sqr = List.map sqr_inbounds psble_knight in
   check_valid_sqrs pos psble_knight valid_sqr color
 
+(**[king_attack pos rank col color] returns true if sqr is attacked by a
+   king, else false*)
+let king_attack pos rank col color =
+  let ksqr = if color then pos.wking else pos.bking in
+  match ksqr with
+  | krank, kcol ->
+      if abs (krank - rank) = 1 || abs (kcol - col) = 1 then true
+      else false
+
 (**[attacked_square pos sqr color] returns true if [sqr] is attacked by
    a piece of [color] in [pos]*)
 let attacked_square pos sqr color =
@@ -379,7 +388,7 @@ let rook_valid_helper pos from_sqr to_sqr =
             | Some k -> a := !a && false
           done
       else a := !a && false;
-      !a
+      if !a then true else raise (IllegalMove "Illegal move for a rook")
 
 (**[bishop_valid_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a bishop*)
@@ -571,6 +580,40 @@ let convert_sqrs_to_string sqr1 sqr2 =
       ^ String.make 1 (Char.lowercase_ascii (char_of_int (c + 97)))
       ^ string_of_int (d + 1)
 
+(**[rmv_piece pos sqr] removes the piece in [pos] at [sqr]. Requires:
+   sqr is inbounds*)
+let rmv_piece pos sqr =
+  match sqr with rank, col -> pos.board.(rank).(col) <- None
+
+(**[add_piece pos sqr piece] adds [piece] to [pos] at [sqr]. Requires:
+   sqr is inbounds*)
+let add_piece pos sqr piece =
+  match sqr with rank, col -> pos.board.(rank).(col) <- piece
+
+(**[mv_and_chck pos sqr] returns true if removing the piece at [sqr]
+   results in the [color] king being in check, else false*)
+let mv_and_chck pos from_sqr to_sqr color =
+  let from_piece = get_piece_internal from_sqr pos in
+  let to_piece = get_piece_internal to_sqr pos in
+  rmv_piece pos from_sqr;
+  add_piece pos to_sqr from_piece;
+  let removing_checks =
+    if
+      attacked_square pos
+        (if color then pos.wking else pos.bking)
+        (not (get_turn pos))
+    then true
+    else false
+  in
+  add_piece pos to_sqr to_piece;
+  add_piece pos from_sqr from_piece;
+  removing_checks
+
+(**[causes_discovery pos from_sqr to_sqr] returns true if moving the
+   piece on [from_sqr] to [to_sqr] causes check for the opposing king *)
+let causes_discovery pos from_sqr to_sqr =
+  mv_and_chck pos from_sqr to_sqr (not (get_turn pos))
+
 (**[add_move pos from_sqr to_sqr k] returns a new position given that
    the board array is already shifted*)
 let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
@@ -579,7 +622,9 @@ let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
   {
     pos with
     turn = not pos.turn;
-    checked = piece_causes_check pos to_sqr;
+    checked =
+      piece_causes_check pos to_sqr
+      || causes_discovery pos from_sqr to_sqr;
     bking;
     wking;
     move_stack =
@@ -614,10 +659,15 @@ let move_en_passant pos from_sqr to_sqr promote_str =
    [piece]. Requires: the piece on [square] is a pawn, [square] is
    inbounds*)
 let promote square pos piece =
+  let pcstring =
+    match piece with None -> "None" | Some k -> Piece.to_string k
+  in
   match square with
   | rank, col ->
       if (get_turn pos && col = 7) || ((not (get_turn pos)) && col = 0)
-      then pos.board.(rank).(col) <- piece;
+      then print_endline "PROMOTING TO";
+      print_endline pcstring;
+      pos.board.(rank).(col) <- piece;
       pos
 
 (**[pawn_double_move_helper pos from_sqr to_sqr]*)
@@ -642,26 +692,25 @@ let pawn_double_move_helper pos from_sqr to_sqr promote_str =
 let pawn_valid_helper pos from_sqr to_sqr new_p promote_str =
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
-      let next_pos =
-        if
-          (get_turn pos && abs (tcol - fcol) = 1)
-          || ((not (get_turn pos)) && tcol - fcol = -1)
-        then
-          if fcol <> tcol && to_sqr = pos.ep then
-            match get_piece_internal to_sqr pos with
-            | None -> move_en_passant pos from_sqr to_sqr promote_str
-            | Some k ->
-                move_normal_piece pos from_sqr to_sqr promote_str
-          else if frank = trank then
-            move_normal_piece pos from_sqr to_sqr promote_str
-          else raise (IllegalMove "Illegal move for a pawn")
-        else if
-          (get_turn pos && tcol - fcol = 2 && fcol = 1)
-          || ((not (get_turn pos)) && tcol - fcol = -2 && fcol = 6)
-        then pawn_double_move_helper pos from_sqr to_sqr promote_str
+      if
+        (get_turn pos && tcol - fcol = 1)
+        || ((not (get_turn pos)) && tcol - fcol = -1)
+      then
+        if frank <> trank then
+          match get_piece_internal to_sqr pos with
+          | None ->
+              if to_sqr = pos.ep then
+                move_en_passant pos from_sqr to_sqr promote_str
+              else raise (IllegalMove "Illegal move for a pawn")
+          | Some k -> move_normal_piece pos from_sqr to_sqr promote_str
+        else if frank = trank then
+          move_normal_piece pos from_sqr to_sqr promote_str
         else raise (IllegalMove "Illegal move for a pawn")
-      in
-      promote to_sqr next_pos new_p
+      else if
+        (get_turn pos && tcol - fcol = 2 && fcol = 1)
+        || ((not (get_turn pos)) && tcol - fcol = -2 && fcol = 6)
+      then pawn_double_move_helper pos from_sqr to_sqr promote_str
+      else raise (IllegalMove "Illegal move for a pawn")
 
 (**[is_in_check pos] returns true if the current player is in check*)
 let is_in_check pos = pos.checked
@@ -705,34 +754,6 @@ let possibly_castle pos from_sqr to_sqr promote_str =
       pos.board.(5).(tcol) <- rook;
       add_move pos from_sqr to_sqr true promote_str
 
-(**[rmv_piece pos sqr] removes the piece in [pos] at [sqr]. Requires:
-   sqr is inbounds*)
-let rmv_piece pos sqr =
-  match sqr with rank, col -> pos.board.(rank).(col) <- None
-
-(**[add_piece pos sqr piece] adds [piece] to [pos] at [sqr]. Requires:
-   sqr is inbounds*)
-let add_piece pos sqr piece =
-  match sqr with rank, col -> pos.board.(rank).(col) <- piece
-
-(**[mv_and_chck pos sqr] returns true if removing the piece at [sqr]
-   results in the king being in check, else false*)
-let mv_and_chck pos from_sqr to_sqr =
-  let piece = get_piece_internal from_sqr pos in
-  rmv_piece pos from_sqr;
-  add_piece pos to_sqr piece;
-  let removing_checks =
-    if
-      attacked_square pos
-        (if get_turn pos then pos.wking else pos.bking)
-        (not (get_turn pos))
-    then true
-    else false
-  in
-  rmv_piece pos to_sqr;
-  add_piece pos from_sqr piece;
-  removing_checks
-
 (**[will_be_checked pos from_sqr to_sqr] checks whether the player's
    move would put themself in check*)
 let will_be_checked pos from_sqr to_sqr =
@@ -743,7 +764,7 @@ let will_be_checked pos from_sqr to_sqr =
       | King -> attacked_square pos to_sqr (not (get_turn pos))
       | _ ->
           if attacked_square pos from_sqr (not (get_turn pos)) then
-            mv_and_chck pos from_sqr to_sqr
+            mv_and_chck pos from_sqr to_sqr (get_turn pos)
           else false )
 
 (**[check_and_move piece pos from_sqr to_sqr] moves the piece [piece]
@@ -754,7 +775,11 @@ let will_be_checked pos from_sqr to_sqr =
    of [pos] is not in check*)
 let check_and_move piece pos from_sqr to_sqr new_p promote_str =
   match Piece.get_piece piece with
-  | Pawn -> pawn_valid_helper pos from_sqr to_sqr new_p promote_str
+  | Pawn ->
+      let next_pos =
+        pawn_valid_helper pos from_sqr to_sqr new_p promote_str
+      in
+      promote to_sqr next_pos new_p
   | Knight ->
       if knight_valid_helper pos from_sqr to_sqr then
         move_normal_piece pos from_sqr to_sqr promote_str
@@ -787,7 +812,7 @@ let is_king piece =
    current player of [pos] is in check *)
 let checked_move piece pos from_sqr to_sqr promote_str new_p : t =
   if
-    (not (mv_and_chck pos from_sqr to_sqr))
+    (not (mv_and_chck pos from_sqr to_sqr (get_turn pos)))
     || is_king piece
        && not (attacked_square pos to_sqr (not (get_turn pos)))
   then check_and_move piece pos from_sqr to_sqr promote_str new_p

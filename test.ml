@@ -2,27 +2,29 @@ open OUnit2
 open Board
 open Piece
 
-let make_col board colid = 
+let make_col board colid =
   let row = ref "" in
   for i = 1 to 8 do
-    row := !row ^ (Board.get_piece (colid ^ string_of_int i) board)
-  done; 
+    row := !row ^ Board.get_piece (colid ^ string_of_int i) board
+  done;
   !row
 
-let init_pos_test name board colid expected = 
-  let col = make_col board colid in 
-  name >:: fun _ -> assert_equal (col) expected
+let init_pos_test name board colid expected =
+  let col = make_col board colid in
+  name >:: fun _ -> assert_equal col expected
 
-let board = init () 
+let board = init ()
 
-let init_tests = [
-  init_pos_test "First col is RPNANANANApr" board "a" "RPNANANANApr";
-  init_pos_test "Second col is NPNANANANApn" board "b" "NPNANANANApn";
-  init_pos_test "Third col is BPNANANANApb" board "c" "BPNANANANApb" ;
-  init_pos_test "Fourth col is QPNANANANApq" board "d" "QPNANANANApq";
-  init_pos_test "Fifth col is KPNANANANApk" board "e" "KPNANANANApk";
-  (*Cols 6-8 are repeats of 1-3*)
-]
+let init_tests =
+  [
+    init_pos_test "First col is RPNANANANApr" board "a" "RPNANANANApr";
+    init_pos_test "Second col is NPNANANANApn" board "b" "NPNANANANApn";
+    init_pos_test "Third col is BPNANANANApb" board "c" "BPNANANANApb";
+    init_pos_test "Fourth col is QPNANANANApq" board "d" "QPNANANANApq";
+    init_pos_test "Fifth col is KPNANANANApk" board "e" "KPNANANANApk";
+    (*Cols 6-8 are repeats of 1-3*)
+  ]
+
 (**[move_throws board from_sqr to_sqr expected] creates an OUnit test
    asserting that movement of a piece at [from_sqr] to [to_sqr] throws
    [IllegalMove of error]*)
@@ -31,24 +33,308 @@ let move_throws name board move_str error =
   name >:: fun _ ->
   assert_raises (IllegalMove error) (fun () -> move move_str "" pos)
 
+(**[move_no_throw asserts that a move completes successfully without
+   throwing an error]*)
+let move_no_throw name board move_str =
+  let pos = fen_to_board board in
+  name >:: fun _ ->
+  assert_equal ()
+    ( move move_str "" pos;
+      () )
+
 (*FENs for knight tests*)
-let knight_tests = []
+let nf1 = "8/8/4p3/8/3N4/1n3q2/4b3/8 w - - 0 1"
+
+let nfmove = "d4f5"
+
+let nfmove2 = "d4e6"
+
+let nfmove3 = "d4c6"
+
+let nfmove4 = "d4b5"
+
+let nfmove5 = "d4b3"
+
+let nfmove6 = "d4e2"
+
+let nfmove7 = "d4f3"
+
+let nfmove8 = "d4c2"
+
+let nf2 = "8/8/5r1p/4q3/6n1/4k3/5b1n/8 b - - 0 1"
+
+let nf2move = "g4h6"
+
+let nf2move2 = "g4f6"
+
+let nf2move3 = "g4e5"
+
+let nf2move4 = "g4e3"
+
+let nf2move5 = "g4f2"
+
+let nf2move6 = "g4h2"
+
+let nf2move7 = "g4i3"
+
+let nf2move8 = "g4e4"
+
+let nf2move9 = "g4e6"
+
+let nf2move10 = "g4h3"
+
+let knight_tests =
+  [
+    move_no_throw "white knight moves midtop right normally" nf1 nfmove;
+    move_no_throw "white knight captures top right pawn normally" nf1
+      nfmove2;
+    move_no_throw "white knight moves top left normally" nf1 nfmove3;
+    move_no_throw "white knight moves midtop left knight normally" nf1
+      nfmove4;
+    move_no_throw "white knight captures midbottom left normally" nf1
+      nfmove5;
+    move_no_throw "white knight moves bottom left normally" nf1 nfmove8;
+    move_no_throw "white knight captures bottom right bishop normally"
+      nf1 nfmove6;
+    move_no_throw "white knight captures midbottom right queen normally"
+      nf1 nfmove7;
+    move_throws "black knight capturing black pawn throws" nf2 nf2move
+      "Cannot capture ally";
+    move_throws "black knight capturing black rook throws" nf2 nf2move2
+      "Cannot capture ally";
+    move_throws "black knight capturing black queen throws" nf2 nf2move3
+      "Cannot capture ally";
+    move_throws "black knight capturing black king throws" nf2 nf2move4
+      "Cannot capture ally";
+    move_throws "black knight capturing black bishop throws" nf2
+      nf2move5 "Cannot capture ally";
+    move_throws "black knight capturing black knight throws" nf2
+      nf2move6 "Cannot capture ally";
+    move_throws "black knight moving out of bounds throws" nf2 nf2move7
+      "g4i3 is not a valid coordinate string of a move";
+    move_throws "black knight moving abnormally horizontally throws" nf2
+      nf2move8 "Illegal move for knight";
+    move_throws "black knight moving abnormally diagonally throws" nf2
+      nf2move9 "Illegal move for knight";
+    move_throws
+      "black knight moving abnormally one square diagonally throws" nf2
+      nf2move10 "Illegal move for knight";
+  ]
 
 (*FENs for bishop tests*)
 let bishop_tests = []
 
 (*FENs for rook tests*)
-let rook_tests = []
+let rf1 = "8/3Q4/8/8/3R2p1/8/3P4/8 w - - 0 1"
+
+let rf1move = "d4e4"
+
+let rf1move2 = "d4c4"
+
+let rf1move3 = "d4d5"
+
+let rf1move4 = "d4d3"
+
+let rf1move5 = "d4g4"
+
+let rf1move6 = "d4h4"
+
+let rf1move7 = "d4d2"
+
+let rf1move8 = "d4d1"
+
+let rf1move9 = "d4d7"
+
+let rf1move10 = "d4d8"
+
+let rook_tests =
+  [
+    move_no_throw "move white rook 1 square right works" rf1 rf1move;
+    move_no_throw "move white rook 1 square left works" rf1 rf1move2;
+    move_no_throw "move white rook 1 square up works" rf1 rf1move3;
+    move_no_throw "move white rook 1 square down works" rf1 rf1move4;
+    move_no_throw "white rook captures black pawn works" rf1 rf1move5;
+    move_throws "white rook moves past black piece" rf1 rf1move6
+      "Illegal move for a rook";
+    move_throws "white rook tries to capture white pawn" rf1 rf1move7
+      "Cannot capture ally";
+    move_throws "white rook tries to move past white piece" rf1 rf1move8
+      "Illegal move for a rook";
+    move_throws "white rook tries to capture white queen" rf1 rf1move9
+      "Cannot capture ally";
+    move_throws "white rook tries to move past white queen" rf1
+      rf1move10 "Illegal move for a rook";
+  ]
 
 (*FENs for queen tests*)
-let queen_tests = []
+(*FENs for rook tests*)
+let qf1 = "8/3q4/8/8/3q2P1/8/3p4/8 b - - 0 1"
+
+let qf1move = "d4e4"
+
+let qf1move2 = "d4c4"
+
+let qf1move3 = "d4d5"
+
+let qf1move4 = "d4d3"
+
+let qf1move5 = "d4g4"
+
+let qf1move6 = "d4h4"
+
+let qf1move7 = "d4d2"
+
+let qf1move8 = "d4d1"
+
+let qf1move9 = "d4d7"
+
+let qf1move10 = "d4d8"
+
+let queen_tests =
+  [
+    move_no_throw "move black queen 1 square right works" qf1 qf1move;
+    move_no_throw "move black queen 1 square left works" qf1 qf1move2;
+    move_no_throw "move black queen 1 square up works" qf1 qf1move3;
+    move_no_throw "move black queen 1 square down works" qf1 qf1move4;
+    move_no_throw "black queen captures white pawn works" qf1 qf1move5;
+    move_throws "black queen moves past black piece" qf1 qf1move6 "";
+    move_throws "black queen tries to capture black pawn" qf1 qf1move7
+      "Cannot capture ally";
+    move_throws "black queen tries to move past black piece" qf1
+      qf1move8 "";
+    move_throws "black queen tries to capture black queen" qf1 qf1move9
+      "Cannot capture ally";
+    move_throws "black queen tries to move past black queen" qf1
+      qf1move10 "";
+  ]
+
+let promote_tester name board move_str promote_str =
+  let pos = fen_to_board board in
+  let board = move move_str promote_str pos in
+  name >:: fun _ ->
+  assert_equal promote_str
+    (String.uppercase_ascii
+       (Board.get_piece (String.sub move_str 2 2) board))
+    ~printer:(fun x -> x)
 
 (*FENs for pawn tests*)
-let pawn_tests = []
+let pf1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
+let pf1_move = "e2e4"
+
+let pf1_move2 = "e2e3"
+
+let pf1_move3 = "a2a3"
+
+let pf1_move4 = "f2f4"
+
+let pf2 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"
+
+let pf2_move = "e7e5"
+
+let pf2_move2 = "e7e6"
+
+let pf2_move3 = "g7g6"
+
+let pf2_move4 = "b7b5"
+
+let pf3 =
+  "2bqk1nr/ppp1p1pp/8/2npPp2/1r1P3b/2P3P1/PP3P1P/RNBQKBNR w KQk f6 0 1"
+
+let pf3_move = "e5f6"
+
+let pf3_move2 = "d4c5"
+
+let pf3_move3 = "c3b4"
+
+let pf3_move4 = "g3h4"
+
+let pf3_move5 = "e5d6"
+
+let pf3_move6 = "g3g5"
+
+let pf3_move7 = "f2e3"
+
+let pf3_move8 = "a2a5"
+
+let pf3_move9 = "e5e4"
+
+let pf4 = "rnbqkbnr/4p2p/8/8/4Pp2/8/pppp1PpP/4B1KR b Kkq e3 0 1"
+
+let pf4_move = "f4e3"
+
+let pf4_move2 = "g2g4"
+
+let pf4_move3 = "a2a1"
+
+let pf4_move4 = "b2b1"
+
+let pf4_move5 = "c2c1"
+
+let pf4_move6 = "d2d1"
+
+let pawn_tests =
+  [
+    move_no_throw "white double pawn move at start doesn't throw" pf1
+      pf1_move;
+    move_no_throw "white single pawn move at start doesn't throw" pf1
+      pf1_move2;
+    move_no_throw
+      "white double pawn move from different position at start doesn't \
+       throw"
+      pf1 pf1_move4;
+    move_no_throw
+      "white single pawn move from different position at start doesn't \
+       throw"
+      pf1 pf1_move3;
+    move_no_throw "black double pawn move at start doesn't throw" pf2
+      pf2_move;
+    move_no_throw "black single pawn move at start doesn't throw" pf2
+      pf2_move2;
+    move_no_throw
+      "black double pawn move from different position at start doesn't \
+       throw"
+      pf2 pf2_move3;
+    move_no_throw
+      "black single pawn move from different position at start doesn't \
+       throw"
+      pf2 pf2_move4;
+    move_no_throw "correct en passant doesn't throw" pf3 pf3_move;
+    move_no_throw "capturing knight left correctly doesn't throw" pf3
+      pf3_move2;
+    move_no_throw "capturing rook left correctly doesn't throw" pf3
+      pf3_move3;
+    move_no_throw "capturing bishop right correctly doesn't throw" pf3
+      pf3_move4;
+    move_throws "incorrect en passant throws" pf3 pf3_move5
+      "Illegal move for a pawn";
+    move_throws "double move not from start throws" pf3 pf3_move6
+      "Illegal move for a pawn";
+    move_throws "illegal diagonal move for pawn throws" pf3 pf3_move7
+      "Illegal move for a pawn";
+    move_throws "illegal triple move for pawn throws" pf3 pf3_move8
+      "Illegal move for a pawn";
+    move_throws "white pawn cannot move backwards" pf3 pf3_move9
+      "Illegal move for a pawn";
+    move_no_throw "en passant works on black too" pf4 pf4_move;
+    move_throws
+      "black pawn cannot move double backwards from white starting line"
+      pf4 pf4_move2 "Illegal move for a pawn";
+    promote_tester "black pawn promotes to black queen" pf4 pf4_move3
+      "Q";
+    promote_tester "black pawn promotes to black rook" pf4 pf4_move3 "R";
+    promote_tester "black pawn promotes to black knight" pf4 pf4_move3
+      "N";
+    promote_tester "black pawn promotes to black bishop" pf4 pf4_move3
+      "B";
+  ]
+
+(**[check_true name fen move_str] creates an OUnit test asserting that
+   the following player is in check after the move indicated by
+   [move_str]*)
 let check_true name fen move_str =
   let pos = fen_to_board fen in
-  let next_pos = move move_str "" pos in
+  let next_pos = move move_str "Q" pos in
   name >:: fun _ -> assert_equal true (is_in_check next_pos)
 
 (**bishop FENs and movestrings for is_check tests*)
@@ -187,6 +473,14 @@ let r2move2 = "d7d8"
 
 let r2move3 = "d7f7"
 
+let r3 = "8/3R4/6p1/1r3k1R/3K3p/7r/6P1/8 b - - 0 1"
+
+let r3move = "b5d5"
+
+let r4 = "8/3R4/6p1/1r3k1R/3K3p/7r/6P1/8 w - - 0 1"
+
+let r4move = "d7f7"
+
 let rook_check_tests =
   [
     check_true "left black rook checks correctly" r1 rmove1;
@@ -195,20 +489,36 @@ let rook_check_tests =
     check_true "right white rook checks correctly" r2 r2move1;
     check_true "left white rook checks correctly" r2 r2move2;
     check_true "bottom white rook checks correctly" r2 r2move3;
+    check_true "top black rook checks correctly" r3 r3move;
+    check_true "top white rook checks correctly" r4 r4move;
+  ]
+
+(*FENs for discovery check tests*)
+let disc_fen1 = "8/1K2b1q1/PP6/8/8/N7/8/8 b - - 0 1"
+
+let dfen1_move = "e7a3"
+
+let disc_fen2 = "8/1K6/PP6/3n4/8/5b2/8/8 b - - 0 1"
+
+let dfen2_move = "d5e7"
+
+let disc_fen3 = "8/8/8/8/P7/1P1N4/1K2p2r/8 b - - 0 1"
+
+let dfen3_move = "e2e1"
+
+let discovery_check_tests =
+  [
+    check_true "moving bishop out of queen attack checks king" disc_fen1
+      dfen1_move;
+    check_true "moving knight out of bishop attack causes check"
+      disc_fen2 dfen2_move;
+    check_true "moving pawn out of rook line causes check" disc_fen3
+      dfen3_move;
   ]
 
 let check_tests =
   List.flatten
     [ bishop_check_tests; knight_check_tests; rook_check_tests ]
-
-(**[move_no_throw asserts that a move completes successfully without
-   throwing an error]*)
-let move_no_throw name board move_str =
-  let pos = fen_to_board board in
-  name >:: fun _ ->
-  assert_equal ()
-    ( move move_str "" pos;
-      () )
 
 (*Positions for bishop pins*)
 let bishop_pin1 = "8/8/6b1/8/8/3N4/8/1K6 w - - 0 1"
@@ -287,7 +597,9 @@ let pin_tests =
       "Moving this piece would place you in check";
   ]
 
-let move_tests = List.flatten [ pin_tests ]
+let move_tests =
+  List.flatten
+    [ knight_tests; bishop_tests; rook_tests; pawn_tests; pin_tests ]
 
 let undo_move_tests = []
 
