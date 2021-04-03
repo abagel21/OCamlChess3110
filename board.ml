@@ -973,7 +973,7 @@ let rec move_list tuple_list board =
   | _ -> board
 
 let undo_prev pos =
-  let flip = List.rev pos.move_list in
+  let flip = List.rev pos.move_stack in
   match flip with
   | h :: k -> move_list (List.rev k) (init ())
   | _ -> init ()
