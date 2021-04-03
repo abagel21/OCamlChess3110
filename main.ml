@@ -37,10 +37,14 @@ let rec game_loop board () =
       print_endline "Enter the turn to return to";
       let temp = read_line () in
       try
-        let turn = int_of_string temp in
+        let turn = int_of_string temp in 
+        if (turn < get_turn_num board) then 
         let old_board = revert_prev board turn in
         print_board old_board;
         game_loop old_board ()
+        else 
+          print_endline (temp ^ " is greater than current turn"); 
+          game_loop board ()
       with exn -> game_loop board ())
   | str ->
       (try

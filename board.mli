@@ -81,4 +81,5 @@ val is_in_check : t -> bool
     than than or equal to the current turn *)
 val revert_prev : t -> int -> t
 
+(** [get_turn_num t] returns the current turn number of t*)
 val get_turn_num : t -> int
