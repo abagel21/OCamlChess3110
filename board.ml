@@ -438,19 +438,28 @@ let queen_valid_helper pos from_sqr to_sqr =
   rook_valid_helper pos from_sqr to_sqr
   || bishop_valid_helper pos from_sqr to_sqr
 
+let extract_opt = function Some k -> k | _ -> raise IllegalPiece
+
+let is_rook x (pos : t) =
+  let a = extract_opt x in
+  let b = Piece.get_color a in
+  let c = Piece.get_piece a in
+  let d = get_turn pos in
+  match c with Rook -> b == d | _ -> false
+
 let check_castle pos frank trank =
   if get_turn pos then
     if frank > trank then
-      if pos.castling.(0) then true
+      if pos.castling.(0) && is_rook pos.board.(0).(0) pos then true
       else
         raise (IllegalMove "White king cannot castle queenside anymore")
-    else if pos.castling.(1) then true
+    else if pos.castling.(1) && is_rook pos.board.(0).(7) pos then true
     else raise (IllegalMove "White king cannot castle kingside anymore")
   else if frank > trank then
-    if pos.castling.(2) then true
+    if pos.castling.(2) && is_rook pos.board.(7).(0) pos then true
     else
       raise (IllegalMove "Black king cannot castle queenside anymore")
-  else if pos.castling.(3) then true
+  else if pos.castling.(3) && is_rook pos.board.(7).(7) pos then true
   else raise (IllegalMove "Black king cannot castle kingside anymore")
 
 (**[king_valid_helper pos from_sqr to_sqr] verifies that the moves
@@ -719,7 +728,7 @@ let set_castles2 pos =
 
 (**[possibly_castle pos from_sqr to_sqr] moves the king normally or
    castles depending on the call.*)
-let possibly_castle pos from_sqr to_sqr  =
+let possibly_castle pos from_sqr to_sqr =
   set_castles1 pos;
   set_castles2 pos;
   let frank = fst from_sqr in
@@ -793,7 +802,7 @@ let check_and_move piece pos from_sqr to_sqr new_p promote_str =
   | King ->
       if king_valid_helper pos from_sqr to_sqr then
         if not (will_be_checked pos from_sqr to_sqr) then
-          possibly_castle pos from_sqr to_sqr 
+          possibly_castle pos from_sqr to_sqr
         else raise (IllegalMove "Cannot move yourself into check")
       else raise (IllegalMove "Illegal move for a king")
 
