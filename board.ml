@@ -612,7 +612,7 @@ let mv_and_chck pos from_sqr to_sqr color =
 (**[causes_discovery pos from_sqr to_sqr] returns true if moving the
    piece on [from_sqr] to [to_sqr] causes check for the opposing king *)
 let causes_discovery pos from_sqr to_sqr =
-  mv_and_chck pos from_sqr to_sqr ((get_turn pos))
+  mv_and_chck pos from_sqr to_sqr (get_turn pos)
 
 (**[add_move pos from_sqr to_sqr k] returns a new position given that
    the board array is already shifted*)
@@ -793,7 +793,9 @@ let check_and_move piece pos from_sqr to_sqr new_p promote_str =
       else raise (IllegalMove "Illegal move for a queen")
   | King ->
       if king_valid_helper pos from_sqr to_sqr then
-        possibly_castle pos from_sqr to_sqr promote_str
+        if not (will_be_checked pos from_sqr to_sqr) then
+          possibly_castle pos from_sqr to_sqr promote_str
+        else raise (IllegalMove "Cannot move yourself into check")
       else raise (IllegalMove "Illegal move for a king")
 
 (**[is_king piece] returns true if the option piece is a king,else false*)
