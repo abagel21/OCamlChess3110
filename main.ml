@@ -19,12 +19,14 @@ let rec game_loop board () =
   print_endline (Board.to_string board ^ "\n");
   print_endline
     "Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate the \
-     square to move from and to respectively or enter 'QUIT' to exit";
+     square to move from and to respectively, enter 'undo' to undo the \
+     previous move, or enter 'QUIT' to exit";
   match read_line () with
   | "QUIT" ->
       ANSITerminal.print_string [ ANSITerminal.cyan ]
         "Thanks for playing\n";
       exit 0
+  | "undo" -> game_loop (undo_prev board) ()
   | str ->
       (try
          let mod_board = play_move str board in
