@@ -372,13 +372,13 @@ let rook_valid_helper pos from_sqr to_sqr =
             | None -> a := !a && true
             | Some k -> a := !a && false
           done
-        else if fcol = tcol && frank > trank then
+        else 
           for i = trank + 1 to frank - 1 do
             match get_piece_internal (i, fcol) pos with
             | None -> a := !a && true
             | Some k -> a := !a && false
           done
-        else a := not !a;
+        else a := !a &&false;
       !a
 
 (**[bishop_valid_helper pos from_sqr to_sqr] verifies that the moves
