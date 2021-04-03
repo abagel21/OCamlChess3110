@@ -68,7 +68,7 @@ let rec start () =
               ("This is not a proper FEN: " ^ k)
         | Invalid_argument l ->
             ANSITerminal.print_string [ ANSITerminal.red ]
-              ("This is not a proper command: " ^ l)
+              "That is not a proper command. "
       end;
       print_endline "";
       start ()
