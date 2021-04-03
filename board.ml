@@ -619,12 +619,13 @@ let causes_discovery pos from_sqr to_sqr =
 let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
   let wking = if k && pos.turn then to_sqr else pos.wking in
   let bking = if k && not pos.turn then to_sqr else pos.bking in
+  let turn_check = not (get_turn pos) in
   {
     pos with
     turn = not pos.turn;
     checked =
-      piece_causes_check pos to_sqr
-      || causes_discovery pos from_sqr to_sqr;
+      piece_causes_check {pos with turn = turn_check} to_sqr
+      || (causes_discovery {pos with turn = turn_check} from_sqr to_sqr);
     bking;
     wking;
     move_stack =
