@@ -54,6 +54,7 @@ Precondition: [fen] is a valid FEN format string
 *)
 val fen_to_board : string -> t
 
+val move_list : (string * string) list -> t -> t
 (**[is_in_check] returns whether the current player is in check*)
 val is_in_check : t -> bool
 
