@@ -519,14 +519,7 @@ let rook_checks pos square =
 (**[queen_checks pos square] returns true if the queen on [square]
    checks the opposing player's king*)
 let queen_checks pos square =
-  let ksquare = find_king_sqr pos (not (get_turn pos)) in
-  match (square, ksquare) with
-  | (rank, col), (krank, kcol) ->
-      if
-        krank = rank || kcol = col
-        || abs (krank - rank) = abs (kcol - col)
-      then queen_valid_helper pos square ksquare
-      else false
+  rook_checks pos square|| bishop_checks pos square
 
 (**[piece_causes_check pos square] checks if the piece on [square]
    causes check for the opposing king*)
