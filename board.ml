@@ -372,13 +372,13 @@ let rook_valid_helper pos from_sqr to_sqr =
             | None -> a := !a && true
             | Some k -> a := !a && false
           done
-        else 
+        else
           for i = trank + 1 to frank - 1 do
             match get_piece_internal (i, fcol) pos with
             | None -> a := !a && true
             | Some k -> a := !a && false
           done
-        else a := !a &&false;
+      else a := !a && false;
       !a
 
 (**[bishop_valid_helper pos from_sqr to_sqr] verifies that the moves
@@ -776,14 +776,21 @@ let check_and_move piece pos from_sqr to_sqr new_p promote_str =
         possibly_castle pos from_sqr to_sqr promote_str
       else pos
 
+(**[is_king piece] returns true if the option piece is a king,else false*)
+let is_king piece =
+  match Piece.get_piece piece with King -> true | _ -> false
+
 (**[checked_move piece pos from_sqr to_sqr] moves the piece [piece] from
    [from_sqr] to [to_sqr] in [pos] if it is a legal move for [piece] and
    returns the new state if the move is legal, else returns [pos]
    Precondition: [piece] is owned by the current player of [pos], the
    current player of [pos] is in check *)
 let checked_move piece pos from_sqr to_sqr promote_str new_p : t =
-  if not (mv_and_chck pos from_sqr to_sqr) then
-    check_and_move piece pos from_sqr to_sqr promote_str new_p
+  if
+    (not (mv_and_chck pos from_sqr to_sqr))
+    || is_king piece
+       && not (attacked_square pos to_sqr (not (get_turn pos)))
+  then check_and_move piece pos from_sqr to_sqr promote_str new_p
   else raise (IllegalMove "You are in check!")
 
 (**[move_helper piece pos from_sqr to_sqr] moves the piece [piece] from
