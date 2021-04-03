@@ -623,7 +623,7 @@ let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
     pos with
     turn = not pos.turn;
     checked =
-      piece_causes_check {pos with turn = turn_check} to_sqr
+      piece_causes_check pos to_sqr
       || (causes_discovery {pos with turn = turn_check} from_sqr to_sqr);
     bking;
     wking;
