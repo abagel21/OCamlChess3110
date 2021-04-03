@@ -706,9 +706,9 @@ let pawn_valid_helper pos from_sqr to_sqr new_p promote_str =
                 move_en_passant pos from_sqr to_sqr promote_str
               else raise (IllegalMove "Illegal move for a pawn")
           | Some k -> move_normal_piece pos from_sqr to_sqr promote_str
-        else if frank = trank then 
-          if (get_piece_internal to_sqr pos) = None then
-          move_normal_piece pos from_sqr to_sqr promote_str
+        else if frank = trank then
+          if get_piece_internal to_sqr pos = None then
+            move_normal_piece pos from_sqr to_sqr promote_str
           else raise (IllegalMove "Pawn cannot take vertically")
         else raise (IllegalMove "Illegal move for a pawn")
       else if
@@ -1039,7 +1039,9 @@ let extract pos turn =
   List.rev !a
 
 let revert_prev pos turn = move_list (extract pos turn) (init ())
+let get_turn_num pos = List.length pos.move_stack + 1
 
 let equals pos1 pos2 = failwith "unimplemented"
+
 
 let eval_move pos = failwith "unimplemented"
