@@ -22,7 +22,8 @@ let rec game_loop board () =
   print_endline
     "Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate the \
      square to move from and to respectively, enter 'undo' to undo the \
-     previous move, or enter 'QUIT' to exit";
+     previous move, enter 'revert' to choose a turn to return to or \
+     enter  'QUIT' to exit";
   match String.trim (read_line ()) with
   | "QUIT" ->
       ANSITerminal.print_string [ ANSITerminal.cyan ]
