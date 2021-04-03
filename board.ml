@@ -768,7 +768,7 @@ let check_and_move piece pos from_sqr to_sqr new_p =
    Precondition: [piece] is owned by the current player of [pos], the
    current player of [pos] is in check *)
 let checked_move piece pos from_sqr to_sqr new_p : t =
-  if mv_and_chck pos from_sqr to_sqr then
+  if not (mv_and_chck pos from_sqr to_sqr) then
     check_and_move piece pos from_sqr to_sqr new_p
   else raise (IllegalMove "You are in check!")
 
