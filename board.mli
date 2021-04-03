@@ -15,15 +15,16 @@ exception EmptyMoveStack
 exception IllegalSquare of string
 
 exception IllegalPiece
+
 exception IllegalFen of string
 
 (** [init ()] returns the representation of initial position of a chess
     game. *)
 val init : unit -> t
 
-(** [get_piece str t] takes the [str] coordinate (rankcol) square
+(** [get_piece str pos] takes the [str] coordinate (rankcol) square
     representation and returns the name of the piece on that square in
-    [t] or Raises: [IllegalSquare str] if [str] is not a valid chess
+    [pos]. Raises: [IllegalSquare str] if [str] is not a valid chess
     square. *)
 val get_piece : string -> t -> string
 
@@ -51,6 +52,8 @@ val undo_prev : t -> t
     Black's. *)
 val get_turn : t -> bool
 
+(** [get_castling pos] returns the array of valid and invalid castles in
+    board state [pos]. *)
 val get_castling : t -> bool array
 
 (** [to_string pos] outputs a pretty-printed string of board state

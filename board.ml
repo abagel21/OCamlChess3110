@@ -123,15 +123,11 @@ let get_piece_helper str pos =
     else pos.board.(rank).(col)
   else raise (IllegalSquare (str ^ " is not a legal square"))
 
-(**[get_piece str pos] returns the FEN representation of the piece at
-   the coordinate in [str], "no piece" if empty, or throws an
-   [IllegalSquare] if [str] is not a valid coordinate*)
 let get_piece str pos =
   match get_piece_helper str pos with
   | Some k -> Piece.to_string k
   | None -> "NA"
 
-(**[get_castling pos] returns the array of valid and invalid castles*)
 let get_castling pos = pos.castling
 
 let rank_rep = [ 'a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h' ]
@@ -623,8 +619,8 @@ let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
     pos with
     turn = not pos.turn;
     checked =
-      piece_causes_check {pos with turn = turn_check} to_sqr
-      || (causes_discovery {pos with turn = turn_check} from_sqr to_sqr);
+      piece_causes_check { pos with turn = turn_check } to_sqr
+      || causes_discovery { pos with turn = turn_check } from_sqr to_sqr;
     bking;
     wking;
     move_stack =
