@@ -30,3 +30,7 @@ docs-private: build
 	ocamlfind ocamldoc -I _build -package ANSITerminal \
 		-html -stars -d _doc.private \
 		-inv-merge-ml-mli -m A $(MLIS) $(MLS)
+zip :
+
+	zip final_proj.zip *.ml* *.mli* _tags .merlin .ocamlformat .ocamlinit Makefile INSTALL.txt
+	
