@@ -138,7 +138,7 @@ let rank_rep = [ 'a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h' ]
 
 (**[verify_move_string str] checks whether [str] is a valid coordinate
    representation chess move. 'e2e4' is valid, 'p1p3' is not. Ranks must
-   be in {a-h} and columns must be in {1-8}*)
+   be in "a".."h" and columns must be in 1..8. *)
 let verify_move_string (str : string) =
   let length = String.length str = 4 in
   let from_rank = str.[0] in
