@@ -4,6 +4,7 @@ open Board
 let turn board =
   match Board.get_turn board with true -> "White" | false -> "Black"
 
+let print board = print_endline(Board.to_string board ^ "\n")
 (** [play_move str board] parses a standard chess move in UCI long
     algebraic notation from [str] and moves the piece on [board] *)
 let play_move str board =
@@ -25,17 +26,22 @@ let rec game_loop board () =
       ANSITerminal.print_string [ ANSITerminal.cyan ]
         "Thanks for playing\n";
       exit 0
-  | "undo" -> game_loop (undo_prev board) ()
+  | "undo" ->
+      let old_board = undo_prev board in
+      print old_board;
+      game_loop old_board ()
   | str ->
       (try
          let mod_board = play_move str board in
          ANSITerminal.erase Screen;
-         print_endline (Board.to_string board ^ "\n");
-         if (is_in_check mod_board) then ANSITerminal.print_string [ ANSITerminal.red ]((turn mod_board) ^ " is in check")
-         else ();   
+         print mod_board;
+         if is_in_check mod_board then
+           ANSITerminal.print_string [ ANSITerminal.red ]
+             (turn mod_board ^ " is in check\n")
+         else ();
          game_loop mod_board ()
        with IllegalMove k ->
-         ANSITerminal.print_string [ ANSITerminal.red ] k );
+         ANSITerminal.print_string [ ANSITerminal.red ] k);
       print_endline "";
       game_loop board ()
 
@@ -47,7 +53,7 @@ let rec start () =
   match read_line () with
   | "start" ->
       let board = Board.init () in
-      print_endline(Board.to_string board);
+      print board;
       game_loop board ()
   | str ->
       (try

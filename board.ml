@@ -612,7 +612,7 @@ let mv_and_chck pos from_sqr to_sqr color =
 (**[causes_discovery pos from_sqr to_sqr] returns true if moving the
    piece on [from_sqr] to [to_sqr] causes check for the opposing king *)
 let causes_discovery pos from_sqr to_sqr =
-  mv_and_chck pos from_sqr to_sqr (not (get_turn pos))
+  mv_and_chck pos from_sqr to_sqr ((get_turn pos))
 
 (**[add_move pos from_sqr to_sqr k] returns a new position given that
    the board array is already shifted*)
