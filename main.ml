@@ -8,7 +8,7 @@ let print board = print_endline(Board.to_string board ^ "\n")
 (** [play_move str board] parses a standard chess move in UCI long
     algebraic notation from [str] and moves the piece on [board] *)
 let play_move str board =
-  match String.length str with
+  match String.length (String.trim str) with
   | 4 -> Board.move (String.sub str 0 4) "" board
   | 5 -> Board.move (String.sub str 0 4) (String.sub str 4 1) board
   | _ -> raise (IllegalMove str)
@@ -21,7 +21,7 @@ let rec game_loop board () =
     "Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate the \
      square to move from and to respectively, enter 'undo' to undo the \
      previous move, or enter 'QUIT' to exit";
-  match read_line () with
+  match String.trim (read_line ()) with
   | "QUIT" ->
       ANSITerminal.print_string [ ANSITerminal.cyan ]
         "Thanks for playing\n";
@@ -50,7 +50,7 @@ let rec start () =
   print_endline
     "Enter 'start' to begin with the starting chess position or enter \
      a FEN formatted string to load a specific board\n";
-  match read_line () with
+  match String.trim (read_line ()) with
   | "start" ->
       let board = Board.init () in
       print board;

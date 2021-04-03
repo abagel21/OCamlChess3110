@@ -619,7 +619,7 @@ let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
     pos with
     turn = not pos.turn;
     checked =
-      piece_causes_check { pos with turn = turn_check } to_sqr
+      piece_causes_check pos to_sqr
       || causes_discovery { pos with turn = turn_check } from_sqr to_sqr;
     bking;
     wking;
@@ -809,7 +809,7 @@ let checked_move piece pos from_sqr to_sqr promote_str new_p : t =
     || is_king piece
        && not (attacked_square pos to_sqr (not (get_turn pos)))
   then check_and_move piece pos from_sqr to_sqr promote_str new_p
-  else raise (IllegalMove "You are in check!")
+  else raise (IllegalMove "Invalid move, you are in check!")
 
 (**[move_helper piece pos from_sqr to_sqr] moves the piece [piece] from
    [from_sqr] to [to_sqr] if it is a legal move in [pos] and returns the
