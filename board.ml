@@ -42,7 +42,7 @@ type t = {
   checked : bool;
   wking : square;
   bking : square;
-  move_list : move list;
+  move_stack : move list;
 }
 
 let wrook = Some (make_piece true Rook)
@@ -94,7 +94,7 @@ let init_empty () =
     checked = false;
     wking = (-1, -1);
     bking = (-1, -1);
-    move_list = [];
+    move_stack = [];
   }
 
 let init () =
@@ -106,7 +106,7 @@ let init () =
     checked = false;
     wking = (4, 0);
     bking = (4, 7);
-    move_list = [];
+    move_stack = [];
   }
 
 (**[get_turn pos] returns true if it is white's move and false
@@ -571,10 +571,10 @@ let add_move pos (from_sqr : square) (to_sqr : square) k promote_str=
     checked = piece_causes_check pos to_sqr;
     bking;
     wking;
-    move_list =
+    move_stack =
       List.rev
         ((convert_sqrs_to_string from_sqr to_sqr, promote_str)
-        :: List.rev pos.move_list);
+        :: List.rev pos.move_stack);
   }
 
 (**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr]
