@@ -33,14 +33,14 @@ let move_throws name board move_str error =
   name >:: fun _ ->
   assert_raises (IllegalMove error) (fun () -> move move_str "" pos)
 
-(**[move_no_throw asserts that a move completes successfully without
-   throwing an error]*)
-let move_no_throw name board move_str =
+(**[move_no_throw] asserts that move completes without throwing an error
+   and the correct piece is at final_pos*)
+let move_no_throw name board move_str final_pos expected =
   let pos = fen_to_board board in
   name >:: fun _ ->
-  assert_equal ()
-    ( move move_str "" pos;
-      () )
+  assert_equal
+    (Board.get_piece final_pos (move move_str "" pos))
+    expected
 
 (*FENs for knight tests*)
 let nf1 = "8/8/4p3/8/3N4/1n3q2/4b3/8 w - - 0 1"
@@ -85,19 +85,22 @@ let nf2move10 = "g4h3"
 
 let knight_tests =
   [
-    move_no_throw "white knight moves midtop right normally" nf1 nfmove;
+    move_no_throw "white knight moves midtop right normally" nf1 nfmove
+      "f5" "N";
     move_no_throw "white knight captures top right pawn normally" nf1
-      nfmove2;
-    move_no_throw "white knight moves top left normally" nf1 nfmove3;
+      nfmove2 "e6" "N";
+    move_no_throw "white knight moves top left normally" nf1 nfmove3
+      "c6" "N";
     move_no_throw "white knight moves midtop left knight normally" nf1
-      nfmove4;
+      nfmove4 "b5" "N";
     move_no_throw "white knight captures midbottom left normally" nf1
-      nfmove5;
-    move_no_throw "white knight moves bottom left normally" nf1 nfmove8;
+      nfmove5 "b3" "N";
+    move_no_throw "white knight moves bottom left normally" nf1 nfmove8
+      "c2" "N";
     move_no_throw "white knight captures bottom right bishop normally"
-      nf1 nfmove6;
+      nf1 nfmove6 "e2" "N";
     move_no_throw "white knight captures midbottom right queen normally"
-      nf1 nfmove7;
+      nf1 nfmove7 "f3" "N";
     move_throws "black knight capturing black pawn throws" nf2 nf2move
       "Cannot capture ally";
     move_throws "black knight capturing black rook throws" nf2 nf2move2
@@ -113,12 +116,12 @@ let knight_tests =
     move_throws "black knight moving out of bounds throws" nf2 nf2move7
       "g4i3 is not a valid coordinate string of a move";
     move_throws "black knight moving abnormally horizontally throws" nf2
-      nf2move8 "Illegal move for knight";
+      nf2move8 "Illegal move for a knight";
     move_throws "black knight moving abnormally diagonally throws" nf2
-      nf2move9 "Illegal move for knight";
+      nf2move9 "Illegal move for a knight";
     move_throws
       "black knight moving abnormally one square diagonally throws" nf2
-      nf2move10 "Illegal move for knight";
+      nf2move10 "Illegal move for a knight";
   ]
 
 (*FENs for bishop tests*)
@@ -149,11 +152,16 @@ let rf1move10 = "d4d8"
 
 let rook_tests =
   [
-    move_no_throw "move white rook 1 square right works" rf1 rf1move;
-    move_no_throw "move white rook 1 square left works" rf1 rf1move2;
-    move_no_throw "move white rook 1 square up works" rf1 rf1move3;
-    move_no_throw "move white rook 1 square down works" rf1 rf1move4;
-    move_no_throw "white rook captures black pawn works" rf1 rf1move5;
+    move_no_throw "move white rook 1 square right works" rf1 rf1move
+      "e4" "R";
+    move_no_throw "move white rook 1 square left works" rf1 rf1move2
+      "c4" "R";
+    move_no_throw "move white rook 1 square up works" rf1 rf1move3 "d5"
+      "R";
+    move_no_throw "move white rook 1 square down works" rf1 rf1move4
+      "d3" "R";
+    move_no_throw "white rook captures black pawn works" rf1 rf1move5
+      "g4" "R";
     move_throws "white rook moves past black piece" rf1 rf1move6
       "Illegal move for a rook";
     move_throws "white rook tries to capture white pawn" rf1 rf1move7
@@ -192,11 +200,16 @@ let qf1move10 = "d4d8"
 
 let queen_tests =
   [
-    move_no_throw "move black queen 1 square right works" qf1 qf1move;
-    move_no_throw "move black queen 1 square left works" qf1 qf1move2;
-    move_no_throw "move black queen 1 square up works" qf1 qf1move3;
-    move_no_throw "move black queen 1 square down works" qf1 qf1move4;
-    move_no_throw "black queen captures white pawn works" qf1 qf1move5;
+    move_no_throw "move black queen 1 square right works" qf1 qf1move
+      "e4" "q";
+    move_no_throw "move black queen 1 square left works" qf1 qf1move2
+      "c4" "q";
+    move_no_throw "move black queen 1 square up works" qf1 qf1move3 "d5"
+      "q";
+    move_no_throw "move black queen 1 square down works" qf1 qf1move4
+      "d3" "q";
+    move_no_throw "black queen captures white pawn works" qf1 qf1move5
+      "g4" "q";
     move_throws "black queen moves past black piece" qf1 qf1move6 "";
     move_throws "black queen tries to capture black pawn" qf1 qf1move7
       "Cannot capture ally";
@@ -276,36 +289,37 @@ let pf4_move6 = "d2d1"
 let pawn_tests =
   [
     move_no_throw "white double pawn move at start doesn't throw" pf1
-      pf1_move;
+      pf1_move "e4" "P";
     move_no_throw "white single pawn move at start doesn't throw" pf1
-      pf1_move2;
+      pf1_move2 "e3" "P";
     move_no_throw
       "white double pawn move from different position at start doesn't \
        throw"
-      pf1 pf1_move4;
+      pf1 pf1_move4 "f4" "P";
     move_no_throw
       "white single pawn move from different position at start doesn't \
        throw"
-      pf1 pf1_move3;
+      pf1 pf1_move3 "a3" "P";
     move_no_throw "black double pawn move at start doesn't throw" pf2
-      pf2_move;
+      pf2_move "e5" "p";
     move_no_throw "black single pawn move at start doesn't throw" pf2
-      pf2_move2;
+      pf2_move2 "e6" "p";
     move_no_throw
       "black double pawn move from different position at start doesn't \
        throw"
-      pf2 pf2_move3;
+      pf2 pf2_move3 "g6" "p";
     move_no_throw
       "black single pawn move from different position at start doesn't \
        throw"
-      pf2 pf2_move4;
-    move_no_throw "correct en passant doesn't throw" pf3 pf3_move;
+      pf2 pf2_move4 "b5" "p";
+    move_no_throw "correct en passant doesn't throw" pf3 pf3_move "f6"
+      "P";
     move_no_throw "capturing knight left correctly doesn't throw" pf3
-      pf3_move2;
+      pf3_move2 "c5" "P";
     move_no_throw "capturing rook left correctly doesn't throw" pf3
-      pf3_move3;
+      pf3_move3 "b4" "P";
     move_no_throw "capturing bishop right correctly doesn't throw" pf3
-      pf3_move4;
+      pf3_move4 "h4" "P";
     move_throws "incorrect en passant throws" pf3 pf3_move5
       "Illegal move for a pawn";
     move_throws "double move not from start throws" pf3 pf3_move6
@@ -316,7 +330,7 @@ let pawn_tests =
       "Illegal move for a pawn";
     move_throws "white pawn cannot move backwards" pf3 pf3_move9
       "Illegal move for a pawn";
-    move_no_throw "en passant works on black too" pf4 pf4_move;
+    move_no_throw "en passant works on black too" pf4 pf4_move "e3" "p";
     move_throws
       "black pawn cannot move double backwards from white starting line"
       pf4 pf4_move2 "Illegal move for a pawn";
@@ -583,12 +597,12 @@ let pin_tests =
       "Moving this piece would place you in check";
     move_no_throw
       "left horizontal black queen can be captured without throwing"
-      qpin4 "f1d1";
+      qpin4 "f1d1" "d1" "R";
     move_throws "bottom right white queen raises" qpin5 "d4e5"
       "Moving this piece would place you in check";
     move_no_throw
       "bottom right white queen can be captured without throwing" qpin5
-      "d4f2";
+      "d4f2" "f2" "b";
     move_throws "bottom left black queen raises" qpin6 "d4e4"
       "Moving this piece would place you in check";
     move_throws "top right white queen raises" qpin7 "f3g5"

@@ -786,7 +786,7 @@ let check_and_move piece pos from_sqr to_sqr new_p promote_str =
   | Rook ->
       if rook_valid_helper pos from_sqr to_sqr then
         move_normal_piece pos from_sqr to_sqr promote_str
-      else raise (IllegalMove "Illegal move a rook")
+      else raise (IllegalMove "Illegal move for a rook")
   | Queen ->
       if queen_valid_helper pos from_sqr to_sqr then
         move_normal_piece pos from_sqr to_sqr promote_str
