@@ -45,7 +45,7 @@ let rec game_loop board () =
       print_endline "";
       game_loop board ()
 
-(**[start] initializes the board*)
+(** [start ()] initializes the board. *)
 let rec start () =
   print_endline
     "Enter 'start' to begin with the starting chess position or enter \
@@ -55,17 +55,20 @@ let rec start () =
       let board = Board.init () in
       print board;
       game_loop board ()
-  | str ->
-      (try
-         let board = fen_to_board str in
-         game_loop board ()
-       with IllegalFen k ->
-         ANSITerminal.print_string [ ANSITerminal.red ]
-           ("This is not a proper FEN: " ^ k));
+  | str -> begin
+      try let board = fen_to_board str in game_loop board ()
+      with 
+      | IllegalFen k ->
+        ANSITerminal.print_string [ ANSITerminal.red ]
+          ("This is not a proper FEN: " ^ k)
+       | Invalid_argument l -> 
+        ANSITerminal.print_string [ ANSITerminal.red ]
+          ("This is not a proper command.")
+      end;
       print_endline "";
       start ()
 
-(** [main ()] delivers initial instructions and triggers the board setup*)
+(** [main ()] delivers initial instructions and triggers the board setup. *)
 let main () =
   ANSITerminal.print_string
     [ ANSITerminal.magenta ]
