@@ -388,7 +388,7 @@ let rook_valid_helper pos from_sqr to_sqr =
             | Some k -> a := !a && false
           done
       else a := !a && false;
-      if !a then true else raise (IllegalMove "Illegal move for a rook")
+      !a
 
 (**[bishop_valid_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a bishop*)
@@ -424,8 +424,7 @@ let bishop_valid_helper pos from_sqr to_sqr =
             | None -> a := !a && true
             | Some k -> a := !a && false
           done;
-        if !a then true
-        else raise (IllegalMove "Illegal move for a bishop")
+          !a
 
 (**[knight_valid_helper pos from_sqr to_sqr] ensures that the move
    (from_sqr, to_sqr) is legal for a knight and if so, executes the move
@@ -436,7 +435,7 @@ let knight_valid_helper pos from_sqr to_sqr =
   | (frank, fcol), (trank, tcol) ->
       if abs (frank - trank) = 1 && abs (fcol - tcol) = 2 then true
       else if abs (frank - trank) = 2 && abs (fcol - tcol) = 1 then true
-      else raise (IllegalMove "Illegal move for knight")
+      else false
 
 (**[queen_check_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a queen*)
@@ -445,7 +444,7 @@ let queen_valid_helper pos from_sqr to_sqr =
   with IllegalMove "Illegal move for a rook" -> (
     try bishop_valid_helper pos from_sqr to_sqr
     with IllegalMove "Illegal move for a bishop" ->
-      raise (IllegalMove "Illegal move for a queen"))
+      raise (IllegalMove "Illegal move for a qu"))
 
 let check_castle pos frank trank =
   if get_turn pos then
@@ -782,23 +781,23 @@ let check_and_move piece pos from_sqr to_sqr new_p promote_str =
   | Knight ->
       if knight_valid_helper pos from_sqr to_sqr then
         move_normal_piece pos from_sqr to_sqr promote_str
-      else pos
+      else raise (IllegalMove "Illegal move for a knight")
   | Bishop ->
       if bishop_valid_helper pos from_sqr to_sqr then
         move_normal_piece pos from_sqr to_sqr promote_str
-      else pos
+      else raise (IllegalMove "Illegal move for a bishop")
   | Rook ->
       if rook_valid_helper pos from_sqr to_sqr then
         move_normal_piece pos from_sqr to_sqr promote_str
-      else pos
+      else raise (IllegalMove "Illegal move a rook")
   | Queen ->
       if queen_valid_helper pos from_sqr to_sqr then
         move_normal_piece pos from_sqr to_sqr promote_str
-      else pos
+      else raise (IllegalMove "Illegal move for a queen")
   | King ->
       if king_valid_helper pos from_sqr to_sqr then
         possibly_castle pos from_sqr to_sqr promote_str
-      else pos
+      else raise (IllegalMove "Illegal move for a king")
 
 (**[is_king piece] returns true if the option piece is a king,else false*)
 let is_king piece =
