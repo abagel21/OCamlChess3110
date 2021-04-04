@@ -43,7 +43,7 @@ let rec game_loop board () =
         print_board old_board;
         game_loop old_board ()
         else 
-          print_endline (temp ^ " is greater than current turn"); 
+          print_endline (temp ^ " is greater than or equal to current turn"); 
           game_loop board ()
       with exn -> game_loop board ())
   | str ->
