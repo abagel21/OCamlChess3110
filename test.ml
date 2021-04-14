@@ -287,6 +287,10 @@ let pf4_move5 = "c2c1"
 
 let pf4_move6 = "d2d1"
 
+let pf5 = "8/8/8/8/2b5/8/2P5/2K5 w - - 0 1"
+
+let pf5_move = "c2c4"
+
 let pawn_tests =
   [
     move_no_throw "white double pawn move at start doesn't throw" pf1
@@ -335,6 +339,9 @@ let pawn_tests =
     move_throws
       "black pawn cannot move double backwards from white starting line"
       pf4 pf4_move2 "Illegal move for a pawn";
+    move_throws
+      "white pawn cannot capture vertically when moving two spaces" pf5
+      pf5_move "Illegal move for a pawn";
     promote_tester "black pawn promotes to black queen" pf4 pf4_move3
       "Q";
     promote_tester "black pawn promotes to black rook" pf4 pf4_move3 "R";
@@ -390,6 +397,18 @@ let b5move = "d3e4"
 
 let b5move2 = "d3c4"
 
+let b6_fen = "8/8/8/8/2b5/8/4R3/2K5 w - - 0 1"
+
+let b6_move = "e2e3"
+
+let b7_fen = "8/8/8/8/5b2/1N6/3R4/2K5 w - - 0 1"
+
+let b7_move = "b3d4"
+
+let b8_fen = "8/8/8/8/8/1N6/3R4/2Kb4 w - - 0 1"
+
+let b8_move = "b3d4"
+
 let bishop_check_tests =
   [
     check_true "bottom right white bishop checks successfully" b1 b1move;
@@ -409,6 +428,9 @@ let bishop_check_tests =
     check_true
       "bottom left black bishop one square away checks successfully" b5
       b5move2;
+    check_false "bishop cannot check vertically" b6_fen b6_move;
+    check_false "bishop cannot check through pieces" b7_fen b7_move;
+    check_false "bishop cannot check horizontally" b8_fen b8_move;
   ]
 
 (*knight FENs and movestrings for is_check tests*)
@@ -436,6 +458,10 @@ let bmv1 = "d1e3"
 
 let bmv2 = "d1c3"
 
+let n1_fen = "5bk1/5R2/8/8/8/1N2n3/8/2K5 w - - 0 1"
+
+let n1_move = "b3c5"
+
 let knight_check_tests =
   [
     check_true "right top middle white knight checks black king" right
@@ -450,6 +476,10 @@ let knight_check_tests =
     check_true "top left black knight checks white king" top tmv2;
     check_true "bottom right white knight checks black king" bottom bmv1;
     check_true "bottom left white knight checks black king" bottom bmv2;
+    check_false
+      "knight doesn't check an extra square away horizontally or \
+       vertically"
+      n1_fen n1_move;
   ]
 
 (*pawn FENs and movestrings for is_check tests*)
@@ -514,6 +544,18 @@ let r4 = "8/3R4/6p1/1r3k1R/3K3p/7r/6P1/8 w - - 0 1"
 
 let r4move = "d7f7"
 
+let r5_fen = "6k1/6b1/3n4/8/6R1/1N6/8/2K5 b - - 0 1"
+
+let r5_move = "d6c4"
+
+let r6_fen = "1R3bk1/8/3n4/8/8/1N6/8/2K5 b - - 0 1"
+
+let r6_move = "d6c4"
+
+let r7_fen = "5bk1/5R2/3n4/8/8/1N6/8/2K5 b - - 0 1"
+
+let r7_move = "d6c4"
+
 let rook_check_tests =
   [
     check_true "left black rook checks correctly" r1 rmove1;
@@ -524,6 +566,11 @@ let rook_check_tests =
     check_true "bottom white rook checks correctly" r2 r2move3;
     check_true "top black rook checks correctly" r3 r3move;
     check_true "top white rook checks correctly" r4 r4move;
+    check_false "rook cannot check through pieces vertically" r5_fen
+      r5_move;
+    check_false "rook cannot check through pieces horizontally" r6_fen
+      r6_move;
+    check_false "rook cannot check diagonally" r7_fen r7_move;
   ]
 
 (*FENs for discovery check tests*)
@@ -648,8 +695,41 @@ let move_tests =
 
 let undo_move_tests = []
 
+let fen_test name board colid expected =
+  let col = make_col board colid in
+  name >:: fun _ -> assert_equal col expected
+
+let fen_turn name (board : Board.t) expected =
+  name >:: fun _ -> assert_equal expected (get_turn board)
+
+let fen = "k6r/2qP4/3n1bPn/1r4p1/2B1P3/BNP2N2/3R3P/1QKb3R w - - 0 1"
+
+let fen_board = fen_to_board fen
+
+let fen_tests =
+  [
+    fen_test "First col of FEN is NANABNANANANAk" fen_board "a"
+      "NANABNANANANAk";
+    fen_test "Second col of FEN is QNANNArNANANA" fen_board "b"
+      "QNANNArNANANA";
+    fen_test "Third col of FEN is KNAPBNANAqNA" fen_board "c"
+      "KNAPBNANAqNA";
+    fen_test "Fourth col of FEN is bRNANANAnPNA" fen_board "d"
+      "bRNANANAnPNA";
+    fen_test "Fifth col of FEN is NANANAPNANANANA" fen_board "e"
+      "NANANAPNANANANA";
+    fen_test "Sixth col of FEN is NANANNANAbNANA" fen_board "f"
+      "NANANNANAbNANA";
+    fen_test "Seventh col of FEN is NANANANApPNANA" fen_board "g"
+      "NANANANApPNANA";
+    fen_test "Eighth col of FEN is RPNANANAnNAr" fen_board "h"
+      "RPNANANAnNAr";
+    fen_turn "FEN stores correct turn" fen_board true;
+  ]
+
 let board_tests =
-  List.flatten [ init_tests; move_tests; undo_move_tests; check_tests ]
+  List.flatten
+    [ init_tests; move_tests; undo_move_tests; check_tests; fen_tests ]
 
 let suite =
   "test suite for chess engine & game" >::: List.flatten [ board_tests ]

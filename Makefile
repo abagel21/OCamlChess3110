@@ -4,7 +4,9 @@ MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
 TEST=test.byte
 MAIN=main.byte
-OCAMLBUILD=ocamlbuild -use-ocamlfind
+OCAMLBUILD=ocamlbuild -use-ocamlfind \
+	-plugin-tag 'package(bisect_ppx-ocamlbuild)'
+PKGS=unix,ounit2,str,qcheck
 
 default: build
 	OCAMLRUNPARAM=b utop
@@ -33,4 +35,15 @@ docs-private: build
 zip :
 
 	zip final_proj.zip *.ml* *.mli* _tags .merlin .ocamlformat .ocamlinit Makefile INSTALL.txt
+
+clean:
+	ocamlbuild -clean
+	rm -rf search.zip _doc.public _doc.private _coverage bisect*.coverage
+
+bisect-test:
+	BISECT_COVERAGE=YES $(OCAMLBUILD) -tag 'debug' $(TEST) \
+		&& ./$(TEST)
+
+bisect: clean bisect-test
+	bisect-ppx-report html
 	

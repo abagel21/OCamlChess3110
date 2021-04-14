@@ -1,1 +1,3 @@
-true: package(ounit2),package(ANSITerminal)
+<{board}.ml>: coverage
+<test.{byte,native}>: coverage
+true: package(unix), package(ounit2), package(qcheck), package(str), package(ANSITerminal)
