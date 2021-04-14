@@ -7,6 +7,8 @@
 *.native
 *.byte
 _build
+*.coverage
+_coverage
 
 # temporary files
 *.swp
