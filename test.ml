@@ -390,7 +390,7 @@ let whkrook_has_moved =
 
 let only_king = "8/8/8/8/4K3/8/8/8 w - -"
 
-
+let two_kings = "8/8/8/3k4/8/3K4/8/8 w - -"
 let castle_check name board move_str expected final_pos1 final_pos2 =
   let pos = move move_str "" (fen_to_board board) in
   name >:: fun _ ->
@@ -437,8 +437,15 @@ let king_tests =
       move_throws "King cannot move two SE"
       only_king "e4g2" "King can only move one spot when not castling";
     move_throws "King cannot move like a knight" only_king "e4c3"
-    "King cannot move in that direction"
-
+    "King cannot move in that direction";
+    move_no_throw "King can move up one" only_king "e4e5" "e5" "K";
+    move_no_throw "King can move down one" only_king "e4e3" "e3" "K";
+    move_no_throw "King can move one NE" only_king "e4f5" "f5" "K";
+    move_no_throw "King can move one SE" only_king "e4f3" "f3" "K";
+    move_no_throw "King can move one left" only_king "e4d4" "d4" "K";
+    move_throws "White king cannot move up towards black king" two_kings "d3d4" "King cannot move adjacent to enemy king";
+    move_throws "White king cannot move NW towards black king" two_kings "d3c4" "King cannot move adjacent to enemy king";
+    
   ]
 
 (**[check_true name fen move_str] creates an OUnit test asserting that

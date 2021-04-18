@@ -334,7 +334,7 @@ let knight_attack pos rank col color =
 (**[king_attack pos rank col color] returns true if sqr is attacked by a
    king, else false*)
 let king_attack pos rank col color =
-  let ksqr = if color then pos.wking else pos.bking in
+  let ksqr = if color then pos.bking else pos.wking in
   match ksqr with
   | krank, kcol ->
       if abs (krank - rank) = 1 || abs (kcol - col) = 1 then true
@@ -471,6 +471,9 @@ let king_valid_helper pos from_sqr to_sqr =
   let fcol = snd from_sqr in
   let trank = fst to_sqr in
   let tcol = snd to_sqr in
+  if king_attack pos (fst to_sqr) (snd to_sqr) (get_turn pos) then
+    raise (IllegalMove "King cannot move adjacent to enemy king")
+  else
   if bishop_valid_helper pos from_sqr to_sqr then
     if abs (frank - trank) + abs (fcol - tcol) = 2 then true
     else raise (IllegalMove "King can only move one spot when not castling")
@@ -573,13 +576,6 @@ let set_castling pos from_sqr =
             else pos.castling.(0) <- pos.castling.(0)
           else pos.castling.(0) <- pos.castling.(0)
       | _ -> pos.castling.(0) <- pos.castling.(0))
-
-(**[is_castling pos from_sqr to_sqr k] returns true if the move is a
-   castling move, else false*)
-let is_castling pos from_sqr to_sqr k =
-  match (from_sqr, to_sqr) with
-  | (_, fcol), (_, tcol) ->
-      if k && abs (fcol - tcol) > 1 then true else false
 
 let convert_sqrs_to_string sqr1 sqr2 =
   match (sqr1, sqr2) with
