@@ -150,6 +150,14 @@ let rf1move9 = "d4d7"
 
 let rf1move10 = "d4d8"
 
+let rf2 = "rnbqkbnr/1pppppp1/8/p6p/P6P/8/1PPPPPP1/RNBQKBNR w KQkQ - -"
+
+let rf3 = "rnbqkbnr/1pppppp1/8/p6p/P6P/8/1PPPPPP1/RNBQKBNR b KQkQ - -"
+
+let rook_sets_castling name board move_str x expected =
+  let castling = get_castling (move move_str "" (fen_to_board board)) in
+  name >:: fun _ -> assert_equal castling.(x) expected
+
 let rook_tests =
   [
     move_no_throw "move white rook 1 square right works" rf1 rf1move
@@ -172,6 +180,14 @@ let rook_tests =
       "Cannot capture ally";
     move_throws "white rook tries to move past white queen" rf1
       rf1move10 "Illegal move for a rook";
+    rook_sets_castling "rf1 sets kingside castling to false" rf2 "h1h2"
+      1 false;
+    rook_sets_castling "rf1 sets kingside castling to false" rf2 "a1a2"
+      0 false;
+    rook_sets_castling "rf1 sets kingside castling to false" rf3 "h8h7"
+      3 false;
+    rook_sets_castling "rf1 sets kingside castling to false" rf3 "a8a7"
+      2 false;
   ]
 
 (*FENs for queen tests*)
@@ -349,6 +365,80 @@ let pawn_tests =
       "N";
     promote_tester "black pawn promotes to black bishop" pf4 pf4_move3
       "B";
+  ]
+
+let whking_castle_kside =
+  "rnbqk2r/pppppp1p/5npb/8/8/5NPB/PPPPPP1P/RNBQK2R w KQkq - - "
+
+let blking_castle_kside =
+  "rnbqk2r/pppppp1p/5npb/8/8/5NPB/PPPPPP1P/RNBQK2R b KQkq - - "
+
+let whking_castle_qside =
+  "r3kbnr/ppp1pppp/2nq4/3p1b2/3P1B2/2NQ4/PPP1PPPP/R3KBNR w KQkq - -"
+
+let blking_castle_qside =
+  "r3kbnr/ppp1pppp/2nq4/3p1b2/3P1B2/2NQ4/PPP1PPPP/R3KBNR b KQkq - -"
+
+let whking_castle_leads_to_check =
+  "r3kbnr/ppp1pppp/2n5/3p1b2/3P1q2/2NQ4/PPP1PPPP/R3KBNR w KQkq - -"
+
+let whqrook_has_moved =
+  "r3kbnr/ppp1pppp/2nq4/3p1b2/3P4/2NQ4/PPP1PPPP/1R2KBNR w Kkq - - "
+
+let whkrook_has_moved =
+  "rnbqk2r/ppp1p2p/5npb/3p1p2/4P1P1/5P1P/PPPPN1BR/RNBQK3 w Qkq - -"
+
+let only_king = "8/8/8/8/4K3/8/8/8 w - -"
+
+
+let castle_check name board move_str expected final_pos1 final_pos2 =
+  let pos = move move_str "" (fen_to_board board) in
+  name >:: fun _ ->
+  assert_equal
+    (Board.get_piece final_pos1 pos ^ Board.get_piece final_pos2 pos)
+    expected
+
+let castle_throw name board move_str exn =
+  name >:: fun _ ->
+  assert_raises exn (fun () -> move move_str "" (fen_to_board board))
+
+let king_tests =
+  [
+    castle_check "white king can castle kingside" whking_castle_kside
+      "e1g1" "KR" "g1" "f1";
+    castle_check "black king can castle kingside" blking_castle_kside
+      "e8g8" "kr" "g8" "f8";
+    castle_check "white king can castle queenside" whking_castle_qside
+      "e1c1" "KR" "c1" "d1";
+    castle_check "black king can castle queenside" blking_castle_qside
+      "e8c8" "kr" "c8" "d8";
+    castle_throw "queenside castle leads to check"
+      whking_castle_leads_to_check "e1c1"
+      (IllegalMove "Moving this piece would place you in check");
+    (* ^ kind of unnecessary*)
+    castle_throw "queenside rook has moved" whqrook_has_moved "e1c1"
+      (IllegalMove "White king cannot castle queenside anymore");
+    castle_throw "kingside rook has moved" whkrook_has_moved "e1g1"
+      (IllegalMove "White king cannot castle kingside anymore");
+    move_throws "King cannot move two up"
+      only_king "e4e6" "King can only move one spot when not castling";
+      move_throws "King cannot move two down"
+      only_king "e4e2" "King can only move one spot when not castling";
+      move_throws "King cannot move two left"
+      only_king "e4c4" "King can only move one spot when not castling";
+      move_throws "King cannot move two right"
+      only_king "e4g4" "King can only move one spot when not castling";
+      move_throws "King cannot move two SW"
+      only_king "e4c2" "King can only move one spot when not castling";
+      move_throws "King cannot move two NW"
+      only_king "e4c6" "King can only move one spot when not castling";
+      move_throws "King cannot move two NE"
+      only_king "e4g6" "King can only move one spot when not castling";
+      move_throws "King cannot move two SE"
+      only_king "e4g2" "King can only move one spot when not castling";
+    move_throws "King cannot move like a knight" only_king "e4c3"
+    "King cannot move in that direction"
+
   ]
 
 (**[check_true name fen move_str] creates an OUnit test asserting that
@@ -729,7 +819,14 @@ let fen_tests =
 
 let board_tests =
   List.flatten
-    [ init_tests; move_tests; undo_move_tests; check_tests; fen_tests ]
+    [
+      init_tests;
+      move_tests;
+      undo_move_tests;
+      check_tests;
+      fen_tests;
+      king_tests;
+    ]
 
 let suite =
   "test suite for chess engine & game" >::: List.flatten [ board_tests ]

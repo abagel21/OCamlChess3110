@@ -441,11 +441,13 @@ let queen_valid_helper pos from_sqr to_sqr =
 let extract_opt = function Some k -> k | _ -> raise IllegalPiece
 
 let is_rook x (pos : t) =
+  if x <> None then 
   let a = extract_opt x in
   let b = Piece.get_color a in
   let c = Piece.get_piece a in
   let d = get_turn pos in
   match c with Rook -> b == d | _ -> false
+else false
 
 let check_castle pos frank trank =
   if get_turn pos then
@@ -453,10 +455,10 @@ let check_castle pos frank trank =
       if pos.castling.(0) && is_rook pos.board.(0).(0) pos then true
       else
         raise (IllegalMove "White king cannot castle queenside anymore")
-    else if pos.castling.(1) && is_rook pos.board.(0).(7) pos then true
+    else if pos.castling.(1) && is_rook pos.board.(7).(0) pos then true
     else raise (IllegalMove "White king cannot castle kingside anymore")
   else if frank > trank then
-    if pos.castling.(2) && is_rook pos.board.(7).(0) pos then true
+    if pos.castling.(2) && is_rook pos.board.(0).(7) pos then true
     else
       raise (IllegalMove "Black king cannot castle queenside anymore")
   else if pos.castling.(3) && is_rook pos.board.(7).(7) pos then true
@@ -471,12 +473,12 @@ let king_valid_helper pos from_sqr to_sqr =
   let tcol = snd to_sqr in
   if bishop_valid_helper pos from_sqr to_sqr then
     if abs (frank - trank) + abs (fcol - tcol) = 2 then true
-    else raise (IllegalMove "King can only move one spot diagonally")
+    else raise (IllegalMove "King can only move one spot when not castling")
   else if rook_valid_helper pos from_sqr to_sqr then
     if abs (frank - trank + fcol - tcol) = 1 then true
-    else if fcol = tcol && abs (frank - trank) = 2 then
+    else if fcol = tcol && abs (frank - trank) = 2 && (fcol mod 7 =0 )then
       check_castle pos frank trank
-    else false
+    else raise (IllegalMove "King can only move one spot when not castling")
   else raise (IllegalMove "King cannot move in that direction")
 
 (**[pawn_checks pos square] returns true if the pawn on [square] checks
@@ -1039,9 +1041,9 @@ let extract pos turn =
   List.rev !a
 
 let revert_prev pos turn = move_list (extract pos turn) (init ())
+
 let get_turn_num pos = List.length pos.move_stack + 1
 
 let equals pos1 pos2 = failwith "unimplemented"
-
 
 let eval_move pos = failwith "unimplemented"
