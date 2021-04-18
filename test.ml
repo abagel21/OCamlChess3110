@@ -781,6 +781,7 @@ let move_tests =
       pawn_tests;
       queen_tests;
       pin_tests;
+      king_tests;
     ]
 
 let undo_move_tests = []
@@ -825,7 +826,6 @@ let board_tests =
       undo_move_tests;
       check_tests;
       fen_tests;
-      king_tests;
     ]
 
 let suite =
