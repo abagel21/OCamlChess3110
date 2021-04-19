@@ -441,13 +441,13 @@ let queen_valid_helper pos from_sqr to_sqr =
 let extract_opt = function Some k -> k | _ -> raise IllegalPiece
 
 let is_rook x (pos : t) =
-  if x <> None then 
-  let a = extract_opt x in
-  let b = Piece.get_color a in
-  let c = Piece.get_piece a in
-  let d = get_turn pos in
-  match c with Rook -> b == d | _ -> false
-else false
+  if x <> None then
+    let a = extract_opt x in
+    let b = Piece.get_color a in
+    let c = Piece.get_piece a in
+    let d = get_turn pos in
+    match c with Rook -> b == d | _ -> false
+  else false
 
 let check_castle pos frank trank =
   if get_turn pos then
@@ -473,15 +473,18 @@ let king_valid_helper pos from_sqr to_sqr =
   let tcol = snd to_sqr in
   if king_attack pos (fst to_sqr) (snd to_sqr) (get_turn pos) then
     raise (IllegalMove "King cannot move adjacent to enemy king")
-  else
-  if bishop_valid_helper pos from_sqr to_sqr then
+  else if bishop_valid_helper pos from_sqr to_sqr then
     if abs (frank - trank) + abs (fcol - tcol) = 2 then true
-    else raise (IllegalMove "King can only move one spot when not castling")
+    else
+      raise
+        (IllegalMove "King can only move one spot when not castling")
   else if rook_valid_helper pos from_sqr to_sqr then
     if abs (frank - trank + fcol - tcol) = 1 then true
-    else if fcol = tcol && abs (frank - trank) = 2 && (fcol mod 7 =0 )then
-      check_castle pos frank trank
-    else raise (IllegalMove "King can only move one spot when not castling")
+    else if fcol = tcol && abs (frank - trank) = 2 && fcol mod 7 = 0
+    then check_castle pos frank trank
+    else
+      raise
+        (IllegalMove "King can only move one spot when not castling")
   else raise (IllegalMove "King cannot move in that direction")
 
 (**[pawn_checks pos square] returns true if the pawn on [square] checks
@@ -577,13 +580,13 @@ let set_castling pos from_sqr =
           else pos.castling.(0) <- pos.castling.(0)
       | _ -> pos.castling.(0) <- pos.castling.(0))
 
-let convert_sqrs_to_string sqr1 sqr2 =
-  match (sqr1, sqr2) with
-  | (a, b), (c, d) ->
+let sqr_to_str sqr =
+  match sqr with
+  | a, b ->
       String.make 1 (Char.lowercase_ascii (char_of_int (a + 97)))
       ^ string_of_int (b + 1)
-      ^ String.make 1 (Char.lowercase_ascii (char_of_int (c + 97)))
-      ^ string_of_int (d + 1)
+
+let convert_sqrs_to_string sqr1 sqr2 = sqr_to_str sqr1 ^ sqr_to_str sqr2
 
 (**[rmv_piece pos sqr] removes the piece in [pos] at [sqr]. Requires:
    sqr is inbounds*)
@@ -1039,6 +1042,21 @@ let extract pos turn =
 let revert_prev pos turn = move_list (extract pos turn) (init ())
 
 let get_turn_num pos = List.length pos.move_stack + 1
+
+let get_pieces pos =
+  let a = ref [] in
+  for i = 0 to 7 do
+    for j = 0 to 7 do
+      match get_piece_internal (7 - i, 7 - j) pos with
+      | Some k ->
+          if get_color k = pos.turn then a := sqr_to_str (7 - i, 7 -j) :: !a
+      | None -> a := !a
+    done
+  done;
+  a
+
+let avail_moves piece_list = failwith ""
+let move_generator pos =  avail_moves (get_pieces pos) 
 
 let equals pos1 pos2 = failwith "unimplemented"
 
