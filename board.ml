@@ -1056,34 +1056,48 @@ let get_piece_locs pos =
   a
 
 let avail_move_pawn_one piece pos =
-  let a = ref [] in let i = if pos.turn then  0 else -2 in
-      for i = i to i + 2 do
-        let g = (fst piece + i - 1, snd piece + 1) in
-        if fst g < 8 && fst g > -1 then  
-          if fst g = fst piece then 
-            match get_piece_internal g pos with
-              | Some k -> a := !a
-            | None -> a := (sqr_to_str piece ^ sqr_to_str g) :: !a
-          else 
-            match get_piece_internal g pos with
-            | Some k -> if Piece.get_color(extract_opt (get_piece_internal g pos)) <> pos.turn then
+  let a = ref [] in
+  let b = if pos.turn then 1 else -1 in
+  for i = 0 to 2 do
+    let g = (fst piece + i - 1, snd piece + b) in
+    if fst g < 8 && fst g > -1 then
+      if fst g = fst piece then
+        match get_piece_internal g pos with
+        | Some k -> a := !a
+        | None -> a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+      else
+        match get_piece_internal g pos with
+        | Some k ->
+            if
+              Piece.get_color (extract_opt (get_piece_internal g pos))
+              <> pos.turn
+            then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+        | None ->
+            if g = pos.ep then
               a := (sqr_to_str piece ^ sqr_to_str g) :: !a
-            else a := !a
-          | None -> a := !a
-      done;
-      !a
+  done;
+  !a
+
 let avail_move_pawn_general piece pos =
   match pos.turn with
-  | true ->(
-      if snd piece = 1 then
-        if
-          rook_valid_helper pos piece (fst piece, snd piece + 2)
-          && get_piece_internal (fst piece, snd piece + 2) pos = None
-        then
-          [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + 2) ]
-        else []
-      else []) @ avail_move_pawn_one piece pos
-  | false -> []
+  | true ->
+      (if snd piece = 1 then
+       if
+         rook_valid_helper pos piece (fst piece, snd piece + 2)
+         && get_piece_internal (fst piece, snd piece + 2) pos = None
+       then [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + 2) ]
+       else []
+      else [])
+      @ avail_move_pawn_one piece pos
+  | false ->
+      (if snd piece = 6 then
+       if
+         rook_valid_helper pos piece (fst piece, snd piece - 2)
+         && get_piece_internal (fst piece, snd piece - 2) pos = None
+       then [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece - 2) ]
+       else []
+      else [])
+      @ avail_move_pawn_one piece pos
 
 let avail_move piece pos =
   match
@@ -1098,10 +1112,10 @@ let avail_move piece pos =
 
 let rec avail_moves piece_list pos =
   match piece_list with
-  | h :: t -> avail_move h pos :: avail_moves t pos
+  | h :: t -> (avail_move h pos :: avail_moves t pos)
   | [] -> []
 
-let move_generator pos = avail_moves !(get_piece_locs pos) pos
+let move_generator pos = List.flatten (avail_moves !(get_piece_locs pos) pos)
 
 let equals pos1 pos2 = failwith "unimplemented"
 
