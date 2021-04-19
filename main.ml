@@ -52,9 +52,14 @@ let rec game_loop board () =
          ANSITerminal.erase Screen;
          print_board mod_board;
          if is_in_check mod_board then
+          if (not (checkmate mod_board)) then 
            ANSITerminal.print_string [ ANSITerminal.red ]
              (turn mod_board ^ " is in check\n")
+          else  
+            ANSITerminal.print_string [ ANSITerminal.red ] 
+            (turn mod_board ^ " has been checkmated! \n")
          else ();
+         if (checkmate mod_board) then exit 0 else
          game_loop mod_board ()
        with IllegalMove k ->
          ANSITerminal.print_string [ ANSITerminal.red ] k);
