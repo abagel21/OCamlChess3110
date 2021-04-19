@@ -1194,7 +1194,7 @@ let avail_castles piece pos c =
     else ""
   else if (not pos.turn) && piece = (4, 7) then
     if
-      get_piece_internal (4 + (c / 2), 0) pos = None
+      get_piece_internal (4 + (c / 2), 7) pos = None
       &&
       try check_castle pos (4, 7) (4 + c, 7)
       with exn -> false && verify_enemy_or_empty pos (4 + c, 7)
