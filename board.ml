@@ -926,8 +926,8 @@ let fen_parse_other str pos =
             ep;
             checked =
               attacked_square pos
-                (if get_turn pos then pos.wking else pos.bking)
-                (not (get_turn pos));
+                (if turn  then pos.wking else pos.bking)
+                (not turn);
           })
 
 (**[fen_to_board_helper str pos rank col ind] is a recursive helper for
@@ -1060,7 +1060,7 @@ let in_range x = fst x > -1 && fst x < 8 && snd x > -1 && snd x < 8
 let avail_move_pawn_one piece pos checked =
   let b = if pos.turn then 1 else -1 in
   let g = (fst piece, snd piece + b) in
-  if will_be_checked pos piece g then []
+  if will_be_checked pos piece g then ""
   else if
     if checked then
       (not (mv_and_chck pos piece g (get_turn pos)))
@@ -1068,63 +1068,58 @@ let avail_move_pawn_one piece pos checked =
     else true
   then
     match get_piece_internal g pos with
-    | None ->
-        [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + b) ]
-    | Some k -> []
-  else []
+    | None -> sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + b)
+    | Some k -> ""
+  else ""
 
 let avail_move_pawn_two piece pos checked =
-  let x = if pos.turn then 2 else -2 in
-  let g = (fst piece, snd piece + x) in
-  if
-    rook_valid_helper pos piece g
-    && get_piece_internal g pos = None
-    && not (will_be_checked pos piece g)
+  if (pos.turn && snd piece = 1) || ((not pos.turn) && snd piece = 6)
   then
+    let x = if pos.turn then 2 else -2 in
+    let g = (fst piece, snd piece + x) in
     if
-      if checked then
-        (not (mv_and_chck pos piece g (get_turn pos)))
-        && attacked_square pos g (not (get_turn pos))
-      else true
-    then [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + x) ]
-    else []
-  else []
-
-let avail_move_pawn_diag piece pos checked =
-  let a = ref [] in
-  let b = if pos.turn then 1 else -1 in
-  for i = 0 to 2 do
-    let g = (fst piece + i - 1, snd piece + b) in
-    if in_range g then
+      rook_valid_helper pos piece g
+      && get_piece_internal g pos = None
+      && not (will_be_checked pos piece g)
+    then
       if
         if checked then
           (not (mv_and_chck pos piece g (get_turn pos)))
           && attacked_square pos g (not (get_turn pos))
         else true
-      then
-        match get_piece_internal g pos with
-        | Some k ->
-            if verify_enemy_or_empty pos g then
-              a := (sqr_to_str piece ^ sqr_to_str g) :: !a
-        | None ->
-            if g = pos.ep then
-              a := (sqr_to_str piece ^ sqr_to_str g) :: !a
-  done;
-  if will_be_checked pos piece (fst piece, snd piece + b) then []
-  else !a
+      then sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + x)
+      else ""
+    else ""
+  else ""
+
+let avail_move_pawn_diag piece pos x checked =
+  let b = if pos.turn then 1 else -1 in
+  let c = if x then 1 else -1 in
+  let g = (fst piece + c, snd piece + b) in
+  if in_range g && not (will_be_checked pos piece g) then
+    if
+      if checked then
+        (not (mv_and_chck pos piece g (get_turn pos)))
+        && attacked_square pos g (not (get_turn pos))
+      else true
+    then
+      match get_piece_internal g pos with
+      | Some k ->
+          if verify_enemy_or_empty pos g then
+            sqr_to_str piece ^ sqr_to_str g
+          else ""
+      | None ->
+          if g = pos.ep then sqr_to_str piece ^ sqr_to_str g else ""
+    else ""
+  else ""
 
 let avail_move_pawn_general piece pos checked =
-  match pos.turn with
-  | true ->
-      (if snd piece = 1 then avail_move_pawn_two piece pos checked
-      else [])
-      @ avail_move_pawn_one piece pos checked
-      @ avail_move_pawn_diag piece pos checked
-  | false ->
-      (if snd piece = 6 then avail_move_pawn_two piece pos checked
-      else [])
-      @ avail_move_pawn_one piece pos checked
-      @ avail_move_pawn_diag piece pos checked
+  [
+    avail_move_pawn_two piece pos checked;
+    avail_move_pawn_diag piece pos true checked;
+    avail_move_pawn_diag piece pos false checked;
+    avail_move_pawn_one piece pos checked;
+  ]
 
 let avail_move_diag piece pos x y checked =
   let a = ref [] in
