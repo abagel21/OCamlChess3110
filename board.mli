@@ -83,3 +83,7 @@ val revert_prev : t -> int -> t
 
 (** [get_turn_num t] returns the current turn number of t*)
 val get_turn_num : t -> int
+(** [move_generator t] returns the possible moves of pos t*)
+val move_generator : t -> string list
+(** [checkmate t] returns true if the player is checkmated *)
+val checkmate : t -> bool
