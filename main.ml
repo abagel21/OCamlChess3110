@@ -89,7 +89,17 @@ let rec start () =
         try
           let board = fen_to_board str in
           print_board board;
-          game_loop board ()
+          if is_in_check board then
+            if (not (checkmate board)) then 
+             ANSITerminal.print_string [ ANSITerminal.red ]
+               (turn board ^ " is in check\n")
+            else  
+              ANSITerminal.print_string [ ANSITerminal.red ] 
+              (turn board ^ " has been checkmated! \n")
+           else ();
+           if (checkmate board) then exit 0 else
+           game_loop board ()
+          
         with
         | IllegalFen k ->
             ANSITerminal.print_string [ ANSITerminal.red ]
