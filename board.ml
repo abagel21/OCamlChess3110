@@ -1053,69 +1053,191 @@ let get_piece_locs pos =
       | None -> a := !a
     done
   done;
-  a
+  !a
+
+let in_range x = fst x > -1 && fst x < 8 && snd x > -1 && snd x < 8
 
 let avail_move_pawn_one piece pos =
+  let b = if pos.turn then 1 else -1 in
+  let g = (fst piece, snd piece + b) in
+  if will_be_checked pos piece g then []
+  else
+    match get_piece_internal g pos with
+    | None ->
+        [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + b) ]
+    | Some k -> []
+
+let avail_move_pawn_two piece pos =
+  let x = if pos.turn then 2 else -2 in
+  if
+    rook_valid_helper pos piece (fst piece, snd piece + x)
+    && get_piece_internal (fst piece, snd piece + x) pos = None
+    && not (will_be_checked pos piece (fst piece, snd piece + x))
+  then [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + x) ]
+  else []
+
+let avail_move_pawn_diag piece pos =
   let a = ref [] in
   let b = if pos.turn then 1 else -1 in
   for i = 0 to 2 do
     let g = (fst piece + i - 1, snd piece + b) in
-    if fst g < 8 && fst g > -1 then
-      if fst g = fst piece then
-        match get_piece_internal g pos with
-        | Some k -> a := !a
-        | None -> a := (sqr_to_str piece ^ sqr_to_str g) :: !a
-      else
-        match get_piece_internal g pos with
-        | Some k ->
-            if
-              Piece.get_color (extract_opt (get_piece_internal g pos))
-              <> pos.turn
-            then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
-        | None ->
-            if g = pos.ep then
-              a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+    if in_range g then
+      match get_piece_internal g pos with
+      | Some k ->
+          if verify_enemy_or_empty pos g then
+            a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+      | None ->
+          if g = pos.ep then
+            a := (sqr_to_str piece ^ sqr_to_str g) :: !a
   done;
-  !a
+  if will_be_checked pos piece (fst piece, snd piece + b) then []
+  else !a
 
 let avail_move_pawn_general piece pos =
   match pos.turn with
   | true ->
-      (if snd piece = 1 then
-       if
-         rook_valid_helper pos piece (fst piece, snd piece + 2)
-         && get_piece_internal (fst piece, snd piece + 2) pos = None
-       then [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + 2) ]
-       else []
-      else [])
+      (if snd piece = 1 then avail_move_pawn_two piece pos else [])
       @ avail_move_pawn_one piece pos
+      @ avail_move_pawn_diag piece pos
   | false ->
-      (if snd piece = 6 then
-       if
-         rook_valid_helper pos piece (fst piece, snd piece - 2)
-         && get_piece_internal (fst piece, snd piece - 2) pos = None
-       then [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece - 2) ]
-       else []
-      else [])
+      (if snd piece = 6 then avail_move_pawn_two piece pos else [])
       @ avail_move_pawn_one piece pos
+      @ avail_move_pawn_diag piece pos
+
+let avail_move_diag piece pos x y =
+  let a = ref [] in
+  for i = 1 to 7 do
+    let g =
+      ( (fst piece + if x then i else -i),
+        snd piece + if y then i else -i )
+    in
+    if
+      not
+        (in_range g
+        && bishop_valid_helper pos piece g
+        && verify_enemy_or_empty pos g)
+    then a := !a
+    else a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+  done;
+  !a
+
+let avail_move_bishop piece pos =
+  avail_move_diag piece pos true true
+  @ avail_move_diag piece pos true false
+  @ avail_move_diag piece pos false false
+  @ avail_move_diag piece pos false true
+
+let avail_knight piece pos x y =
+  let g = (fst piece + x, snd piece + y) in
+  if
+    in_range g
+    && verify_enemy_or_empty pos g
+    && not (will_be_checked pos piece g)
+  then sqr_to_str piece ^ sqr_to_str g
+  else ""
+
+let avail_move_knight piece pos =
+  [
+    avail_knight piece pos 2 1;
+    avail_knight piece pos 2 (-1);
+    avail_knight piece pos 1 2;
+    avail_knight piece pos 1 (-2);
+    avail_knight piece pos (-2) 1;
+    avail_knight piece pos (-2) (-1);
+    avail_knight piece pos (-1) (-2);
+    avail_knight piece pos (-1) 2;
+  ]
+
+let avail_castles piece pos c =
+  if pos.turn && piece = (4, 0) then
+    if
+      rook_valid_helper pos (4, 0) (6, 0)
+      && check_castle pos (4, 0) (4 + c, 0)
+      && verify_enemy_or_empty pos (4 + c, 0)
+    then sqr_to_str (4, 0) ^ sqr_to_str (4 + c, 0)
+    else ""
+  else if (not pos.turn) && piece = (4, 7) then
+    if
+      rook_valid_helper pos (4, 7) (6, 7)
+      && check_castle pos (4, 7) (4 + c, 7)
+      && verify_enemy_or_empty pos (4 + c, 7)
+    then sqr_to_str (4, 7) ^ sqr_to_str (4 + c, 7)
+    else ""
+  else ""
+
+let avail_move_king piece pos =
+  let a = ref [] in
+  for i = -1 to 1 do
+    for j = -1 to 1 do
+      let g = (fst piece + i, snd piece + j) in
+      try
+        if
+          (not (will_be_checked pos piece g))
+          && king_valid_helper pos piece g
+          && in_range g
+          && verify_enemy_or_empty pos g
+        then
+          a :=
+            (sqr_to_str piece
+            ^ sqr_to_str (fst piece + i, snd piece + j))
+            :: !a
+      with exn -> a := !a
+    done
+  done;
+  avail_castles piece pos 2 :: avail_castles piece pos (-2) :: !a
+
+let avail_move_vert piece pos x =
+  let a = ref [] in
+  for i = 1 to 7 do
+    let g = (fst piece, snd piece + if x then i else -i) in
+    if
+      not
+        (in_range g
+        && rook_valid_helper pos piece g
+        && verify_enemy_or_empty pos g)
+    then a := !a
+    else a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+  done;
+  !a
+
+let avail_move_horiz piece pos x =
+  let a = ref [] in
+  for i = 1 to 7 do
+    let g = ((fst piece + if x then i else -i), snd piece) in
+    if
+      not
+        (in_range g
+        && rook_valid_helper pos piece g
+        && verify_enemy_or_empty pos g)
+    then a := !a
+    else a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+  done;
+  !a
+
+let avail_move_rook piece pos =
+  avail_move_horiz piece pos true
+  @ avail_move_horiz piece pos false
+  @ avail_move_vert piece pos true
+  @ avail_move_vert piece pos false
 
 let avail_move piece pos =
   match
     Piece.get_piece (extract_opt (get_piece_internal piece pos))
   with
   | Pawn -> avail_move_pawn_general piece pos
-  | Bishop -> []
-  | Queen -> []
-  | Rook -> []
-  | Knight -> []
-  | King -> []
+  | Bishop -> avail_move_bishop piece pos
+  | Rook -> avail_move_rook piece pos
+  | Queen -> avail_move_bishop piece pos @ avail_move_rook piece pos
+  | Knight -> avail_move_knight piece pos
+  | King -> avail_move_king piece pos
 
 let rec avail_moves piece_list pos =
   match piece_list with
-  | h :: t -> (avail_move h pos :: avail_moves t pos)
+  | h :: t -> avail_move h pos :: avail_moves t pos
   | [] -> []
 
-let move_generator pos = List.flatten (avail_moves !(get_piece_locs pos) pos)
+let move_generator pos =
+  List.flatten (avail_moves (get_piece_locs pos) pos)
 
 let equals pos1 pos2 = failwith "unimplemented"
 
