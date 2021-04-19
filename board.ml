@@ -337,7 +337,7 @@ let king_attack pos rank col color =
   let ksqr = if color then pos.bking else pos.wking in
   match ksqr with
   | krank, kcol ->
-      if abs (krank - rank) = 1 || abs (kcol - col) = 1 then true
+      if abs (krank - rank) <= 1 && abs (kcol - col) <= 1 then true
       else false
 
 (**[attacked_square pos sqr color] returns true if [sqr] is attacked by
