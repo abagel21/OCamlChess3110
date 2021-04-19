@@ -15,6 +15,10 @@ let play_move str board =
   | 5 -> Board.move (String.sub str 0 4) (String.sub str 4 1) board
   | _ -> raise (IllegalMove str)
 
+
+let rec print = function
+| h :: t -> if h <> "" then print_string h; print_string "  "; print t
+| [] -> print_endline "\n"
 (** [game_loop board ()] manages the game loop. *)
 let rec game_loop board () =
   let player_turn = turn board in
@@ -22,7 +26,8 @@ let rec game_loop board () =
   print_endline
     "Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate the \
      square to move from and to respectively, enter 'undo' to undo the \
-     previous move, enter 'revert' to choose a turn to return to or \
+     previous move, enter 'revert' to choose a turn to return to, \
+     enter 'help' to gather possible moves, or \n
      enter  'QUIT' to exit";
   match String.trim (read_line ()) with
   | "QUIT" ->
@@ -33,6 +38,9 @@ let rec game_loop board () =
       let old_board = undo_prev board in
       print_board old_board;
       game_loop old_board ()
+  | "help" -> 
+      print (move_generator board);
+      game_loop board ()
   | "revert" -> (
       print_endline "Enter the turn to return to";
       let temp = read_line () in
