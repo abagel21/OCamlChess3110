@@ -1100,26 +1100,12 @@ let avail_move_pawn_diag piece pos x checked =
   else ""
 
 let avail_move_pawn_general piece pos checked =
-<<<<<<< HEAD
   [
     avail_move_pawn_two piece pos checked;
     avail_move_pawn_diag piece pos true checked;
     avail_move_pawn_diag piece pos false checked;
     avail_move_pawn_one piece pos checked;
   ]
-=======
-  match pos.turn with
-  | true ->
-      ( if snd piece = 1 then avail_move_pawn_two piece pos checked
-      else [] )
-      @ avail_move_pawn_one piece pos checked
-      @ avail_move_pawn_diag piece pos checked
-  | false ->
-      ( if snd piece = 6 then avail_move_pawn_two piece pos checked
-      else [] )
-      @ avail_move_pawn_one piece pos checked
-      @ avail_move_pawn_diag piece pos checked
->>>>>>> b94adb4465a6c7f20ff608a113608830a4ace71e
 
 let avail_move_diag piece pos x y checked =
   let a = ref [] in
