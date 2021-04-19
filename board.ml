@@ -926,7 +926,7 @@ let fen_parse_other str pos =
             ep;
             checked =
               attacked_square pos
-                (if turn  then pos.wking else pos.bking)
+                (if turn then pos.wking else pos.bking)
                 (not turn);
           })
 
