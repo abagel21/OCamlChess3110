@@ -1061,15 +1061,17 @@ let avail_move_pawn_one piece pos checked =
   let b = if pos.turn then 1 else -1 in
   let g = (fst piece, snd piece + b) in
   if will_be_checked pos piece g then []
-  else
-    if (if checked then not ((mv_and_chck pos piece g (get_turn pos)))
-      && (attacked_square pos g (not (get_turn pos)))
-    else true)  then 
+  else if
+    if checked then
+      (not (mv_and_chck pos piece g (get_turn pos)))
+      && attacked_square pos g (not (get_turn pos))
+    else true
+  then
     match get_piece_internal g pos with
     | None ->
         [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + b) ]
     | Some k -> []
-    else []
+  else []
 
 let avail_move_pawn_two piece pos checked =
   let x = if pos.turn then 2 else -2 in
@@ -1078,13 +1080,15 @@ let avail_move_pawn_two piece pos checked =
     rook_valid_helper pos piece g
     && get_piece_internal g pos = None
     && not (will_be_checked pos piece g)
-  then  if (if checked then not ((mv_and_chck pos piece g (get_turn pos)))
-    && (attacked_square pos g (not (get_turn pos)))
-  else true)  then 
-  [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + x) ]
-else []
+  then
+    if
+      if checked then
+        (not (mv_and_chck pos piece g (get_turn pos)))
+        && attacked_square pos g (not (get_turn pos))
+      else true
+    then [ sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + x) ]
+    else []
   else []
-
 
 let avail_move_pawn_diag piece pos checked =
   let a = ref [] in
@@ -1092,16 +1096,19 @@ let avail_move_pawn_diag piece pos checked =
   for i = 0 to 2 do
     let g = (fst piece + i - 1, snd piece + b) in
     if in_range g then
-      if (if checked then not ((mv_and_chck pos piece g (get_turn pos)))
-        && (attacked_square pos g (not (get_turn pos)))
-      else true) then 
-      match get_piece_internal g pos with
-      | Some k ->
-          if verify_enemy_or_empty pos g then
-            a := (sqr_to_str piece ^ sqr_to_str g) :: !a
-      | None ->
-          if g = pos.ep then
-            a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+      if
+        if checked then
+          (not (mv_and_chck pos piece g (get_turn pos)))
+          && attacked_square pos g (not (get_turn pos))
+        else true
+      then
+        match get_piece_internal g pos with
+        | Some k ->
+            if verify_enemy_or_empty pos g then
+              a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+        | None ->
+            if g = pos.ep then
+              a := (sqr_to_str piece ^ sqr_to_str g) :: !a
   done;
   if will_be_checked pos piece (fst piece, snd piece + b) then []
   else !a
@@ -1109,11 +1116,13 @@ let avail_move_pawn_diag piece pos checked =
 let avail_move_pawn_general piece pos checked =
   match pos.turn with
   | true ->
-      (if snd piece = 1 then avail_move_pawn_two piece pos checked else [])
+      (if snd piece = 1 then avail_move_pawn_two piece pos checked
+      else [])
       @ avail_move_pawn_one piece pos checked
       @ avail_move_pawn_diag piece pos checked
   | false ->
-      (if snd piece = 6 then avail_move_pawn_two piece pos checked else [])
+      (if snd piece = 6 then avail_move_pawn_two piece pos checked
+      else [])
       @ avail_move_pawn_one piece pos checked
       @ avail_move_pawn_diag piece pos checked
 
@@ -1128,37 +1137,43 @@ let avail_move_diag piece pos x y checked =
       not
         (in_range g
         && bishop_valid_helper pos piece g
-        && not (will_be_checked pos piece g)
+        && (not (will_be_checked pos piece g))
         && verify_enemy_or_empty pos g)
     then a := !a
-    else 
-      if (if checked then not ((mv_and_chck pos piece g (get_turn pos)))
-        && (attacked_square pos g (not (get_turn pos)))
-      else true) then 
-      a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+    else if
+      if checked then
+        (not (mv_and_chck pos piece g (get_turn pos)))
+        && attacked_square pos g (not (get_turn pos))
+      else true
+    then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
   done;
   !a
 
-let avail_move_bishop piece pos checked=
+let avail_move_bishop piece pos checked =
   avail_move_diag piece pos true true checked
   @ avail_move_diag piece pos true false checked
   @ avail_move_diag piece pos false false checked
   @ avail_move_diag piece pos false true checked
 
-let avail_knight piece pos x y checked=
+let avail_knight piece pos x y checked =
   let g = (fst piece + x, snd piece + y) in
   if
-   not (in_range g
-    && verify_enemy_or_empty pos g
-    && not (will_be_checked pos piece g)) 
-  then "" else if (if checked then not ((mv_and_chck pos piece g (get_turn pos)))
-    && (attacked_square pos g (not (get_turn pos)))
-  else true) then sqr_to_str piece ^ sqr_to_str g
+    not
+      (in_range g
+      && verify_enemy_or_empty pos g
+      && not (will_be_checked pos piece g))
+  then ""
+  else if
+    if checked then
+      (not (mv_and_chck pos piece g (get_turn pos)))
+      && attacked_square pos g (not (get_turn pos))
+    else true
+  then sqr_to_str piece ^ sqr_to_str g
   else ""
 
-let avail_move_knight piece pos checked=
+let avail_move_knight piece pos checked =
   [
-    avail_knight piece pos 2 1 checked ;
+    avail_knight piece pos 2 1 checked;
     avail_knight piece pos 2 (-1) checked;
     avail_knight piece pos 1 2 checked;
     avail_knight piece pos 1 (-2) checked;
@@ -1171,16 +1186,18 @@ let avail_move_knight piece pos checked=
 let avail_castles piece pos c =
   if pos.turn && piece = (4, 0) then
     if
-      rook_valid_helper pos (4, 0) (6, 0)
-      && check_castle pos (4, 0) (4 + c, 0)
-      && verify_enemy_or_empty pos (4 + c, 0)
+      get_piece_internal (4 + (c / 2), 0) pos = None
+      &&
+      try check_castle pos (4, 0) (4 + c, 0)
+      with exn -> false && verify_enemy_or_empty pos (4 + c, 0)
     then sqr_to_str (4, 0) ^ sqr_to_str (4 + c, 0)
     else ""
   else if (not pos.turn) && piece = (4, 7) then
     if
-      rook_valid_helper pos (4, 7) (6, 7)
-      && check_castle pos (4, 7) (4 + c, 7)
-      && verify_enemy_or_empty pos (4 + c, 7)
+      get_piece_internal (4 + (c / 2), 0) pos = None
+      &&
+      try check_castle pos (4, 7) (4 + c, 7)
+      with exn -> false && verify_enemy_or_empty pos (4 + c, 7)
     then sqr_to_str (4, 7) ^ sqr_to_str (4 + c, 7)
     else ""
   else ""
@@ -1213,34 +1230,36 @@ let avail_move_vert piece pos x checked =
     if
       not
         (in_range g
-        && not (will_be_checked pos piece g)
+        && (not (will_be_checked pos piece g))
         && rook_valid_helper pos piece g
         && verify_enemy_or_empty pos g)
     then a := !a
-    else 
-      if (if checked then not ((mv_and_chck pos piece g (get_turn pos)))
-        && (attacked_square pos g (not (get_turn pos)))
-      else true) then 
-      a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+    else if
+      if checked then
+        (not (mv_and_chck pos piece g (get_turn pos)))
+        && attacked_square pos g (not (get_turn pos))
+      else true
+    then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
   done;
   !a
 
-let avail_move_horiz piece pos x checked=
+let avail_move_horiz piece pos x checked =
   let a = ref [] in
   for i = 1 to 7 do
     let g = ((fst piece + if x then i else -i), snd piece) in
     if
       not
         (in_range g
-        && not (will_be_checked pos piece g)
+        && (not (will_be_checked pos piece g))
         && rook_valid_helper pos piece g
         && verify_enemy_or_empty pos g)
     then a := !a
-    else 
-      if (if checked then not ((mv_and_chck pos piece g (get_turn pos)))
-        && (attacked_square pos g (not (get_turn pos)))
-      else true) then 
-      a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+    else if
+      if checked then
+        (not (mv_and_chck pos piece g (get_turn pos)))
+        && attacked_square pos g (not (get_turn pos))
+      else true
+    then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
   done;
   !a
 
@@ -1250,27 +1269,34 @@ let avail_move_rook piece pos checked =
   @ avail_move_vert piece pos true checked
   @ avail_move_vert piece pos false checked
 
-let avail_move piece pos checked=
+let avail_move piece pos checked =
   match
     Piece.get_piece (extract_opt (get_piece_internal piece pos))
   with
   | Pawn -> avail_move_pawn_general piece pos checked
   | Bishop -> avail_move_bishop piece pos checked
   | Rook -> avail_move_rook piece pos checked
-  | Queen -> avail_move_bishop piece pos checked @ avail_move_rook piece pos checked
+  | Queen ->
+      avail_move_bishop piece pos checked
+      @ avail_move_rook piece pos checked
   | Knight -> avail_move_knight piece pos checked
-  | King -> avail_move_king piece pos 
+  | King -> avail_move_king piece pos
 
-let rec avail_moves piece_list pos checked=
+let rec avail_moves piece_list pos checked =
   match piece_list with
-  | h :: t -> avail_move h pos checked:: avail_moves t pos checked
+  | h :: t -> avail_move h pos checked :: avail_moves t pos checked
   | [] -> []
-let move_generator pos = if (not pos.checked) then 
-  List.flatten (avail_moves (get_piece_locs pos) pos false)
-else  List.flatten (avail_moves (get_piece_locs pos) pos true)
 
-let checkmate pos = not ((List.length (List.filter (fun a -> a <> "") (move_generator pos))) > 0)
+let move_generator pos =
+  if not pos.checked then
+    List.flatten (avail_moves (get_piece_locs pos) pos false)
+  else List.flatten (avail_moves (get_piece_locs pos) pos true)
+
+let checkmate pos =
+  not
+    (List.length (List.filter (fun a -> a <> "") (move_generator pos))
+    > 0)
+
 let equals pos1 pos2 = failwith "unimplemented"
 
 let eval_move pos = failwith "unimplemented"
-
