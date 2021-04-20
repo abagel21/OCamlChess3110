@@ -87,3 +87,6 @@ val get_turn_num : t -> int
 val move_generator : t -> string list
 (** [checkmate t] returns true if the player is checkmated *)
 val checkmate : t -> bool
+
+
+val get_moves : t -> (string * string) list

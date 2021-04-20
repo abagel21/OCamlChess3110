@@ -15,7 +15,10 @@ let play_move str board =
   | 5 -> Board.move (String.sub str 0 4) (String.sub str 4 1) board
   | _ -> raise (IllegalMove str)
 
-
+let rec return_moves num move_list =
+  match move_list with   
+  | [] -> print_endline "\n"
+  | h :: t -> print_endline ((string_of_int num)^ ". " ^ fst h ^ snd h); return_moves (num + 1) t
 let rec print = function
 | h :: t -> if h <> "" then print_string h; print_string "  "; print t
 | [] -> print_endline "\n"
@@ -28,6 +31,7 @@ let rec game_loop board () =
      square to move from and to respectively, enter 'undo' to undo the \
      previous move, enter 'revert' to choose a turn to return to, \
      enter 'help' to gather possible moves, or \n
+     enter 'moves' to review the moves made, \n
      enter  'QUIT' to exit";
   match String.trim (read_line ()) with
   | "QUIT" ->
@@ -54,6 +58,9 @@ let rec game_loop board () =
           print_endline (temp ^ " is greater than or equal to current turn"); 
           game_loop board ()
       with exn -> game_loop board ())
+  | "moves" -> 
+      return_moves 1 (get_moves board);
+      game_loop board ()
   | str ->
       (try
          let mod_board = play_move str board in

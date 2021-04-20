@@ -1282,3 +1282,5 @@ let checkmate pos =
 let equals pos1 pos2 = failwith "unimplemented"
 
 let eval_move pos = failwith "unimplemented"
+
+let get_moves t = t.move_stack
