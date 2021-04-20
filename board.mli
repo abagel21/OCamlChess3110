@@ -88,5 +88,5 @@ val move_generator : t -> string list
 (** [checkmate t] returns true if the player is checkmated *)
 val checkmate : t -> bool
 
-
+(**[ get_moves t] returns the moves made in the game so far*)
 val get_moves : t -> (string * string) list
