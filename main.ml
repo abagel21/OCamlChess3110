@@ -172,6 +172,12 @@ let main () =
 (* Execute the game engine. *)
 let () = main ()
 
+
+
+(** Kept the functions below in case we develop more playable modes 
+    and the true/false isn't enough.*)
+
+    
 (*let rec game_loop_random board () =
     if get_turn board = false then (
       let c = random_move board () in 
