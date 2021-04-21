@@ -1269,14 +1269,15 @@ let rec avail_moves piece_list pos checked =
   | h :: t -> avail_move h pos checked :: avail_moves t pos checked
   | [] -> []
 
-let move_generator pos =
+let move_generator pos = let a = 
   if not pos.checked then
     List.flatten (avail_moves (get_piece_locs pos) pos false)
   else List.flatten (avail_moves (get_piece_locs pos) pos true)
+in  (List.filter (fun a -> a <> "") a)
 
 let checkmate pos =
   not
-    ( List.length (List.filter (fun a -> a <> "") (move_generator pos))
+    ( List.length (move_generator pos)
     > 0 )
 
 let equals pos1 pos2 = failwith "unimplemented"

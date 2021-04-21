@@ -1,4 +1,5 @@
 open Board
+open Random
 
 (** [turn board] returns the current players move on [board]. *)
 let turn board =
@@ -34,11 +35,12 @@ let rec game_loop board () =
   let player_turn = turn board in
   print_endline (player_turn ^ " to move: \n");
   print_endline
-    "Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate the \
-     square to move from and to respectively, enter 'undo' to undo the \
-     previous move, enter 'revert' to choose a turn to return to, \
-     enter 'help' to gather possible moves, or enter 'moves' to review \
-     the moves made, enter  'QUIT' to exit";
+    "1. Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate the \
+     square to move from and to respectively\n 2. Enter 'undo' to undo the \
+     previous move\n 3. enter 'revert' to choose a turn to return to, \
+     \n 4. Enter 'help' to gather possible moves\n 5. Enter 'moves' to review \
+     the moves made\n 6. Enter 'random' to recieve a random available \
+     move\n 7. Enter 'QUIT' to exit";
   match String.trim (read_line ()) with
   | "QUIT" ->
       ANSITerminal.print_string [ ANSITerminal.cyan ]
@@ -71,25 +73,30 @@ let rec game_loop board () =
   | "moves" ->
       return_moves 1 (get_moves board);
       game_loop board ()
+  | "random" ->
+      let d = move_generator board in
+      let a = Random.int (List.length d) in
+      print_endline (List.nth d a);
+      game_loop board ()
   | str ->
       (try
          let mod_board = play_move str board in
          ANSITerminal.erase Screen;
          print_board mod_board;
-         if is_in_check mod_board then
-           (if not (checkmate mod_board) then
+         if is_in_check mod_board then (
+           if not (checkmate mod_board) then
              ANSITerminal.print_string [ ANSITerminal.red ]
                (turn mod_board ^ " is in check\n")
            else
              ANSITerminal.print_string [ ANSITerminal.red ]
                (turn mod_board ^ " has been checkmated! \n");
-               exit 0)
+           exit 0)
          else ();
          if checkmate mod_board then (
-          ANSITerminal.print_string [ ANSITerminal.red ]
-          " Stalemate! \n";
-          exit 0 )
-        else game_loop mod_board ()
+           ANSITerminal.print_string [ ANSITerminal.red ]
+             " Stalemate! \n";
+           exit 0)
+         else game_loop mod_board ()
        with IllegalMove k ->
          ANSITerminal.print_string [ ANSITerminal.red ] k);
       print_endline "";
@@ -120,8 +127,9 @@ let rec start () =
           else ();
           if checkmate board then (
             ANSITerminal.print_string [ ANSITerminal.red ]
-            " Stalemate ! \n";
-            exit 0 ) else game_loop board ()
+              " Stalemate ! \n";
+            exit 0)
+          else game_loop board ()
         with
         | IllegalFen k ->
             ANSITerminal.print_string [ ANSITerminal.red ]
