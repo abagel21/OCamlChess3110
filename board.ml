@@ -1095,7 +1095,7 @@ let avail_move_pawn_diag piece pos x checked =
       match get_piece_internal g pos with
       | Some k ->
             sqr_to_str piece ^ sqr_to_str g
-      | None ->
+      | None -> if g = pos.ep then sqr_to_str piece ^ sqr_to_str g else
            ""
     else ""
   else ""
@@ -1172,6 +1172,7 @@ let avail_castles piece pos c =
     if
       get_piece_internal (4 + (c / 2), 0) pos = None
       &&
+       get_piece_internal (4 + c, 0) pos = None &&
       try check_castle pos (4, 0) (4 + c, 0)
       with exn -> false && verify_enemy_or_empty pos (4 + c, 0)
     then sqr_to_str (4, 0) ^ sqr_to_str (4 + c, 0)
@@ -1179,7 +1180,7 @@ let avail_castles piece pos c =
   else if (not pos.turn) && piece = (4, 7) then
     if
       get_piece_internal (4 + (c / 2), 7) pos = None
-      &&
+      && get_piece_internal (4 + c, 0) pos = None &&
       try check_castle pos (4, 7) (4 + c, 7)
       with exn -> false && verify_enemy_or_empty pos (4 + c, 7)
     then sqr_to_str (4, 7) ^ sqr_to_str (4 + c, 7)
@@ -1279,13 +1280,13 @@ let move_generator pos = let a =
   else List.flatten (avail_moves (get_piece_locs pos) pos true)
 in  (List.filter (fun a -> a <> "") a)
 
-let rec check_kings pos = 
+let check_kings pos = 
   match get_piece_locs pos with 
-  | [t] -> (pos.wking = t || pos.bking = t) && check_kings {pos with turn = not (pos.turn);}
+  | [t] -> (pos.wking = t || pos.bking = t) 
   | _ -> false
 
 let checkmate pos = 
-  check_kings pos ||
+  (check_kings pos && check_kings {pos with turn = not pos.turn;})||
   not
     ( List.length (move_generator pos)
     > 0 )

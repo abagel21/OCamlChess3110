@@ -120,9 +120,9 @@ let rec game_loop board () b =
 
 let rec random_game board =
   if checkmate board then (
-    (if is_in_check board then print_endline "Checkmate!"
-    else print_endline "Stalemate!");
-    exit 0)
+    (if is_in_check board then (print_endline "Checkmate!"; exit 0)
+    else print_endline "Stalemate!"; exit 0)
+  )
   else
     let a = random_move board () in
    try let b = move a "Q" board in
