@@ -30,7 +30,7 @@ let rec print = function
       print t
   | [] -> print_endline "\n"
 
-let random_move board =
+let random_move board () =
   let d = move_generator board in
   let a = Random.int (List.length d) in
   List.nth d a
@@ -81,7 +81,7 @@ let rec game_loop board () =
       return_moves 1 (get_moves board);
       game_loop board ()
   | "random" ->
-      print_endline (random_move board);
+      print_endline (random_move board ());
       game_loop board ()
   | str ->
       (try
@@ -108,9 +108,10 @@ let rec game_loop board () =
       game_loop board ()
 
 let rec game_loop_random board () =
-  let board =
     if get_turn board = false then (
-      let d = move (random_move board) "" board in
+      let c = random_move board () in 
+      let d = move (c) "" board in
+      print_endline ("Black moved : " ^c);
       print_board d;
       print_endline ( "White to move: \n");
       print_endline
@@ -122,9 +123,8 @@ let rec game_loop_random board () =
     \ 5. Enter 'moves' to review the moves made\n\
     \ 6. Enter 'random' to recieve a random available move\n\
     \ 7. Enter 'QUIT' to exit";
-      d)
-    else board
-  in
+      game_loop_random d ())
+    else 
   match String.trim (read_line ()) with
   | "QUIT" ->
       ANSITerminal.print_string [ ANSITerminal.cyan ]
@@ -158,7 +158,7 @@ let rec game_loop_random board () =
       return_moves 1 (get_moves board);
       game_loop_random board ()
   | "random" ->
-      print_endline (random_move board);
+      print_endline (random_move board ());
       game_loop_random board ()
   | str ->
       (try
@@ -187,7 +187,8 @@ let rec game_loop_random board () =
 (** [start ()] initializes the board. *)
 let rec start () =
   print_endline
-    "Enter 'start' to begin with the starting chess position or enter \
+    "Enter 'start' to begin with the starting chess position or \ enter 
+    'random' to play against a computer making random moves \ enter \
      a FEN formatted string to load a specific board\n";
   match String.trim (read_line ()) with
   | "start" ->
