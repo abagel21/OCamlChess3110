@@ -1,6 +1,7 @@
 open Board
 open Random
 
+
 (** [turn board] returns the current players move on [board]. *)
 let turn board =
   match Board.get_turn board with true -> "White" | false -> "Black"
@@ -30,9 +31,10 @@ let rec print = function
       print t
   | [] -> print_endline "\n"
 
+let gen_random x = Random.self_init (); Random.int x 
 let random_move board () =
   let d = move_generator board in
-  let a = Random.int (List.length d) in
+  let a = gen_random (List.length d) in
   List.nth d a
 
 (** [game_loop board ()] manages the game loop. *)
