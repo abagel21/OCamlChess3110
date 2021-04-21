@@ -1048,10 +1048,10 @@ let avail_move_pawn_one piece pos checked =
   let g = (fst piece, snd piece + b) in
   if will_be_checked pos piece g then ""
   else if
-    if checked then
+    (if checked then
       (not (mv_and_chck pos piece g (get_turn pos)))
-      && attacked_square pos g ((get_turn pos))
-    else true
+       && (attacked_square pos g (not (get_turn pos)))
+    else true)
   then
     match get_piece_internal g pos with
     | None -> sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + b)
@@ -1071,7 +1071,7 @@ let avail_move_pawn_two piece pos checked =
       if
         if checked then
           (not (mv_and_chck pos piece g (get_turn pos)))
-          && attacked_square pos g ((get_turn pos))
+             && (attacked_square pos g (not (get_turn pos)))
         else true
       then sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + x)
       else ""
@@ -1086,7 +1086,7 @@ let avail_move_pawn_diag piece pos x checked =
     if
       if checked then
         (not (mv_and_chck pos piece g (get_turn pos)))
-        && attacked_square pos g ((get_turn pos))
+       && (attacked_square pos g (not (get_turn pos)))
       else true
     then
       match get_piece_internal g pos with

@@ -43,10 +43,10 @@ if (b || get_turn board) then (
 let player_turn = turn board in
 print_endline (player_turn ^ " to move: \n");
 print_endline
-  "1. Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate \
-   the square to move from and to respectively\n\
+  " 1. Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate \
+       the square to move from and to respectively\n\
   \ 2. Enter 'undo' to undo the previous move\n\
-  \ 3. Enter 'revert' to choose a turn to return to, \n\
+  \ 3. Enter 'revert' to choose a turn to return to \n\
   \ 4. Enter 'help' to gather possible moves\n\
   \ 5. Enter 'moves' to review the moves made\n\
   \ 6. Enter 'random' to recieve a random available move\n\
@@ -91,14 +91,15 @@ match String.trim (read_line ()) with
        let mod_board = play_move str board in
        ANSITerminal.erase Screen;
        print_board mod_board;
-       if is_in_check mod_board then (
-         if not (checkmate mod_board) then
+       if is_in_check mod_board then begin
+         if not (checkmate mod_board) then(
            ANSITerminal.print_string [ ANSITerminal.red ]
-             (turn mod_board ^ " is in check\n")
-         else
+             (turn mod_board ^ " is in check\n"))
+         else(
            ANSITerminal.print_string [ ANSITerminal.red ]
              (turn mod_board ^ " has been checkmated! \n");
          exit 0)
+        end
        else ();
        if checkmate mod_board then (
          ANSITerminal.print_string [ ANSITerminal.red ]
@@ -112,8 +113,8 @@ match String.trim (read_line ()) with
   else 
     let c = random_move board () in 
     let d = move (c) "" board in
-    print_endline ("Black moved : " ^c);
     print_board d;
+    print_endline ("\nBlack moved : " ^c ^ "\n");
     game_loop d () b
 
 
@@ -122,7 +123,7 @@ let rec start () =
   print_endline
     "Enter 'start' to begin with the starting chess position or \ enter 
     'random' to play against a computer making random moves \ enter \
-     a FEN formatted string to load a specific board\n";
+     a FEN formatted string to load a specific board \n";
   match String.trim (read_line ()) with
   | "start" ->
       let board = Board.init () in
@@ -177,7 +178,7 @@ let () = main ()
 (** Kept the functions below in case we develop more playable modes 
     and the true/false isn't enough.*)
 
-    
+
 (*let rec game_loop_random board () =
     if get_turn board = false then (
       let c = random_move board () in 
