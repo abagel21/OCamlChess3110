@@ -30,17 +30,24 @@ let rec print = function
       print t
   | [] -> print_endline "\n"
 
+let random_move board =
+  let d = move_generator board in
+  let a = Random.int (List.length d) in
+  List.nth d a
+
 (** [game_loop board ()] manages the game loop. *)
 let rec game_loop board () =
   let player_turn = turn board in
   print_endline (player_turn ^ " to move: \n");
   print_endline
-    "1. Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate the \
-     square to move from and to respectively\n 2. Enter 'undo' to undo the \
-     previous move\n 3. enter 'revert' to choose a turn to return to, \
-     \n 4. Enter 'help' to gather possible moves\n 5. Enter 'moves' to review \
-     the moves made\n 6. Enter 'random' to recieve a random available \
-     move\n 7. Enter 'QUIT' to exit";
+    "1. Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate \
+     the square to move from and to respectively\n\
+    \ 2. Enter 'undo' to undo the previous move\n\
+    \ 3. Enter 'revert' to choose a turn to return to, \n\
+    \ 4. Enter 'help' to gather possible moves\n\
+    \ 5. Enter 'moves' to review the moves made\n\
+    \ 6. Enter 'random' to recieve a random available move\n\
+    \ 7. Enter 'QUIT' to exit";
   match String.trim (read_line ()) with
   | "QUIT" ->
       ANSITerminal.print_string [ ANSITerminal.cyan ]
@@ -74,9 +81,7 @@ let rec game_loop board () =
       return_moves 1 (get_moves board);
       game_loop board ()
   | "random" ->
-      let d = move_generator board in
-      let a = Random.int (List.length d) in
-      print_endline (List.nth d a);
+      print_endline (random_move board);
       game_loop board ()
   | str ->
       (try
@@ -102,6 +107,83 @@ let rec game_loop board () =
       print_endline "";
       game_loop board ()
 
+let rec game_loop_random board () =
+  let board =
+    if get_turn board = false then (
+      let d = move (random_move board) "" board in
+      print_board d;
+      print_endline ( "White to move: \n");
+      print_endline
+    "1. Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate \
+     the square to move from and to respectively\n\
+    \ 2. Enter 'undo' to undo the previous move\n\
+    \ 3. Enter 'revert' to choose a turn to return to, \n\
+    \ 4. Enter 'help' to gather possible moves\n\
+    \ 5. Enter 'moves' to review the moves made\n\
+    \ 6. Enter 'random' to recieve a random available move\n\
+    \ 7. Enter 'QUIT' to exit";
+      d)
+    else board
+  in
+  match String.trim (read_line ()) with
+  | "QUIT" ->
+      ANSITerminal.print_string [ ANSITerminal.cyan ]
+        "Thanks for playing\n";
+      exit 0
+  | "undo" ->
+      let old_board = undo_prev board in
+      print_board old_board;
+      game_loop_random old_board ()
+  | "help" ->
+      print (move_generator board);
+      game_loop board ()
+  | "revert" -> (
+      print_endline "Enter the turn to return to";
+      let temp = read_line () in
+      try
+        let turn = int_of_string temp in
+        if turn < get_turn_num board then (
+          let old_board = revert_prev board turn in
+          print_board old_board;
+          game_loop_random old_board ())
+        else
+          print_endline
+            (temp ^ " is greater than or equal to current turn \n");
+        game_loop_random board ()
+      with exn ->
+        print_endline
+          (temp ^ " was not a valid int, continuing current game \n");
+        game_loop_random board ())
+  | "moves" ->
+      return_moves 1 (get_moves board);
+      game_loop_random board ()
+  | "random" ->
+      print_endline (random_move board);
+      game_loop_random board ()
+  | str ->
+      (try
+         let mod_board = play_move str board in
+         ANSITerminal.erase Screen;
+         print_board mod_board;
+         if is_in_check mod_board then (
+           if not (checkmate mod_board) then
+             ANSITerminal.print_string [ ANSITerminal.red ]
+               (turn mod_board ^ " is in check\n")
+           else
+             ANSITerminal.print_string [ ANSITerminal.red ]
+               (turn mod_board ^ " has been checkmated! \n");
+           exit 0)
+         else ();
+         if checkmate mod_board then (
+           ANSITerminal.print_string [ ANSITerminal.red ]
+             " Stalemate! \n";
+           exit 0)
+         else game_loop_random mod_board ()
+       with IllegalMove k ->
+         ANSITerminal.print_string [ ANSITerminal.red ] k);
+      print_endline "";
+      game_loop_random board ()
+
 (** [start ()] initializes the board. *)
 let rec start () =
   print_endline
@@ -112,6 +194,9 @@ let rec start () =
       let board = Board.init () in
       print_board board;
       game_loop board ()
+  | "random" ->
+      print_board (Board.init ());
+      game_loop_random (Board.init ()) ()
   | str ->
       begin
         try
