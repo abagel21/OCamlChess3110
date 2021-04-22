@@ -128,9 +128,8 @@ let rec random_game board x =
   else
     let a = random_move board () in
     let b = move a "Q" board in
-    random_game b x)
-  
-
+    random_game b x
+  )
 
 (** [start ()] initializes the board. *)
 let rec start () =

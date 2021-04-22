@@ -163,6 +163,9 @@ let sqr_from_str str =
    player*)
 let find_king_sqr pos color = if color then pos.wking else pos.bking
 
+
+let extract_opt = function Some k -> k | None -> raise IllegalPiece
+
 (**[verify_enemy_or_empty pos to_sqr] returns true if [to_sqr] is empty
    or occupied by an enemy piece*)
 let verify_enemy_or_empty pos to_sqr =
@@ -173,13 +176,18 @@ let verify_enemy_or_empty pos to_sqr =
 (**[first_piece pos rank col rankinc colinc] returns the first piece
    along the line designated by rank = rank + rankinc, col = col +
    colinc*)
-let rec first_piece pos rank col rankinc colinc =
+let rec first_piece pos rank col rankinc colinc stationary =
   if rank > 7 || rank < 0 || col > 7 || col < 0 then None
   else
+    if stationary = None then  match get_piece_internal (rank, col) pos with
+      | None ->
+          first_piece pos (rank + rankinc) (col + colinc) rankinc colinc stationary
+      | Some k -> Some k
+    else
     match get_piece_internal (rank, col) pos with
     | None ->
-        first_piece pos (rank + rankinc) (col + colinc) rankinc colinc
-    | Some k -> Some k
+        first_piece pos (rank + rankinc) (col + colinc) rankinc colinc stationary
+    | Some k -> if (k = extract_opt stationary) then first_piece pos (rank + rankinc) (col + colinc) rankinc colinc stationary else Some k
 
 (**[is_horiz_attacker piece color] returns true if [piece] attacks
    horizontally per the rules of chess*)
@@ -190,7 +198,7 @@ let is_horiz_attacker piece color =
       match Piece.get_piece k with
       | Rook -> get_color k = color
       | Queen -> get_color k = color
-      | _ -> false )
+      | _ -> false)
 
 (**[is_diag_attacker piece color] returns true if [piece] attacks
    diagonally per the rules of chess*)
@@ -201,42 +209,42 @@ let is_diag_attacker piece color =
       match Piece.get_piece k with
       | Bishop -> get_color k = color
       | Queen -> get_color k = color
-      | _ -> false )
+      | _ -> false)
 
 (**[perp_attack pos rank col color] returns true if there is a piece
    horizontally or vertically attacking the square at (rank, col) of
    [color]*)
-let perp_attack pos rank col color =
+let perp_attack pos rank col color k=
   let left_attack =
-    is_horiz_attacker (first_piece pos (rank - 1) col ~-1 0) color
+    is_horiz_attacker (first_piece pos (rank - 1) col ~-1 0 k) color  
   in
   let right_attack =
-    is_horiz_attacker (first_piece pos (rank + 1) col 1 0) color
+    is_horiz_attacker (first_piece pos (rank + 1) col 1 0 k) color  
   in
   let up_attack =
-    is_horiz_attacker (first_piece pos rank (col + 1) 0 1) color
+    is_horiz_attacker (first_piece pos rank (col + 1) 0 1 k) color 
   in
   let down_attack =
-    is_horiz_attacker (first_piece pos rank (col - 1) 0 ~-1) color
+    is_horiz_attacker (first_piece pos rank (col - 1) 0 ~-1 k) color 
   in
-  left_attack || right_attack || up_attack || down_attack
+  left_attack || right_attack || up_attack || down_attack 
 
 (**[diag_attack pos rank col color] returns true if there is a piece
    diagonally attacking the square at (rank, col) of [color]*)
-let diag_attack pos rank col color =
+let diag_attack pos rank col color k=
   let upleft =
-    is_diag_attacker (first_piece pos (rank + 1) (col + 1) 1 1) color
+    is_diag_attacker (first_piece pos (rank - 1) (col + 1) ~-1 1 k) color 
   in
   let upright =
-    is_diag_attacker (first_piece pos (rank - 1) (col + 1) ~-1 1) color
+    is_diag_attacker (first_piece pos (rank + 1) (col + 1) 1 1 k) color 
   in
   let botleft =
     is_diag_attacker
-      (first_piece pos (rank - 1) (col - 1) ~-1 ~-1)
+      (first_piece pos (rank - 1) (col - 1) ~-1 ~-1 k)
       color
   in
   let botright =
-    is_diag_attacker (first_piece pos (rank + 1) (col - 1) 1 ~-1) color
+    is_diag_attacker (first_piece pos (rank + 1) (col - 1) 1 ~-1 k) color
   in
   upleft || upright || botleft || botright
 
@@ -248,7 +256,7 @@ let is_pawn_attacker piece color =
   | Some k -> (
       match Piece.get_piece k with
       | Pawn -> get_color k = color
-      | _ -> false )
+      | _ -> false)
 
 (**[pawn_attack pos rank col color] returns true if there is a pawn
    attacking the square at (rank, col) of [color]*)
@@ -282,7 +290,7 @@ let is_knight_attacker piece color =
   | Some k -> (
       match Piece.get_piece k with
       | Knight -> get_color k = color
-      | _ -> false )
+      | _ -> false)
 
 (** [sqr_inbounds sqr] returns whether [sqr] is inbounds. *)
 let sqr_inbounds (rank, col) =
@@ -294,8 +302,8 @@ let rec check_valid_sqrs pos psble_knight valid_sqr color =
   match (psble_knight, valid_sqr) with
   | [], [] -> false
   | kh :: kt, vh :: vt ->
-      ( if vh then is_knight_attacker (get_piece_internal kh pos) color
-      else false )
+      (if vh then is_knight_attacker (get_piece_internal kh pos) color
+      else false)
       || check_valid_sqrs pos kt vt color
   | _ -> false
 
@@ -328,11 +336,20 @@ let king_attack pos rank col color =
 
 (**[attacked_square pos sqr color] returns true if [sqr] is attacked by
    a piece of [color] in [pos]*)
-let attacked_square pos sqr color =
+let attacked_square pos sqr color  =
   match sqr with
   | rank, col ->
-      let perp = perp_attack pos rank col color in
-      let diag = diag_attack pos rank col color in
+      let perp = perp_attack pos rank col color None in
+      let diag = diag_attack pos rank col color None in
+      let pawn = pawn_attack pos rank col color in
+      let knight = knight_attack pos rank col color in
+      perp || diag || pawn || knight
+
+let attacked_square_king pos sqr color (k : Piece.t option) =
+  match sqr with
+  | rank, col ->
+      let perp = perp_attack pos rank col color k in
+      let diag = diag_attack pos rank col color k in
       let pawn = pawn_attack pos rank col color in
       let knight = knight_attack pos rank col color in
       perp || diag || pawn || knight
@@ -424,7 +441,6 @@ let queen_valid_helper pos from_sqr to_sqr =
   rook_valid_helper pos from_sqr to_sqr
   || bishop_valid_helper pos from_sqr to_sqr
 
-let extract_opt = function Some k -> k | None -> raise IllegalPiece
 
 let is_rook x (pos : t) =
   if x <> None then
@@ -438,16 +454,30 @@ let is_rook x (pos : t) =
 let check_castle pos frank trank =
   if get_turn pos then
     if frank > trank then
-      if pos.castling.(0) && is_rook pos.board.(0).(0) pos && rook_valid_helper pos (frank,0) (0,0) then true
-      else
-        raise (IllegalMove "White king cannot castle queenside ")
-    else if pos.castling.(1) && is_rook pos.board.(7).(0) pos && rook_valid_helper pos (frank,0) (7,0)  then true
+      if
+        pos.castling.(0)
+        && is_rook pos.board.(0).(0) pos
+        && rook_valid_helper pos (frank, 0) (0, 0)
+      then true
+      else raise (IllegalMove "White king cannot castle queenside ")
+    else if
+      pos.castling.(1)
+      && is_rook pos.board.(7).(0) pos
+      && rook_valid_helper pos (frank, 0) (7, 0)
+    then true
     else raise (IllegalMove "White king cannot castle kingside ")
   else if frank > trank then
-    if pos.castling.(2) && is_rook pos.board.(0).(7) pos && rook_valid_helper pos (frank,7) (0,7)then true
-    else
-      raise (IllegalMove "Black king cannot castle queenside ")
-  else if pos.castling.(3) && is_rook pos.board.(7).(7) pos && rook_valid_helper pos (frank,7) (7,7)then true
+    if
+      pos.castling.(2)
+      && is_rook pos.board.(0).(7) pos
+      && rook_valid_helper pos (frank, 7) (0, 7)
+    then true
+    else raise (IllegalMove "Black king cannot castle queenside ")
+  else if
+    pos.castling.(3)
+    && is_rook pos.board.(7).(7) pos
+    && rook_valid_helper pos (frank, 7) (7, 7)
+  then true
   else raise (IllegalMove "Black king cannot castle kingside ")
 
 (**[king_valid_helper pos from_sqr to_sqr] verifies that the moves
@@ -547,7 +577,7 @@ let piece_causes_check pos square =
       | Bishop -> bishop_checks pos square
       | Rook -> rook_checks pos square
       | Queen -> queen_checks pos square
-      | King -> false )
+      | King -> false)
 
 let set_castling pos from_sqr =
   match get_piece_internal from_sqr pos with
@@ -564,7 +594,7 @@ let set_castling pos from_sqr =
             else if fst from_sqr = 7 then pos.castling.(3) <- false
             else pos.castling.(0) <- pos.castling.(0)
           else pos.castling.(0) <- pos.castling.(0)
-      | _ -> pos.castling.(0) <- pos.castling.(0) )
+      | _ -> pos.castling.(0) <- pos.castling.(0))
 
 let sqr_to_str sqr =
   match sqr with
@@ -588,6 +618,7 @@ let add_piece pos sqr piece =
    results in the [color] king being in check, else false*)
 let mv_and_chck pos from_sqr to_sqr color =
   let from_piece = get_piece_internal from_sqr pos in
+
   let to_piece = get_piece_internal to_sqr pos in
   rmv_piece pos from_sqr;
   add_piece pos to_sqr from_piece;
@@ -595,7 +626,7 @@ let mv_and_chck pos from_sqr to_sqr color =
     if
       attacked_square pos
         (if color then pos.wking else pos.bking)
-        (not color)
+        (not color) 
     then true
     else false
   in
@@ -620,12 +651,13 @@ let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
     checked =
       piece_causes_check pos to_sqr
       || causes_discovery { pos with turn = turn_check } from_sqr to_sqr;
+    ep = (-1, -1);
     bking;
     wking;
     move_stack =
       List.rev
-        ( (convert_sqrs_to_string from_sqr to_sqr, promote_str)
-        :: List.rev pos.move_stack );
+        ((convert_sqrs_to_string from_sqr to_sqr, promote_str)
+        :: List.rev pos.move_stack);
   }
 
 (**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr]
@@ -670,7 +702,7 @@ let pawn_double_move_helper pos from_sqr to_sqr promote_str =
         in
         {
           next_pos with
-          ep = (fst from_sqr, (snd from_sqr + snd to_sqr)/2);
+          ep = (fst from_sqr, (snd from_sqr + snd to_sqr) / 2);
         }
       else raise (IllegalMove "Illegal move for a pawn")
   | Some k -> raise (IllegalMove "Illegal move for a pawn")
@@ -728,7 +760,7 @@ let possibly_castle pos from_sqr to_sqr =
     let curr_piece = pos.board.(frank).(fcol) in
     pos.board.(frank).(fcol) <- None;
     pos.board.(trank).(tcol) <- curr_piece;
-    add_move pos from_sqr to_sqr true "" )
+    add_move pos from_sqr to_sqr true "")
   else
     let curr_piece = pos.board.(frank).(fcol) in
     if frank > trank then (
@@ -737,7 +769,7 @@ let possibly_castle pos from_sqr to_sqr =
       pos.board.(trank).(tcol) <- curr_piece;
       pos.board.(0).(fcol) <- None;
       pos.board.(3).(fcol) <- rook;
-      add_move pos from_sqr to_sqr true "" )
+      add_move pos from_sqr to_sqr true "")
     else
       let rook = pos.board.(7).(fcol) in
       pos.board.(frank).(fcol) <- None;
@@ -753,11 +785,11 @@ let will_be_checked pos from_sqr to_sqr =
   | None -> raise (IllegalMove "There is no piece to move")
   | Some k -> (
       match Piece.get_piece k with
-      | King -> attacked_square pos to_sqr (not (get_turn pos))
+      | King -> attacked_square_king pos to_sqr (not (get_turn pos)) (get_piece_internal from_sqr pos)
       | _ ->
           if attacked_square pos from_sqr (not (get_turn pos)) then
             mv_and_chck pos from_sqr to_sqr (get_turn pos)
-          else false )
+          else false)
 
 (**[check_and_move piece pos from_sqr to_sqr] moves the piece [piece]
    from [from_sqr] to [to_sqr] in [pos] if it is a legal move for
@@ -805,11 +837,14 @@ let is_king piece =
    Precondition: [piece] is owned by the current player of [pos], the
    current player of [pos] is in check *)
 let checked_move piece pos from_sqr to_sqr promote_str new_p : t =
-  if
-    (not (mv_and_chck pos from_sqr to_sqr (get_turn pos)))
-    || is_king piece
-       && not (attacked_square pos to_sqr (not (get_turn pos)))
-  then check_and_move piece pos from_sqr to_sqr promote_str new_p
+  let a =
+    if is_king piece then
+      not (will_be_checked pos from_sqr to_sqr )
+    else
+      (not (mv_and_chck pos from_sqr to_sqr (get_turn pos)))
+      || not (attacked_square pos to_sqr (not (get_turn pos)))
+  in
+  if a then check_and_move piece pos from_sqr to_sqr promote_str new_p
   else raise (IllegalMove "Invalid move, you are in check!")
 
 (**[move_helper piece pos from_sqr to_sqr] moves the piece [piece] from
@@ -827,8 +862,8 @@ let move_helper piece pos from_sqr to_sqr new_p promote_str =
   else
     raise
       (IllegalMove
-         ( (if get_turn pos then "White" else "Black")
-         ^ " does not own this piece" ))
+         ((if get_turn pos then "White" else "Black")
+         ^ " does not own this piece"))
 
 (**[parse_promote_str str] returns the valid piece representation of
    [str]. Throws [IllegalPiece] if the string is an illegal piece *)
@@ -919,21 +954,21 @@ let fen_parse_other str pos =
   match split with
   | [] -> raise (IllegalFen "no castling portion")
   | h :: t -> (
-    let castling = fen_parse_castling h pos in
-    match t with
-    | [] -> raise (IllegalFen "No en passant portion")
-    | h :: t ->
-        let ep = if h = "-" then (-1, -1) else sqr_from_str h in
-        {
-          pos with
-          turn;
-          castling;
-          ep;
-          checked =
-            attacked_square pos
-              (if turn then pos.wking else pos.bking)
-              (not turn);
-        } )
+      let castling = fen_parse_castling h pos in
+      match t with
+      | [] -> raise (IllegalFen "No en passant portion")
+      | h :: t ->
+          let ep = if h = "-" then (-1, -1) else sqr_from_str h in
+          {
+            pos with
+            turn;
+            castling;
+            ep;
+            checked =
+              attacked_square pos
+                (if turn then pos.wking else pos.bking)
+                (not turn) ;
+          })
 
 (**[fen_to_board_helper str pos rank col ind] is a recursive helper for
    turning a FEN string into a board. It returns a new position with the
@@ -957,8 +992,8 @@ let rec fen_to_board_helper str pos rank col ind =
     | _ ->
         raise
           (IllegalFen
-             ( Char.escaped str.[ind]
-             ^ " is not a valid FEN number or symbol" ))
+             (Char.escaped str.[ind]
+             ^ " is not a valid FEN number or symbol"))
 
 and letter_fen_matching str pos rank col prevind nextind =
   let nk = ref (-1, -1) in
@@ -1012,7 +1047,7 @@ let rec move_list moves board =
   | (a, b) :: k -> move_list k (move a b board)
   | _ -> board
 
-let undo_prev pos =
+let undo_prev pos = 
   let flip = List.rev pos.move_stack in
   match flip with
   | h :: k -> move_list (List.rev k) (init ())
@@ -1048,11 +1083,10 @@ let avail_move_pawn_one piece pos checked =
   let g = (fst piece, snd piece + b) in
   if will_be_checked pos piece g then ""
   else if
-    (if checked then
+    if checked then
       (not (mv_and_chck pos piece g (get_turn pos)))
-      || is_king (extract_opt(get_piece_internal piece pos))
-         && not (attacked_square pos g (not (get_turn pos)))
-    else true)
+      || is_king (extract_opt (get_piece_internal piece pos)) && not (attacked_square pos g (not (get_turn pos)))
+    else true
   then
     match get_piece_internal g pos with
     | None -> sqr_to_str piece ^ sqr_to_str g
@@ -1071,9 +1105,10 @@ let avail_move_pawn_two piece pos checked =
     then
       if
         if checked then
+         
+     
           (not (mv_and_chck pos piece g (get_turn pos)))
-          || is_king (extract_opt(get_piece_internal piece pos))
-             && not (attacked_square pos g (not (get_turn pos)))
+          || is_king (extract_opt (get_piece_internal piece pos)) && not (attacked_square pos g (not (get_turn pos)))
         else true
       then sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + x)
       else ""
@@ -1084,20 +1119,24 @@ let avail_move_pawn_diag piece pos x checked =
   let b = if pos.turn then 1 else -1 in
   let c = if x then 1 else -1 in
   let g = (fst piece + c, snd piece + b) in
-  if in_range g && not (will_be_checked pos piece g) && verify_enemy_or_empty pos g then
-    (if
+  if
+    in_range g
+    && (not (will_be_checked pos piece g))
+    && verify_enemy_or_empty pos g
+  then
+    if
       if checked then
+        
+     
         (not (mv_and_chck pos piece g (get_turn pos)))
-        || is_king (extract_opt(get_piece_internal piece pos))
-           && not (attacked_square pos g (not (get_turn pos)))
+      || is_king (extract_opt (get_piece_internal piece pos)) && not (attacked_square pos g (not (get_turn pos)))
       else true
     then
       match get_piece_internal g pos with
-      | Some k ->
-            sqr_to_str piece ^ sqr_to_str g
-      | None -> 
-        if g = pos.ep then sqr_to_str piece ^ sqr_to_str g else ""
-    else "")
+      | Some k -> sqr_to_str piece ^ sqr_to_str g
+      | None ->
+          if g = pos.ep then sqr_to_str piece ^ sqr_to_str g else ""
+    else ""
   else ""
 
 let avail_move_pawn_general piece pos checked =
@@ -1117,21 +1156,20 @@ let avail_move_diag piece pos x y checked =
     in
     if
       not
-        ( in_range g
+        (in_range g
         && bishop_valid_helper pos piece g
         && (not (will_be_checked pos piece g))
-        && verify_enemy_or_empty pos g )
+        && verify_enemy_or_empty pos g)
     then a := !a
-    else 
-      (if
-      (if checked then
+    else if
+      if checked then
+       
+    
         (not (mv_and_chck pos piece g (get_turn pos)))
-      || is_king (extract_opt(get_piece_internal piece pos))
-         && not (attacked_square pos g (not (get_turn pos)))
-      else true)
+        || is_king (extract_opt (get_piece_internal piece pos)) && not (attacked_square pos g (not (get_turn pos)))
+      else true
     then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
     else a := !a
-    )
   done;
   !a
 
@@ -1147,12 +1185,14 @@ let avail_knight piece pos x y checked =
     not
       (in_range g
       && verify_enemy_or_empty pos g
-      && not (will_be_checked pos piece g) )
+      && not (will_be_checked pos piece g))
   then ""
   else if
-    if checked then (not (mv_and_chck pos piece g (get_turn pos)))
-      || is_king (extract_opt(get_piece_internal piece pos))
-         && not (attacked_square pos g (not (get_turn pos)))
+    if checked then
+      
+      
+      (not (mv_and_chck pos piece g (get_turn pos)))
+      || is_king (extract_opt (get_piece_internal piece pos)) && not (attacked_square pos g (not (get_turn pos)))
     else true
   then sqr_to_str piece ^ sqr_to_str g
   else ""
@@ -1173,9 +1213,9 @@ let avail_castles piece pos c =
   if pos.turn && piece = (4, 0) then
     if
       get_piece_internal (4 + (c / 2), 0) pos = None
+      && get_piece_internal (4 + c, 0) pos = None
+      && (not (will_be_checked pos (4, 0) (4 + c, 0)))
       &&
-       get_piece_internal (4 + c, 0) pos = None &&
-       not (will_be_checked pos (4,0) (4 + c,0)) &&
       try check_castle pos 4 (4 + c)
       with exn -> false && verify_enemy_or_empty pos (4 + c, 0)
     then sqr_to_str (4, 0) ^ sqr_to_str (4 + c, 0)
@@ -1183,8 +1223,9 @@ let avail_castles piece pos c =
   else if (not pos.turn) && piece = (4, 7) then
     if
       get_piece_internal (4 + (c / 2), 7) pos = None
-      && get_piece_internal (4 + c, 7) pos = None &&
-      not (will_be_checked pos (4,7) (4 + c,7)) &&
+      && get_piece_internal (4 + c, 7) pos = None
+      && (not (will_be_checked pos (4, 7) (4 + c, 7)))
+      &&
       try check_castle pos 4 (4 + c)
       with exn -> false && verify_enemy_or_empty pos (4 + c, 7)
     then sqr_to_str (4, 7) ^ sqr_to_str (4 + c, 7)
@@ -1202,18 +1243,12 @@ let avail_move_king piece pos =
           && king_valid_helper pos piece g
           && in_range g
           && verify_enemy_or_empty pos g
-          &&  ((not (mv_and_chck pos piece g (get_turn pos)))
-          || (true
-             && not (attacked_square pos g (not (get_turn pos)))))
-        then
-          a :=
-            ( sqr_to_str piece
-            ^ sqr_to_str (fst piece + i, snd piece + j) )
-            :: !a
+        then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
       with exn -> a := !a
     done
   done;
-  if (not pos.checked) then avail_castles piece pos 2 :: avail_castles piece pos (-2) :: !a
+  if not pos.checked then
+    avail_castles piece pos 2 :: avail_castles piece pos (-2) :: !a
   else !a
 
 let avail_move_vert piece pos x checked =
@@ -1225,13 +1260,14 @@ let avail_move_vert piece pos x checked =
         (in_range g
         && (not (will_be_checked pos piece g))
         && rook_valid_helper pos piece g
-        && verify_enemy_or_empty pos g )
+        && verify_enemy_or_empty pos g)
     then a := !a
     else if
       if checked then
+        
+    
         (not (mv_and_chck pos piece g (get_turn pos)))
-      || is_king (extract_opt(get_piece_internal piece pos))
-         && not (attacked_square pos g (not (get_turn pos)))
+        || is_king (extract_opt (get_piece_internal piece pos)) && not (attacked_square pos g (not (get_turn pos)))
       else true
     then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
   done;
@@ -1243,16 +1279,17 @@ let avail_move_horiz piece pos x checked =
     let g = ((fst piece + if x then i else -i), snd piece) in
     if
       not
-        ( in_range g
+        (in_range g
         && (not (will_be_checked pos piece g))
         && rook_valid_helper pos piece g
-        && verify_enemy_or_empty pos g )
+        && verify_enemy_or_empty pos g)
     then a := !a
     else if
       if checked then
+       
+     
         (not (mv_and_chck pos piece g (get_turn pos)))
-      || is_king (extract_opt(get_piece_internal piece pos))
-         && not (attacked_square pos g (not (get_turn pos)))
+        || is_king (extract_opt (get_piece_internal piece pos)) && not (attacked_square pos g (not (get_turn pos)))
       else true
     then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
   done;
@@ -1282,22 +1319,22 @@ let rec avail_moves piece_list pos checked =
   | h :: t -> avail_move h pos checked :: avail_moves t pos checked
   | [] -> []
 
-let move_generator pos = let a = 
-  if not pos.checked then
-    List.flatten (avail_moves (get_piece_locs pos) pos false)
-  else List.flatten (avail_moves (get_piece_locs pos) pos true)
-in  (List.filter (fun a -> a <> "") a)
+let move_generator pos =
+  let a =
+    if not pos.checked then
+      List.flatten (avail_moves (get_piece_locs pos) pos false)
+    else List.flatten (avail_moves (get_piece_locs pos) pos true)
+  in
+  List.filter (fun a -> a <> "") a
 
-let check_kings pos = 
-  match get_piece_locs pos with 
-  | [t] -> (pos.wking = t || pos.bking = t) 
+let check_kings pos =
+  match get_piece_locs pos with
+  | [ t ] -> pos.wking = t || pos.bking = t
   | _ -> false
 
-let checkmate pos = 
-  (check_kings pos && check_kings {pos with turn = not pos.turn;})||
-  not
-    ( List.length (move_generator pos)
-    > 0 )
+let checkmate pos =
+  (check_kings pos && check_kings { pos with turn = not pos.turn })
+  || not (List.length (move_generator pos) > 0)
 
 let equals pos1 pos2 = failwith "unimplemented"
 
