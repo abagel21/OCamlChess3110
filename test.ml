@@ -42,6 +42,44 @@ let move_no_throw name board move_str final_pos expected =
     (Board.get_piece final_pos (move move_str "" pos))
     expected
 
+let rec all_empty board empty_lst =
+  match empty_lst with
+  | [] -> true
+  | h :: t -> Board.get_piece h board = "NA" && all_empty board t
+
+(**[move_seq_nt] returns an OUnit test asserting that executing the
+   three move sequence [move_tpl] results in a final position with
+   [expected] at [final_pos] and empty squares at all strings in
+   [empty_lst] *)
+let move_seq_nt name board move_tpl final_pos empty_lst expected =
+  let pos = fen_to_board board in
+  match move_tpl with
+  | mv1, mv2, mv3 ->
+      let next_board =
+        pos |> move mv1 "" |> move mv2 "" |> move mv3 ""
+      in
+      let pawn_posc = Board.get_piece final_pos next_board = expected in
+      let pawn_rmvd = all_empty next_board empty_lst in
+      name >:: fun _ ->
+      assert_bool
+        "either pawn was not in correct final position or en passant \
+         pawn was not removed"
+        (pawn_posc && pawn_rmvd)
+
+(**[en_passant_nt] returns an OUnit test asserting that executing move
+   with [move_str] on [board] results in a position with [expected] at
+   [final_pos] and with [empty_sqr] having no piece on it *)
+let en_passant_nt name board move_str final_pos empty_sqr expected =
+  let pos = fen_to_board board in
+  let next_board = move move_str "" pos in
+  let pawn_posc = Board.get_piece final_pos next_board = expected in
+  let pawn_rmvd = Board.get_piece empty_sqr next_board = "NA" in
+  name >:: fun _ ->
+  assert_bool
+    "either pawn was not in correct final position or en passant pawn \
+     was not removed"
+    (pawn_posc && pawn_rmvd)
+
 (*FENs for knight tests*)
 let nf1 = "8/8/4p3/8/3N4/1n3q2/4b3/8 w - - 0 1"
 
@@ -307,39 +345,46 @@ let pf5 = "8/8/8/8/2b5/8/2P5/2K5 w - - 0 1"
 
 let pf5_move = "c2c4"
 
+let pf6 =
+  "2bqk1nr/ppp1pppp/8/2np4/1r1PP2b/2P3P1/PP3P1P/RNBQKBNR w KQk - 0 1"
+
+let pf6_seq = ("e4e5", "f7f5", "e5f6")
+
 let pawn_tests =
   [
-    move_no_throw "white double pawn move at start doesn't throw" pf1
+    move_no_throw "white double pawn move at start does not throw" pf1
       pf1_move "e4" "P";
-    move_no_throw "white single pawn move at start doesn't throw" pf1
+    move_no_throw "white single pawn move at start does not throw" pf1
       pf1_move2 "e3" "P";
     move_no_throw
-      "white double pawn move from different position at start doesn't \
-       throw"
+      "white double pawn move from different position at start does \
+       not throw"
       pf1 pf1_move4 "f4" "P";
     move_no_throw
-      "white single pawn move from different position at start doesn't \
-       throw"
+      "white single pawn move from different position at start does \
+       not throw"
       pf1 pf1_move3 "a3" "P";
-    move_no_throw "black double pawn move at start doesn't throw" pf2
+    move_no_throw "black double pawn move at start does not throw" pf2
       pf2_move "e5" "p";
-    move_no_throw "black single pawn move at start doesn't throw" pf2
+    move_no_throw "black single pawn move at start does not throw" pf2
       pf2_move2 "e6" "p";
     move_no_throw
-      "black double pawn move from different position at start doesn't \
-       throw"
+      "black double pawn move from different position at start does \
+       not throw"
       pf2 pf2_move3 "g6" "p";
     move_no_throw
-      "black single pawn move from different position at start doesn't \
-       throw"
+      "black single pawn move from different position at start does \
+       not throw"
       pf2 pf2_move4 "b5" "p";
-    move_no_throw "correct en passant doesn't throw" pf3 pf3_move "f6"
-      "P";
-    move_no_throw "capturing knight left correctly doesn't throw" pf3
+    move_seq_nt
+      "the moves that create an en passant square and the en passant \
+       move themselves function correctly"
+      pf6 pf6_seq "f6" [ "e4"; "e5"; "f5" ] "P";
+    move_no_throw "capturing knight left correctly does not throw" pf3
       pf3_move2 "c5" "P";
-    move_no_throw "capturing rook left correctly doesn't throw" pf3
+    move_no_throw "capturing rook left correctly does not throw" pf3
       pf3_move3 "b4" "P";
-    move_no_throw "capturing bishop right correctly doesn't throw" pf3
+    move_no_throw "capturing bishop right correctly does not throw" pf3
       pf3_move4 "h4" "P";
     move_throws "incorrect en passant throws" pf3 pf3_move5
       "Illegal move for a pawn";
@@ -351,7 +396,8 @@ let pawn_tests =
       "Illegal move for a pawn";
     move_throws "white pawn cannot move backwards" pf3 pf3_move9
       "Illegal move for a pawn";
-    move_no_throw "en passant works on black too" pf4 pf4_move "e3" "p";
+    en_passant_nt "en passant works on black too" pf4 pf4_move "e3" "e4"
+      "p";
     move_throws
       "black pawn cannot move double backwards from white starting line"
       pf4 pf4_move2 "Illegal move for a pawn";
@@ -388,9 +434,19 @@ let whqrook_has_moved =
 let whkrook_has_moved =
   "rnbqk2r/ppp1p2p/5npb/3p1p2/4P1P1/5P1P/PPPPN1BR/RNBQK3 w Qkq - -"
 
+let wh_castle_thr_chk =
+  "rnb2k1r/pppQ1ppp/8/2b1p3/2B1P3/2Nq4/PPPP1PPP/R1B1K2R w KQkq - 0 1"
+
+let wh_castle_out_chk =
+  "rnb2k1r/pppQ1ppp/8/2b1p3/2B1P3/2N1q3/PPPP1PPP/R1B1K2R w KQkq - 0 1"
+
+let wh_king_along_chk =
+  "rnbq1bnr/pppppkpp/5p2/7Q/4P3/8/PPPP1PPP/RNB1KBNR b KQ - 0 1"
+
 let only_king = "8/8/8/8/4K3/8/8/8 w - -"
 
 let two_kings = "8/8/8/3k4/8/3K4/8/8 w - -"
+
 let castle_check name board move_str expected final_pos1 final_pos2 =
   let pos = move move_str "" (fen_to_board board) in
   name >:: fun _ ->
@@ -416,36 +472,43 @@ let king_tests =
       whking_castle_leads_to_check "e1c1"
       (IllegalMove "Moving this piece would place you in check");
     (* ^ kind of unnecessary*)
+    castle_throw "castling through check throws" wh_castle_thr_chk
+      "e1g1" (IllegalMove "King cannot castle through check");
+    castle_throw "castling out of check throws" wh_castle_out_chk "e1g1"
+      (IllegalMove "King cannot castle out of check");
     castle_throw "queenside rook has moved" whqrook_has_moved "e1c1"
-      (IllegalMove "White king cannot castle queenside anymore");
+      (IllegalMove "White king cannot castle queenside ");
     castle_throw "kingside rook has moved" whkrook_has_moved "e1g1"
-      (IllegalMove "White king cannot castle kingside anymore");
-    move_throws "King cannot move two up"
-      only_king "e4e6" "King can only move one spot when not castling";
-      move_throws "King cannot move two down"
-      only_king "e4e2" "King can only move one spot when not castling";
-      move_throws "King cannot move two left"
-      only_king "e4c4" "King can only move one spot when not castling";
-      move_throws "King cannot move two right"
-      only_king "e4g4" "King can only move one spot when not castling";
-      move_throws "King cannot move two SW"
-      only_king "e4c2" "King can only move one spot when not castling";
-      move_throws "King cannot move two NW"
-      only_king "e4c6" "King can only move one spot when not castling";
-      move_throws "King cannot move two NE"
-      only_king "e4g6" "King can only move one spot when not castling";
-      move_throws "King cannot move two SE"
-      only_king "e4g2" "King can only move one spot when not castling";
+      (IllegalMove "White king cannot castle kingside ");
+    move_throws "King cannot move two up" only_king "e4e6"
+      "King can only move one spot when not castling";
+    move_throws "King cannot move two down" only_king "e4e2"
+      "King can only move one spot when not castling";
+    move_throws "King cannot move two left" only_king "e4c4"
+      "King can only move one spot when not castling";
+    move_throws "King cannot move two right" only_king "e4g4"
+      "King can only move one spot when not castling";
+    move_throws "King cannot move two SW" only_king "e4c2"
+      "King can only move one spot when not castling";
+    move_throws "King cannot move two NW" only_king "e4c6"
+      "King can only move one spot when not castling";
+    move_throws "King cannot move two NE" only_king "e4g6"
+      "King can only move one spot when not castling";
+    move_throws "King cannot move two SE" only_king "e4g2"
+      "King can only move one spot when not castling";
     move_throws "King cannot move like a knight" only_king "e4c3"
-    "King cannot move in that direction";
+      "King cannot move in that direction";
+    move_throws "King cannot move backwards along a check"
+      wh_king_along_chk "f7e8" "Invalid move, you are in check!";
     move_no_throw "King can move up one" only_king "e4e5" "e5" "K";
     move_no_throw "King can move down one" only_king "e4e3" "e3" "K";
     move_no_throw "King can move one NE" only_king "e4f5" "f5" "K";
     move_no_throw "King can move one SE" only_king "e4f3" "f3" "K";
     move_no_throw "King can move one left" only_king "e4d4" "d4" "K";
-    move_throws "White king cannot move up towards black king" two_kings "d3d4" "King cannot move adjacent to enemy king";
-    move_throws "White king cannot move NW towards black king" two_kings "d3c4" "King cannot move adjacent to enemy king";
-    
+    move_throws "White king cannot move up towards black king" two_kings
+      "d3d4" "King cannot move adjacent to enemy king";
+    move_throws "White king cannot move NW towards black king" two_kings
+      "d3c4" "King cannot move adjacent to enemy king";
   ]
 
 (**[check_true name fen move_str] creates an OUnit test asserting that
@@ -574,7 +637,7 @@ let knight_check_tests =
     check_true "bottom right white knight checks black king" bottom bmv1;
     check_true "bottom left white knight checks black king" bottom bmv2;
     check_false
-      "knight doesn't check an extra square away horizontally or \
+      "knight does not check an extra square away horizontally or \
        vertically"
       n1_fen n1_move;
   ]
@@ -607,11 +670,11 @@ let pawn_check_tests =
     check_true "left black pawn check works" w1 w1move;
     check_true "double move white pawn check works" dw dwmove;
     check_false
-      "pawn next to and diagonal ahead right of black king doesn't \
+      "pawn next to and diagonal ahead right of black king does not \
        cause check"
       w2 "c4c5";
     check_false
-      "pawn next to and diagonal ahead left of black king doesn't \
+      "pawn next to and diagonal ahead left of black king does not \
        cause check"
       w2 "a4a5";
   ]
@@ -840,6 +903,156 @@ let fen_tests =
       not_check_board false;
   ]
 
+let move_gen_tester name board expected =
+  let pos = fen_to_board board in
+  name >:: fun _ ->
+  assert_equal
+    (List.sort
+       (fun x y -> if x > y then 1 else if x < y then -1 else 0)
+       (move_generator pos))
+    expected
+
+let initial_board =
+  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+let init_moves =
+  [
+    "a2a3";
+    "a2a4";
+    "b1a3";
+    "b1c3";
+    "b2b3";
+    "b2b4";
+    "c2c3";
+    "c2c4";
+    "d2d3";
+    "d2d4";
+    "e2e3";
+    "e2e4";
+    "f2f3";
+    "f2f4";
+    "g1f3";
+    "g1h3";
+    "g2g3";
+    "g2g4";
+    "h2h3";
+    "h2h4";
+  ]
+
+let cstl_board =
+  "r1b1k1nr/ppppq1pp/8/b2QP3/8/2p2N2/P4PPP/RN2K2R w KQkq - 0 1"
+
+let cstl_moves =
+  [
+    "a2a3";
+    "a2a4";
+    "b1a3";
+    "b1c3";
+    "b1d2";
+    "d5a5";
+    "d5b3";
+    "d5b5";
+    "d5b7";
+    "d5c4";
+    "d5c5";
+    "d5c6";
+    "d5d1";
+    "d5d2";
+    "d5d3";
+    "d5d4";
+    "d5d6";
+    "d5d7";
+    "d5e4";
+    "d5e6";
+    "d5f7";
+    "d5g8";
+    "e1d1";
+    "e1e2";
+    "e1f1";
+    "e1g1";
+    "e5e6";
+    "f3d2";
+    "f3d4";
+    "f3g1";
+    "f3g5";
+    "f3h4";
+    "g2g3";
+    "g2g4";
+    "h1f1";
+    "h1g1";
+    "h2h3";
+    "h2h4";
+  ]
+
+let psnt_board = "N1b2rk1/pp3qpp/7n/Q2pP3/P7/5N1P/5PP1/R4RK1 w Q d6 0 1"
+
+let psnt_moves =
+  [
+    "a1a2";
+    "a1a3";
+    "a1b1";
+    "a1c1";
+    "a1d1";
+    "a1e1";
+    "a5a6";
+    "a5a7";
+    "a5b4";
+    "a5b5";
+    "a5b6";
+    "a5c3";
+    "a5c5";
+    "a5c7";
+    "a5d2";
+    "a5d5";
+    "a5d8";
+    "a5e1";
+    "a8b6";
+    "a8c7";
+    "e5d6";
+    "e5e6";
+    "f1b1";
+    "f1c1";
+    "f1d1";
+    "f1e1";
+    "f3d2";
+    "f3d4";
+    "f3e1";
+    "f3g5";
+    "f3h2";
+    "f3h4";
+    "g1h1";
+    "g1h2";
+    "g2g3";
+    "g2g4";
+    "h3h4";
+  ]
+
+  (*Used the following python code to generate the legal moves for each board:
+  import chess
+  def lst_from_brd(board):
+      lg = board.legal_moves
+      p = []
+      for i in lg:
+          p.append(i.uci())
+      p.sort()
+      return p
+  board = chess.Board([FEN STRING HERE])
+  lst_from_brd(board)
+  *)[@@ocamlformat "disable"]
+
+let move_gen_tests =
+  [
+    move_gen_tester
+      "initial position contains all legal moves when generated"
+      initial_board init_moves;
+    move_gen_tester
+      "more complicated position with castling contains all legal moves"
+      cstl_board cstl_moves;
+    move_gen_tester
+      "en passant complex position contains all legal moves" psnt_board
+      psnt_moves;
+  ]
+
 let board_tests =
   List.flatten
     [
@@ -848,6 +1061,7 @@ let board_tests =
       undo_move_tests;
       check_tests;
       fen_tests;
+      move_gen_tests;
     ]
 
 let suite =
