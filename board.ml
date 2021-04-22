@@ -505,7 +505,8 @@ let king_valid_helper pos from_sqr to_sqr =
   else if rook_valid_helper pos from_sqr to_sqr then
     if abs (frank - trank + fcol - tcol) = 1 then true
     else if fcol = tcol && abs (frank - trank) = 2 && fcol mod 7 = 0
-    then check_castle pos frank trank
+    then  if not (pos.checked) then check_castle pos frank trank else 
+      raise (IllegalMove"Can't castle out of check")
     else
       raise
         (IllegalMove "King can only move one spot when not castling")
