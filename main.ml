@@ -118,16 +118,19 @@ let rec game_loop board () b =
     print_endline ("\nBlack moved : " ^ c ^ "\n");
     game_loop d () b
 
-let rec random_game board =
+let rec random_game board x =
+  if x <= 0 then (print_endline "Success"; exit 0 )
+  else (
   if checkmate board then (
-    (if is_in_check board then (print_endline "Checkmate!"; exit 0)
-    else print_endline "Stalemate!"; exit 0)
+    (if is_in_check board then (print_endline "Checkmate!"; random_game (Board.init()) (x-1))
+    else print_endline "Stalemate!"; random_game (Board.init()) (x-1))
   )
   else
     let a = random_move board () in
-   let b = move a "Q" board in
+   try let b = move a "Q" board in
     print_board b;
-    random_game b
+    random_game b x
+  with exn -> print_endline a; print_endline "failed"; exit 0)
 
 
 (** [start ()] initializes the board. *)
@@ -144,7 +147,7 @@ let rec start () =
   | "random" ->
       print_board (Board.init ());
       game_loop (Board.init ()) () false
-  | "random game" -> random_game (Board.init ())
+  | "random game" -> random_game (Board.init ()) 100
   | str ->
       begin
         try

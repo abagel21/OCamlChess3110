@@ -438,17 +438,17 @@ let is_rook x (pos : t) =
 let check_castle pos frank trank =
   if get_turn pos then
     if frank > trank then
-      if pos.castling.(0) && is_rook pos.board.(0).(0) pos then true
+      if pos.castling.(0) && is_rook pos.board.(0).(0) pos && rook_valid_helper pos (frank,0) (0,0) then true
       else
-        raise (IllegalMove "White king cannot castle queenside anymore")
-    else if pos.castling.(1) && is_rook pos.board.(7).(0) pos then true
-    else raise (IllegalMove "White king cannot castle kingside anymore")
+        raise (IllegalMove "White king cannot castle queenside ")
+    else if pos.castling.(1) && is_rook pos.board.(7).(0) pos && rook_valid_helper pos (frank,0) (7,0)  then true
+    else raise (IllegalMove "White king cannot castle kingside ")
   else if frank > trank then
-    if pos.castling.(2) && is_rook pos.board.(0).(7) pos then true
+    if pos.castling.(2) && is_rook pos.board.(0).(7) pos && rook_valid_helper pos (frank,7) (0,7)then true
     else
-      raise (IllegalMove "Black king cannot castle queenside anymore")
-  else if pos.castling.(3) && is_rook pos.board.(7).(7) pos then true
-  else raise (IllegalMove "Black king cannot castle kingside anymore")
+      raise (IllegalMove "Black king cannot castle queenside ")
+  else if pos.castling.(3) && is_rook pos.board.(7).(7) pos && rook_valid_helper pos (frank,7) (7,7)then true
+  else raise (IllegalMove "Black king cannot castle kingside ")
 
 (**[king_valid_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a king*)
@@ -1095,8 +1095,8 @@ let avail_move_pawn_diag piece pos x checked =
       match get_piece_internal g pos with
       | Some k ->
             sqr_to_str piece ^ sqr_to_str g
-      | None -> (if g = pos.ep then sqr_to_str piece ^ sqr_to_str g else
-           "")
+      | None -> 
+           ""
     else "")
   else ""
 
@@ -1175,7 +1175,8 @@ let avail_castles piece pos c =
       get_piece_internal (4 + (c / 2), 0) pos = None
       &&
        get_piece_internal (4 + c, 0) pos = None &&
-      try check_castle pos (4, 0) (4 + c, 0)
+       not (will_be_checked pos (4,0) (4 + c,0)) &&
+      try check_castle pos 4 (4 + c)
       with exn -> false && verify_enemy_or_empty pos (4 + c, 0)
     then sqr_to_str (4, 0) ^ sqr_to_str (4 + c, 0)
     else ""
@@ -1183,7 +1184,8 @@ let avail_castles piece pos c =
     if
       get_piece_internal (4 + (c / 2), 7) pos = None
       && get_piece_internal (4 + c, 7) pos = None &&
-      try check_castle pos (4, 7) (4 + c, 7)
+      not (will_be_checked pos (4,7) (4 + c,7)) &&
+      try check_castle pos 4 (4 + c)
       with exn -> false && verify_enemy_or_empty pos (4 + c, 7)
     then sqr_to_str (4, 7) ^ sqr_to_str (4 + c, 7)
     else ""
@@ -1211,7 +1213,8 @@ let avail_move_king piece pos =
       with exn -> a := !a
     done
   done;
-  avail_castles piece pos 2 :: avail_castles piece pos (-2) :: !a
+  if (not pos.checked) then avail_castles piece pos 2 :: avail_castles piece pos (-2) :: !a
+  else []
 
 let avail_move_vert piece pos x checked =
   let a = ref [] in
