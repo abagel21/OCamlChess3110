@@ -1304,10 +1304,16 @@ let avail_move_king piece pos =
     avail_castles piece pos 2 :: avail_castles piece pos (-2) :: !a
   else !a
 
-let avail_move_vert piece pos x checked =
+(** [avail_move_helper piece pos x checked dirxn] finds available moves
+    for [piece] on board [pos], and checks vertical moves if [dirxn] is
+    [true] or horizontal moves if it is [false]. *)
+let avail_move_helper piece pos x checked dirxn =
   let a = ref [] in
   for i = 1 to 7 do
-    let g = (fst piece, snd piece + if x then i else -i) in
+    let g =
+      if dirxn then (fst piece, snd piece + if x then i else -i)
+      else ((fst piece + if x then i else -i), snd piece)
+    in
     if
       not
         (in_range g
@@ -1316,35 +1322,18 @@ let avail_move_vert piece pos x checked =
         && verify_enemy_or_empty pos g)
     then a := !a
     else if
-      if checked then
-        (not (mv_and_chck pos piece g (get_turn pos)))
-        || is_king (extract_opt (get_piece_internal piece pos))
-           && not (attacked_square pos g (not (get_turn pos)))
-      else true
+      (checked && not (mv_and_chck pos piece g (get_turn pos)))
+      || is_king (extract_opt (get_piece_internal piece pos))
+         && not (attacked_square pos g (not (get_turn pos)))
     then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
   done;
   !a
 
+let avail_move_vert piece pos x checked =
+  avail_move_helper piece pos x checked true
+
 let avail_move_horiz piece pos x checked =
-  let a = ref [] in
-  for i = 1 to 7 do
-    let g = ((fst piece + if x then i else -i), snd piece) in
-    if
-      not
-        (in_range g
-        && (not (will_be_checked pos piece g))
-        && rook_valid_helper pos piece g
-        && verify_enemy_or_empty pos g)
-    then a := !a
-    else if
-      if checked then
-        (not (mv_and_chck pos piece g (get_turn pos)))
-        || is_king (extract_opt (get_piece_internal piece pos))
-           && not (attacked_square pos g (not (get_turn pos)))
-      else true
-    then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
-  done;
-  !a
+  avail_move_helper piece pos x checked false
 
 let avail_move_rook piece pos checked =
   avail_move_horiz piece pos true checked
