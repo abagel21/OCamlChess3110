@@ -122,15 +122,14 @@ let rec random_game board x =
   if x <= 0 then (print_endline "Success"; exit 0 )
   else (
   if checkmate board then (
-    (if is_in_check board then (print_endline "Checkmate!"; random_game (Board.init()) (x-1))
-    else print_endline "Stalemate!"; random_game (Board.init()) (x-1))
+    (if is_in_check board then (print_board board; print_endline "Checkmate!"; random_game (Board.init()) (x-1))
+    else print_board board; print_endline "Stalemate!"; random_game (Board.init()) (x))
   )
   else
     let a = random_move board () in
-   try let b = move a "Q" board in
-    print_board b;
-    random_game b x
-  with exn -> print_endline a; print_endline "failed"; exit 0)
+    let b = move a "Q" board in
+    random_game b x)
+  
 
 
 (** [start ()] initializes the board. *)

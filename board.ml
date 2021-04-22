@@ -647,7 +647,7 @@ let move_en_passant pos from_sqr to_sqr promote_str =
   let adj = if get_turn pos then ~-1 else 1 in
   match (from_sqr, to_sqr) with
   | (frank, fcol), (trank, tcol) ->
-      pos.board.(trank + adj).(tcol) <- None;
+      pos.board.(trank).(tcol + adj) <- None;
       temp_pos
 
 (**[promote square pos piece] promotes the pawn on [square] in [pos] to
@@ -670,7 +670,7 @@ let pawn_double_move_helper pos from_sqr to_sqr promote_str =
         in
         {
           next_pos with
-          ep = ((fst from_sqr + fst to_sqr) / 2, snd to_sqr);
+          ep = (fst from_sqr, (snd from_sqr + snd to_sqr)/2);
         }
       else raise (IllegalMove "Illegal move for a pawn")
   | Some k -> raise (IllegalMove "Illegal move for a pawn")
@@ -1096,7 +1096,7 @@ let avail_move_pawn_diag piece pos x checked =
       | Some k ->
             sqr_to_str piece ^ sqr_to_str g
       | None -> 
-           ""
+        if g = pos.ep then sqr_to_str piece ^ sqr_to_str g else ""
     else "")
   else ""
 
@@ -1203,8 +1203,8 @@ let avail_move_king piece pos =
           && in_range g
           && verify_enemy_or_empty pos g
           &&  ((not (mv_and_chck pos piece g (get_turn pos)))
-          || true
-             && not (attacked_square pos g (not (get_turn pos))))
+          || (true
+             && not (attacked_square pos g (not (get_turn pos)))))
         then
           a :=
             ( sqr_to_str piece
@@ -1214,7 +1214,7 @@ let avail_move_king piece pos =
     done
   done;
   if (not pos.checked) then avail_castles piece pos 2 :: avail_castles piece pos (-2) :: !a
-  else []
+  else !a
 
 let avail_move_vert piece pos x checked =
   let a = ref [] in
