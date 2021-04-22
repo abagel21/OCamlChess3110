@@ -1304,10 +1304,10 @@ let avail_move_king piece pos =
     avail_castles piece pos 2 :: avail_castles piece pos (-2) :: !a
   else !a
 
-(** [avail_move_helper piece pos x checked dirxn] finds available moves
-    for [piece] on board [pos], and checks vertical moves if [dirxn] is
+(** [avail_move_aux piece pos x checked dirxn] finds available moves for
+    [piece] on board [pos], and checks vertical moves if [dirxn] is
     [true] or horizontal moves if it is [false]. *)
-let avail_move_helper piece pos x checked dirxn =
+let avail_move_aux piece pos x checked dirxn =
   let a = ref [] in
   for i = 1 to 7 do
     let g =
@@ -1330,10 +1330,10 @@ let avail_move_helper piece pos x checked dirxn =
   !a
 
 let avail_move_vert piece pos x checked =
-  avail_move_helper piece pos x checked true
+  avail_move_aux piece pos x checked true
 
 let avail_move_horiz piece pos x checked =
-  avail_move_helper piece pos x checked false
+  avail_move_aux piece pos x checked false
 
 let avail_move_rook piece pos checked =
   avail_move_horiz piece pos true checked
