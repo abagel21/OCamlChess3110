@@ -1085,7 +1085,7 @@ let avail_move_pawn_diag piece pos x checked =
   let c = if x then 1 else -1 in
   let g = (fst piece + c, snd piece + b) in
   if in_range g && not (will_be_checked pos piece g) && verify_enemy_or_empty pos g then
-    if
+    (if
       if checked then
         (not (mv_and_chck pos piece g (get_turn pos)))
         || is_king (extract_opt(get_piece_internal piece pos))
@@ -1095,9 +1095,9 @@ let avail_move_pawn_diag piece pos x checked =
       match get_piece_internal g pos with
       | Some k ->
             sqr_to_str piece ^ sqr_to_str g
-      | None -> if g = pos.ep then sqr_to_str piece ^ sqr_to_str g else
-           ""
-    else ""
+      | None -> (if g = pos.ep then sqr_to_str piece ^ sqr_to_str g else
+           "")
+    else "")
   else ""
 
 let avail_move_pawn_general piece pos checked =
@@ -1123,13 +1123,15 @@ let avail_move_diag piece pos x y checked =
         && verify_enemy_or_empty pos g )
     then a := !a
     else 
-      if
-      if checked then
+      (if
+      (if checked then
         (not (mv_and_chck pos piece g (get_turn pos)))
       || is_king (extract_opt(get_piece_internal piece pos))
          && not (attacked_square pos g (not (get_turn pos)))
-      else true
+      else true)
     then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+    else a := !a
+    )
   done;
   !a
 
@@ -1180,7 +1182,7 @@ let avail_castles piece pos c =
   else if (not pos.turn) && piece = (4, 7) then
     if
       get_piece_internal (4 + (c / 2), 7) pos = None
-      && get_piece_internal (4 + c, 0) pos = None &&
+      && get_piece_internal (4 + c, 7) pos = None &&
       try check_castle pos (4, 7) (4 + c, 7)
       with exn -> false && verify_enemy_or_empty pos (4 + c, 7)
     then sqr_to_str (4, 7) ^ sqr_to_str (4 + c, 7)
@@ -1198,6 +1200,9 @@ let avail_move_king piece pos =
           && king_valid_helper pos piece g
           && in_range g
           && verify_enemy_or_empty pos g
+          &&  ((not (mv_and_chck pos piece g (get_turn pos)))
+          || true
+             && not (attacked_square pos g (not (get_turn pos))))
         then
           a :=
             ( sqr_to_str piece
