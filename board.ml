@@ -468,11 +468,11 @@ let check_castle pos frank trank =
         && rook_valid_helper pos (frank, 0) (0, 0)
       then
         if
-          not
-            (attacked_square_king pos (2, 0)
-               (not (get_turn pos))
-               (get_piece_internal (4, 0) pos))
-               && not
+          (not
+             (attacked_square_king pos (2, 0)
+                (not (get_turn pos))
+                (get_piece_internal (4, 0) pos)))
+          && not
                (attacked_square_king pos (3, 0)
                   (not (get_turn pos))
                   (get_piece_internal (4, 0) pos))
@@ -485,14 +485,14 @@ let check_castle pos frank trank =
       && rook_valid_helper pos (frank, 0) (7, 0)
     then
       if
-        not
-          (attacked_square_king pos (6, 0)
-             (not (get_turn pos))
-             (get_piece_internal (4, 0) pos))
-            &&  not
-            (attacked_square_king pos (5, 0)
-               (not (get_turn pos))
-               (get_piece_internal (4, 0) pos))
+        (not
+           (attacked_square_king pos (6, 0)
+              (not (get_turn pos))
+              (get_piece_internal (4, 0) pos)))
+        && not
+             (attacked_square_king pos (5, 0)
+                (not (get_turn pos))
+                (get_piece_internal (4, 0) pos))
       then true
       else raise (IllegalMove "King cannot castle through check")
     else raise (IllegalMove "White king cannot castle kingside ")
@@ -503,14 +503,14 @@ let check_castle pos frank trank =
       && rook_valid_helper pos (frank, 7) (0, 7)
     then
       if
-        not
-            (attacked_square_king pos (2, 7)
-               (not (get_turn pos))
-               (get_piece_internal (4, 7) pos))
-               && not
-               (attacked_square_king pos (3,7)
-                  (not (get_turn pos))
-                  (get_piece_internal (4, 7) pos))
+        (not
+           (attacked_square_king pos (2, 7)
+              (not (get_turn pos))
+              (get_piece_internal (4, 7) pos)))
+        && not
+             (attacked_square_king pos (3, 7)
+                (not (get_turn pos))
+                (get_piece_internal (4, 7) pos))
       then true
       else raise (IllegalMove "King cannot castle through check")
     else raise (IllegalMove "Black king cannot castle queenside ")
@@ -520,14 +520,14 @@ let check_castle pos frank trank =
     && rook_valid_helper pos (frank, 7) (7, 7)
   then
     if
-      not
-          (attacked_square_king pos (6, 7)
-             (not (get_turn pos))
-             (get_piece_internal (4, 7) pos))
-            &&  not
-            (attacked_square_king pos (5, 7)
-               (not (get_turn pos))
-               (get_piece_internal (4, 7) pos))
+      (not
+         (attacked_square_king pos (6, 7)
+            (not (get_turn pos))
+            (get_piece_internal (4, 7) pos)))
+      && not
+           (attacked_square_king pos (5, 7)
+              (not (get_turn pos))
+              (get_piece_internal (4, 7) pos))
     then true
     else raise (IllegalMove "King cannot castle through check")
   else raise (IllegalMove "Black king cannot castle kingside ")
@@ -711,7 +711,7 @@ let add_move pos (from_sqr : square) (to_sqr : square) k promote_str =
     move_stack =
       List.rev
         ((convert_sqrs_to_string from_sqr to_sqr, promote_str)
-        :: List.rev pos.move_stack);
+         :: List.rev pos.move_stack);
   }
 
 (**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr]
@@ -1371,12 +1371,10 @@ let rec avail_moves piece_list pos checked =
   | [] -> []
 
 let move_generator pos =
-  let a =
-    if not pos.checked then
-      List.flatten (avail_moves (get_piece_locs pos) pos false)
-    else List.flatten (avail_moves (get_piece_locs pos) pos true)
-  in
-  List.filter (fun a -> a <> "") a
+  (not pos.checked)
+  |> avail_moves (get_piece_locs pos) pos
+  |> List.flatten
+  |> List.filter (fun x -> x <> "")
 
 let check_kings pos =
   match get_piece_locs pos with
@@ -1385,7 +1383,7 @@ let check_kings pos =
 
 let checkmate pos =
   (check_kings pos && check_kings { pos with turn = not pos.turn })
-  || not (List.length (move_generator pos) > 0)
+  || List.length (move_generator pos) <= 0
 
 let equals pos1 pos2 = failwith "unimplemented"
 
