@@ -52,9 +52,9 @@ val undo_prev : t -> t
     Black's. *)
 val get_turn : t -> bool
 
-(** [get_castling pos] returns the array of valid and invalid castles in
-    board state [pos]. *)
-val get_castling : t -> bool array
+(** [get_castling pos] returns a list containing values corresponding to the validity of castling in
+    board state [pos]. EX: [white kingside castling, white queenside castling, black kingside castling, black queenside castling] *)
+val get_castling : t -> bool list
 
 (** [to_string pos] outputs a pretty-printed string of board state
     [pos]. *)
@@ -89,6 +89,9 @@ val move_generator : t -> string list
 
 (** [checkmate t] returns true if the player is checkmated *)
 val checkmate : t -> bool
+
+(**[draw t] returns true if the player to move can claim a draw, else false*)
+val draw : t -> bool
 
 (**[ get_moves t] returns the moves made in the game so far*)
 val get_moves : t -> (string * string) list

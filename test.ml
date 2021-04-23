@@ -192,9 +192,14 @@ let rf2 = "rnbqkbnr/1pppppp1/8/p6p/P6P/8/1PPPPPP1/RNBQKBNR w KQkQ - -"
 
 let rf3 = "rnbqkbnr/1pppppp1/8/p6p/P6P/8/1PPPPPP1/RNBQKBNR b KQkQ - -"
 
+let rec get_nth_list_item lst n =
+  match lst with
+  | [] -> raise (Failure "Index out of bounds")
+  | h :: t -> if n = 0 then h else get_nth_list_item t (n - 1)
+
 let rook_sets_castling name board move_str x expected =
   let castling = get_castling (move move_str "" (fen_to_board board)) in
-  name >:: fun _ -> assert_equal castling.(x) expected
+  name >:: fun _ -> assert_equal (get_nth_list_item castling x) expected
 
 let rook_tests =
   [
@@ -218,14 +223,18 @@ let rook_tests =
       "Cannot capture ally";
     move_throws "white rook tries to move past white queen" rf1
       rf1move10 "Illegal move for a rook";
-    rook_sets_castling "rf1 sets kingside castling to false" rf2 "h1h2"
-      1 false;
-    rook_sets_castling "rf1 sets kingside castling to false" rf2 "a1a2"
-      0 false;
-    rook_sets_castling "rf1 sets kingside castling to false" rf3 "h8h7"
-      3 false;
-    rook_sets_castling "rf1 sets kingside castling to false" rf3 "a8a7"
-      2 false;
+    rook_sets_castling
+      "moving white kingside rook sets kingside castling to false" rf2
+      "h1h2" 1 false;
+    rook_sets_castling
+      "moving white queenside rook sets queenside castling to false" rf2
+      "a1a2" 0 false;
+    rook_sets_castling
+      "moving black kingside rook sets kingside castling to false" rf3
+      "h8h7" 3 false;
+    rook_sets_castling
+      "moving black queenside rook sets queenside castling to false" rf3
+      "a8a7" 2 false;
   ]
 
 (*FENs for queen tests*)
@@ -851,7 +860,190 @@ let move_tests =
       king_tests;
     ]
 
-let undo_move_tests = []
+let seq_equals name move_seq1 move_seq2 expected =
+  let pos1 = move_list move_seq1 (init ()) in
+  let pos2 = move_list move_seq2 (init ()) in
+  name >:: fun _ -> assert_equal expected (Board.equals pos1 pos2)
+
+let equals_tests =
+  [
+    seq_equals
+      "castling opening sequences are equal even if move ordering is \
+       different"
+      [
+        ("e2e4", "");
+        ("e7e5", "");
+        ("g1f3", "");
+        ("b8c6", "");
+        ("f1c4", "");
+        ("g8f6", "");
+        ("b1c3", "");
+        ("f8d6", "");
+        ("d1e2", "");
+        ("h8f8", "");
+        ("d2d3", "");
+        ("a7a5", "");
+        ("e1g1", "");
+      ]
+      [
+        ("e2e4", "");
+        ("e7e5", "");
+        ("f1c4", "");
+        ("f8d6", "");
+        ("b1c3", "");
+        ("g8f6", "");
+        ("d1e2", "");
+        ("h8f8", "");
+        ("g1f3", "");
+        ("b8c6", "");
+        ("d2d3", "");
+        ("a7a5", "");
+        ("e1g1", "");
+      ]
+      true;
+  ]
+
+let gen_random x =
+  Random.self_init ();
+  Random.int x
+
+let random_move board () =
+  let d = move_generator board in
+  let a = gen_random (List.length d) in
+  List.nth d a
+
+let rec random_game board x =
+  if x <= 0 then board
+  else if checkmate board then board
+  else
+    let a = random_move board () in
+    let b = move a "Q" board in
+    random_game b x
+
+let rec undo_seq_compare undo_board move_seq =
+  match List.rev move_seq with
+  | [] -> true
+  | h :: t ->
+      let fresh_init = init () in
+      let next_undo = Board.undo_prev undo_board in
+      let new_board = move_list (List.rev t) fresh_init in
+      if Board.equals new_board next_undo then
+        undo_seq_compare next_undo (List.rev t)
+      else (
+        print_endline (Board.to_string next_undo);
+        print_endline " did not equal ";
+        print_endline (Board.to_string new_board);
+        false )
+
+let undo_seq_tester name move_seq =
+  let final_board = move_list move_seq (init ()) in
+  let is_equal_seq = undo_seq_compare final_board move_seq in
+  name >:: fun _ ->
+  assert_bool
+    "Undoing did not result in the same board as the original move \
+     sequence"
+    is_equal_seq
+
+let undo_random_tester name =
+  let board = random_game (init ()) 60 in
+  undo_seq_tester name (get_moves board)
+
+let undo_move_tests =
+  [
+    undo_seq_tester
+      "undoing every move in the opening with no captures results in \
+       the same board as the initial move sequence"
+      [
+        ("e2e4", "");
+        ("e7e5", "");
+        ("g1f3", "");
+        ("b8c6", "");
+        ("f1c4", "");
+        ("g8f6", "");
+        ("b1c3", "");
+        ("f8d6", "");
+        ("d1e2", "");
+        ("h8f8", "");
+        ("d2d3", "");
+        ("a7a5", "");
+      ];
+    undo_seq_tester
+      "undoing initial move sequence with en passant works"
+      [
+        ("e2e4", "");
+        ("e7e5", "");
+        ("g1f3", "");
+        ("b8c6", "");
+        ("f1c4", "");
+        ("g8f6", "");
+        ("b1c3", "");
+        ("f8d6", "");
+        ("d1e2", "");
+        ("h8f8", "");
+        ("d2d3", "");
+        ("a7a5", "");
+        ("g2g4", "");
+        ("b7b6", "");
+        ("g4g5", "");
+        ("h7h5", "");
+        ("g5h6", "");
+      ];
+    undo_seq_tester "undoing initial move sequence with castling works"
+      [
+        ("e2e4", "");
+        ("e7e5", "");
+        ("g1f3", "");
+        ("b8c6", "");
+        ("f1c4", "");
+        ("g8f6", "");
+        ("b1c3", "");
+        ("f8d6", "");
+        ("d1e2", "");
+        ("h8f8", "");
+        ("d2d3", "");
+        ("a7a5", "");
+        ("e1g1", "");
+      ];
+    undo_seq_tester
+      "undoing every move in the opening with a variety of captures  \
+       correctly matches initial move sequence"
+      [
+        ("e2e4", "");
+        ("e7e5", "");
+        ("g1f3", "");
+        ("b8c6", "");
+        ("f1c4", "");
+        ("g8f6", "");
+        ("b1c3", "");
+        ("f8d6", "");
+        ("d1e2", "");
+        ("h8f8", "");
+        ("d2d3", "");
+        ("a7a5", "");
+        ("f3e5", "");
+        ("d6e5", "");
+        ("c3d5", "");
+        ("f6d5", "");
+        ("c4d5", "");
+        ("d8h4", "");
+        ("d5c6", "");
+        ("b7c6", "");
+        ("c1e3", "");
+        ("e5h2", "");
+        ("h1h2", "");
+        ("h4h2", "");
+        ("e2g4", "");
+        ("h2h1", "");
+        ("e1d2", "");
+        ("h1a1", "");
+        ("g4g7", "");
+        ("a1a2", "");
+      ];
+    undo_random_tester
+      "Performing 60 random moves on a board and then undoing each \
+       individually to compare with the normally generated board  \
+       results in all equivalent boards";
+  ]
 
 let fen_test name board colid expected =
   let col = make_col board colid in
@@ -1040,6 +1232,25 @@ let psnt_moves =
   lst_from_brd(board)
   *)[@@ocamlformat "disable"]
 
+(**[move_gen_random name] creates an OUnit test that always returns
+   true, contingent on the creation of a random game with 60 moves not
+   throwing an error from an illegal move being generated *)
+let move_gen_random name num =
+  let all_ran =
+    let rec move_gen_random_helper num =
+      if num = 0 then true
+      else
+        let board = random_game (init ()) 60 in
+        move_gen_random_helper (num - 1)
+    in
+    move_gen_random_helper num
+  in
+  name >:: fun _ ->
+  assert_bool
+    "This cannot fail; the test exists to assert that no illegal moves \
+     were thrown"
+    all_ran
+
 let move_gen_tests =
   [
     move_gen_tester
@@ -1051,6 +1262,10 @@ let move_gen_tests =
     move_gen_tester
       "en passant complex position contains all legal moves" psnt_board
       psnt_moves;
+    move_gen_random
+      "running 20 random games with the move generator throws no  \
+       errors from illegal moves being generated"
+      20;
   ]
 
 let board_tests =
@@ -1062,6 +1277,7 @@ let board_tests =
       check_tests;
       fen_tests;
       move_gen_tests;
+      equals_tests;
     ]
 
 let suite =
