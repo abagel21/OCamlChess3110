@@ -1700,6 +1700,20 @@ let map_castling_str pos =
       if bq then Buffer.add_char temp 'q';
       Buffer.contents temp
 
+let to_fen_no_mvclck pos =
+  let str = Buffer.create 80 in
+  Buffer.add_string str (build_boardstring pos.board);
+  Buffer.add_string str " ";
+  Buffer.add_string str (if get_turn pos then "w" else "b");
+  Buffer.add_string str " ";
+  Buffer.add_string str
+    (let cstl_str = map_castling_str pos in
+     if cstl_str = "" then "-" else cstl_str);
+  Buffer.add_string str " ";
+  Buffer.add_string str
+    (if pos.ep <> (-1, -1) then sqr_to_str pos.ep else "-");
+  Buffer.contents str
+
 let to_fen pos =
   let str = Buffer.create 80 in
   Buffer.add_string str (build_boardstring pos.board);
@@ -1746,24 +1760,30 @@ let mv_to_str move =
     match move.promotion with None -> "" | Some k -> Piece.to_string k
   )
 
+let rec assoc_list_printer lst acc =
+  match lst with
+  | [] -> acc
+  | (h1, h2) :: t ->
+      assoc_list_printer t (acc ^ "(\"" ^ h1 ^ "\", \"" ^ h2 ^ "\"); ")
+
 (**[threefold_repetition pos] returns true if the current player of
    [pos] can claim a draw by threefold repetition *)
 let threefold_repetition pos =
   let mv_stck = ref [] in
-  let compare_fen = to_fen pos in
+  let compare_fen = to_fen_no_mvclck pos in
   let rec three_rep_helper pos current_pos inc =
     match current_pos.move_stack with
     | [] -> false
     | h :: t ->
-        if match h.capture with None -> true | Some k -> false then (
-          mv_stck := mv_to_str h :: !mv_stck;
+        mv_stck := mv_to_str h :: !mv_stck;
+        if match h.capture with None -> true | Some k -> false then
           let next_pos = undo_prev current_pos in
-          if to_fen next_pos = compare_fen then
+          if to_fen_no_mvclck next_pos = compare_fen then
             if inc + 1 = 3 then (
-              move_list !mv_stck current_pos;
+              move_list !mv_stck next_pos;
               true )
             else three_rep_helper pos next_pos (inc + 1)
-          else three_rep_helper pos next_pos inc )
+          else three_rep_helper pos next_pos inc
         else (
           move_list !mv_stck current_pos;
           false )

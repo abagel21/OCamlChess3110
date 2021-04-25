@@ -1422,6 +1422,8 @@ let bongcloud_moves =
     ("e8e7", "");
     ("e2e1", "");
     ("e7e8", "");
+    ("e1e2", "");
+    ("e8e7", "");
   ]
 
 let draw_tests =
