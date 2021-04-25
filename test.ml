@@ -41,6 +41,7 @@ let move_no_throw name board move_str final_pos expected =
   assert_equal
     (Board.get_piece final_pos (move move_str "" pos))
     expected
+    ~printer:(fun x -> x)
 
 let rec all_empty board empty_lst =
   match empty_lst with
@@ -188,18 +189,13 @@ let rf1move9 = "d4d7"
 
 let rf1move10 = "d4d8"
 
-let rf2 = "rnbqkbnr/1pppppp1/8/p6p/P6P/8/1PPPPPP1/RNBQKBNR w KQkQ - -"
+let rf2 = "rnbqkbnr/1pppppp1/8/p6p/P6P/8/1PPPPPP1/RNBQKBNR w KQkq - 0 1"
 
-let rf3 = "rnbqkbnr/1pppppp1/8/p6p/P6P/8/1PPPPPP1/RNBQKBNR b KQkQ - -"
+let rf3 = "rnbqkbnr/1pppppp1/8/p6p/P6P/8/1PPPPPP1/RNBQKBNR b KQkq - 0 1"
 
-let rec get_nth_list_item lst n =
-  match lst with
-  | [] -> raise (Failure "Index out of bounds")
-  | h :: t -> if n = 0 then h else get_nth_list_item t (n - 1)
-
-let rook_sets_castling name board move_str x expected =
+let rook_sets_castling name board move_str expected =
   let castling = get_castling (move move_str "" (fen_to_board board)) in
-  name >:: fun _ -> assert_equal (get_nth_list_item castling x) expected
+  name >:: fun _ -> assert_equal expected castling
 
 let rook_tests =
   [
@@ -225,16 +221,20 @@ let rook_tests =
       rf1move10 "Illegal move for a rook";
     rook_sets_castling
       "moving white kingside rook sets kingside castling to false" rf2
-      "h1h2" 1 false;
+      "h1h2"
+      [ false; true; true; true ];
     rook_sets_castling
       "moving white queenside rook sets queenside castling to false" rf2
-      "a1a2" 0 false;
+      "a1a2"
+      [ true; false; true; true ];
     rook_sets_castling
       "moving black kingside rook sets kingside castling to false" rf3
-      "h8h7" 3 false;
+      "h8h7"
+      [ true; true; false; true ];
     rook_sets_castling
       "moving black queenside rook sets queenside castling to false" rf3
-      "a8a7" 2 false;
+      "a8a7"
+      [ true; true; true; false ];
   ]
 
 (*FENs for queen tests*)
@@ -423,25 +423,25 @@ let pawn_tests =
   ]
 
 let whking_castle_kside =
-  "rnbqk2r/pppppp1p/5npb/8/8/5NPB/PPPPPP1P/RNBQK2R w KQkq - - "
+  "rnbqk2r/pppppp1p/5npb/8/8/5NPB/PPPPPP1P/RNBQK2R w KQkq - 0 1 "
 
 let blking_castle_kside =
-  "rnbqk2r/pppppp1p/5npb/8/8/5NPB/PPPPPP1P/RNBQK2R b KQkq - - "
+  "rnbqk2r/pppppp1p/5npb/8/8/5NPB/PPPPPP1P/RNBQK2R b KQkq - 0 1 "
 
 let whking_castle_qside =
-  "r3kbnr/ppp1pppp/2nq4/3p1b2/3P1B2/2NQ4/PPP1PPPP/R3KBNR w KQkq - -"
+  "r3kbnr/ppp1pppp/2nq4/3p1b2/3P1B2/2NQ4/PPP1PPPP/R3KBNR w KQkq - 0 1"
 
 let blking_castle_qside =
-  "r3kbnr/ppp1pppp/2nq4/3p1b2/3P1B2/2NQ4/PPP1PPPP/R3KBNR b KQkq - -"
+  "r3kbnr/ppp1pppp/2nq4/3p1b2/3P1B2/2NQ4/PPP1PPPP/R3KBNR b KQkq - 0 1"
 
 let whking_castle_leads_to_check =
-  "r3kbnr/ppp1pppp/2n5/3p1b2/3P1q2/2NQ4/PPP1PPPP/R3KBNR w KQkq - -"
+  "r3kbnr/ppp1pppp/2n5/3p1b2/3P1q2/2NQ4/PPP1PPPP/R3KBNR w KQkq - 0 1"
 
 let whqrook_has_moved =
-  "r3kbnr/ppp1pppp/2nq4/3p1b2/3P4/2NQ4/PPP1PPPP/1R2KBNR w Kkq - - "
+  "r3kbnr/ppp1pppp/2nq4/3p1b2/3P4/2NQ4/PPP1PPPP/1R2KBNR w Kkq - 0 1"
 
 let whkrook_has_moved =
-  "rnbqk2r/ppp1p2p/5npb/3p1p2/4P1P1/5P1P/PPPPN1BR/RNBQK3 w Qkq - -"
+  "rnbqk2r/ppp1p2p/5npb/3p1p2/4P1P1/5P1P/PPPPN1BR/RNBQK3 w Qkq - 0 1"
 
 let wh_castle_thr_chk =
   "rnb2k1r/pppQ1ppp/8/2b1p3/2B1P3/2Nq4/PPPP1PPP/R1B1K2R w KQkq - 0 1"
@@ -452,9 +452,9 @@ let wh_castle_out_chk =
 let wh_king_along_chk =
   "rnbq1bnr/pppppkpp/5p2/7Q/4P3/8/PPPP1PPP/RNB1KBNR b KQ - 0 1"
 
-let only_king = "8/8/8/8/4K3/8/8/8 w - -"
+let only_king = "8/8/8/8/4K3/8/8/8 w - - 0 1"
 
-let two_kings = "8/8/8/3k4/8/3K4/8/8 w - -"
+let two_kings = "8/8/8/3k4/8/3K4/8/8 w - - 0 1"
 
 let castle_check name board move_str expected final_pos1 final_pos2 =
   let pos = move move_str "" (fen_to_board board) in
@@ -948,6 +948,40 @@ let undo_random_tester name =
   let board = random_game (init ()) 60 in
   undo_seq_tester name (get_moves board)
 
+let capture_seq =
+  [
+    ("e2e4", "");
+    ("e7e5", "");
+    ("g1f3", "");
+    ("b8c6", "");
+    ("f1c4", "");
+    ("g8f6", "");
+    ("b1c3", "");
+    ("f8d6", "");
+    ("d1e2", "");
+    ("h8f8", "");
+    ("d2d3", "");
+    ("a7a5", "");
+    ("f3e5", "");
+    ("d6e5", "");
+    ("c3d5", "");
+    ("f6d5", "");
+    ("c4d5", "");
+    ("d8h4", "");
+    ("d5c6", "");
+    ("b7c6", "");
+    ("c1e3", "");
+    ("e5h2", "");
+    ("h1h2", "");
+    ("h4h2", "");
+    ("e2g4", "");
+    ("h2h1", "");
+    ("e1d2", "");
+    ("h1a1", "");
+    ("g4g7", "");
+    ("a1a2", "");
+  ]
+
 let undo_move_tests =
   [
     undo_seq_tester
@@ -1007,42 +1041,10 @@ let undo_move_tests =
     undo_seq_tester
       "undoing every move in the opening with a variety of captures  \
        correctly matches initial move sequence"
-      [
-        ("e2e4", "");
-        ("e7e5", "");
-        ("g1f3", "");
-        ("b8c6", "");
-        ("f1c4", "");
-        ("g8f6", "");
-        ("b1c3", "");
-        ("f8d6", "");
-        ("d1e2", "");
-        ("h8f8", "");
-        ("d2d3", "");
-        ("a7a5", "");
-        ("f3e5", "");
-        ("d6e5", "");
-        ("c3d5", "");
-        ("f6d5", "");
-        ("c4d5", "");
-        ("d8h4", "");
-        ("d5c6", "");
-        ("b7c6", "");
-        ("c1e3", "");
-        ("e5h2", "");
-        ("h1h2", "");
-        ("h4h2", "");
-        ("e2g4", "");
-        ("h2h1", "");
-        ("e1d2", "");
-        ("h1a1", "");
-        ("g4g7", "");
-        ("a1a2", "");
-      ];
-    undo_random_tester
-      "Performing 60 random moves on a board and then undoing each \
-       individually to compare with the normally generated board  \
-       results in all equivalent boards";
+      capture_seq;
+    (* undo_random_tester "Performing 60 random moves on a board and\n\
+       \ then undoing each individually to compare with the \
+       normally\n\ \ generated board results in all equivalent boards"; *)
   ]
 
 let fen_test name board colid expected =
@@ -1057,6 +1059,16 @@ let fen_is_check name board expected =
   assert_equal expected (is_in_check board) ~printer:(fun x ->
       if x then "true" else "false")
 
+let is_draw_tester name board expected =
+  name >:: fun _ ->
+  assert_equal expected (draw board) ~printer:(fun x ->
+      if x then "true" else "false")
+
+let fen_equals_board name board move_seq =
+  let move_board = move_list move_seq (init ()) in
+  name >:: fun _ ->
+  assert_bool "boards were not equal" (Board.equals board move_board)
+
 let fen = "k6r/2qP4/3n1bPn/1r4p1/2B1P3/BNP2N2/3R3P/1QKb3R w - - 0 1"
 
 let fen_check =
@@ -1064,11 +1076,21 @@ let fen_check =
 
 let fen_not_check = "8/3R4/6p1/1r3k1R/3K3p/7r/6P1/8 w - - 0 1"
 
+let fen_fiftyfold_draw =
+  "r1b1kr2/1ppp1ppp/2P5/p3b3/2B4q/3P4/PPP1QPPP/R1B1K2R w KQq - 100 1"
+
+let captures_fen =
+  "r1b1kr2/2pp1pQp/2p5/p7/4P3/3PB3/qPPK1PP1/8 w q - 0 1"
+
+let captures_board = fen_to_board captures_fen
+
 let fen_board = fen_to_board fen
 
 let check_board = fen_to_board fen_check
 
 let not_check_board = fen_to_board fen_not_check
+
+let fiftyfold_draw_board = fen_to_board fen_fiftyfold_draw
 
 let fen_tests =
   [
@@ -1093,6 +1115,13 @@ let fen_tests =
     fen_is_check "basic check is recognized by fen" check_board true;
     fen_is_check "basic endgame non-check recognized by fen"
       not_check_board false;
+    is_draw_tester
+      "loading a fen with a full halfmove clock results in a draw"
+      fiftyfold_draw_board true;
+    fen_equals_board
+      "loading a fen equivalent to a move sequence with multiple \
+       captures is equivalent"
+      captures_board capture_seq;
   ]
 
 let move_gen_tester name board expected =
@@ -1262,10 +1291,9 @@ let move_gen_tests =
     move_gen_tester
       "en passant complex position contains all legal moves" psnt_board
       psnt_moves;
-    move_gen_random
-      "running 20 random games with the move generator throws no  \
-       errors from illegal moves being generated"
-      20;
+    (* move_gen_random "running 20 random games with the move
+       generator\n\ \ throws no errors from illegal moves being
+       generated" 20; *)
   ]
 
 let board_tests =
