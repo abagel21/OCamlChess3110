@@ -2,6 +2,71 @@ open OUnit2
 open Board
 open Piece
 
+let board = init ()
+
+let get_piece_tester name board square expected =
+  name >:: fun _ -> assert_equal expected (Board.get_piece square board)
+
+let get_piece_throws name board square =
+  name >:: fun _ ->
+  assert_raises
+    (IllegalSquare (square ^ " is not a valid square"))
+    (fun () -> Board.get_piece square board)
+
+let get_piece_tests =
+  [
+    get_piece_tester "getting rook on starting position works" board
+      "a1" "R";
+    get_piece_tester "getting empty square works" board "e4" "NA";
+    get_piece_throws "out of bounds square throws" board "u7";
+    get_piece_throws "out of bounds number throws" board "a9";
+    get_piece_throws "longer string throws" board "pawn";
+  ]
+
+let get_moves_tester name moves =
+  let board = move_list moves (init ()) in
+  name >:: fun _ -> assert_equal moves (get_moves board)
+
+let get_moves_tests =
+  [
+    get_moves_tester "empty move list is empty" [];
+    get_moves_tester "one move gives correct list back" [ ("e2e4", "") ];
+    get_moves_tester
+      "long list of captures gives correct move list back"
+      [
+        ("e2e4", "");
+        ("e7e5", "");
+        ("g1f3", "");
+        ("b8c6", "");
+        ("f1c4", "");
+        ("g8f6", "");
+        ("b1c3", "");
+        ("f8d6", "");
+        ("d1e2", "");
+        ("h8f8", "");
+        ("d2d3", "");
+        ("a7a5", "");
+        ("f3e5", "");
+        ("d6e5", "");
+        ("c3d5", "");
+        ("f6d5", "");
+        ("c4d5", "");
+        ("d8h4", "");
+        ("d5c6", "");
+        ("b7c6", "");
+        ("c1e3", "");
+        ("e5h2", "");
+        ("h1h2", "");
+        ("h4h2", "");
+        ("e2g4", "");
+        ("h2h1", "");
+        ("e1d2", "");
+        ("h1a1", "");
+        ("g4g7", "");
+        ("a1a2", "");
+      ];
+  ]
+
 let make_col board colid =
   let row = ref "" in
   for i = 1 to 8 do
@@ -12,8 +77,6 @@ let make_col board colid =
 let init_pos_test name board colid expected =
   let col = make_col board colid in
   name >:: fun _ -> assert_equal col expected
-
-let board = init ()
 
 let init_tests =
   [
@@ -122,6 +185,8 @@ let nf2move9 = "g4e6"
 
 let nf2move10 = "g4h3"
 
+let capture_knight = "7K/8/8/2pppN2/2pkp3/2ppp3/8/8 w - - 0 1"
+
 let knight_tests =
   [
     move_no_throw "white knight moves midtop right normally" nf1 nfmove
@@ -161,6 +226,8 @@ let knight_tests =
     move_throws
       "black knight moving abnormally one square diagonally throws" nf2
       nf2move10 "Illegal move for a knight";
+    move_throws "cannot capture king with knight" capture_knight "f5d4"
+      "Cannot capture king";
   ]
 
 (*FENs for bishop tests*)
@@ -261,6 +328,8 @@ let qf1move9 = "d4d7"
 
 let qf1move10 = "d4d8"
 
+let qf1move11 = "g4g5"
+
 let queen_tests =
   [
     move_no_throw "move black queen 1 square right works" qf1 qf1move
@@ -283,6 +352,8 @@ let queen_tests =
       "Cannot capture ally";
     move_throws "black queen tries to move past black queen" qf1
       qf1move10 "Illegal move for a queen";
+    move_throws "black cannot move a white pawn" qf1 qf1move11
+      "Black does not own the piece on g4";
   ]
 
 let promote_tester name board move_str promote_str =
@@ -293,6 +364,12 @@ let promote_tester name board move_str promote_str =
     (String.uppercase_ascii
        (Board.get_piece (String.sub move_str 2 2) board))
     ~printer:(fun x -> x)
+
+let promote_throws name board move_str promote_str error =
+  let pos = fen_to_board board in
+  name >:: fun _ ->
+  assert_raises (IllegalPiece error) (fun x ->
+      move move_str promote_str pos)
 
 (*FENs for pawn tests*)
 let pf1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -359,6 +436,17 @@ let pf6 =
 
 let pf6_seq = ("e4e5", "f7f5", "e5f6")
 
+let pf7 =
+  "rnbqkbnr/pppp1ppp/B7/4p3/4P3/8/PPPP1PPP/RNBQK1NR b KQkq - 0 1"
+
+let pf7_move = "a7a5"
+
+let pf7_move2 = "a7a6"
+
+let pf8 = "8/3q2P1/8/8/3q4/8/3p4/8 w - - 0 1"
+
+let pf8_move = "g7g8"
+
 let pawn_tests =
   [
     move_no_throw "white double pawn move at start does not throw" pf1
@@ -410,9 +498,14 @@ let pawn_tests =
     move_throws
       "black pawn cannot move double backwards from white starting line"
       pf4 pf4_move2 "Illegal move for a pawn";
+    move_throws "black pawn cannot double move through a piece" pf7
+      pf7_move "Illegal move for a pawn";
     move_throws
       "white pawn cannot capture vertically when moving two spaces" pf5
       pf5_move "Illegal move for a pawn";
+    move_throws
+      "black pawn cannot capture vertically when moving one space" pf7
+      pf7_move2 "Pawn cannot take vertically";
     promote_tester "black pawn promotes to black queen" pf4 pf4_move3
       "Q";
     promote_tester "black pawn promotes to black rook" pf4 pf4_move3 "R";
@@ -420,6 +513,14 @@ let pawn_tests =
       "N";
     promote_tester "black pawn promotes to black bishop" pf4 pf4_move3
       "B";
+    promote_throws "promoting to a king doesn't work" pf3 "a2a1" "K"
+      "Cannot parse K as a promotable piece";
+    promote_tester "white pawn promotes to white queen" pf8 pf8_move "Q";
+    promote_tester "white pawn promotes to white bishop" pf8 pf8_move
+      "B";
+    promote_tester "white pawn promotes to white knight" pf8 pf8_move
+      "N";
+    promote_tester "white pawn promotes to white rook" pf8 pf8_move "R";
   ]
 
 let whking_castle_kside =
@@ -443,8 +544,17 @@ let whqrook_has_moved =
 let whkrook_has_moved =
   "rnbqk2r/ppp1p2p/5npb/3p1p2/4P1P1/5P1P/PPPPN1BR/RNBQK3 w Qkq - 0 1"
 
-let wh_castle_thr_chk =
+let b_no_queenside =
+  "r3k2r/pppn2pp/4bp2/2Q1p3/4P3/2NB4/PPPP1PPP/R1B1K2R b KQk - 0 1"
+
+let b_no_kingside =
+  "r3k2r/pppn2pp/4bp2/3Qp3/4P3/2NB4/PPPP1PPP/R1B1K2R b KQ - 0 1"
+
+let wh_cstl_thr_chk =
   "rnb2k1r/pppQ1ppp/8/2b1p3/2B1P3/2Nq4/PPPP1PPP/R1B1K2R w KQkq - 0 1"
+
+let b_cstl_thr_chk =
+  "rnb1k2r/ppp3pp/5p2/2Q1p3/4P3/2NB4/PPPP1PPP/R1B1K2R b KQkq - 0 1"
 
 let wh_castle_out_chk =
   "rnb2k1r/pppQ1ppp/8/2b1p3/2B1P3/2N1q3/PPPP1PPP/R1B1K2R w KQkq - 0 1"
@@ -455,6 +565,12 @@ let wh_king_along_chk =
 let only_king = "8/8/8/8/4K3/8/8/8 w - - 0 1"
 
 let two_kings = "8/8/8/3k4/8/3K4/8/8 w - - 0 1"
+
+let wh_cstl_take =
+  "rnbqkb1r/pppp1ppp/8/4p3/2B3Q1/P1NPB3/1PP2PPP/R3K1nR w KQkq - 0 1"
+
+let wh_no_rook =
+  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK3 w KQkq - 0 1"
 
 let castle_check name board move_str expected final_pos1 final_pos2 =
   let pos = move move_str "" (fen_to_board board) in
@@ -481,14 +597,33 @@ let king_tests =
       whking_castle_leads_to_check "e1c1"
       (IllegalMove "Moving this piece would place you in check");
     (* ^ kind of unnecessary*)
-    castle_throw "castling through check throws" wh_castle_thr_chk
-      "e1g1" (IllegalMove "King cannot castle through check");
+    castle_throw "white kign castling through check throws"
+      wh_cstl_thr_chk "e1g1"
+      (IllegalMove "King cannot castle through check");
+    castle_throw "black king castling through check throws"
+      b_cstl_thr_chk "e8g8"
+      (IllegalMove "King cannot castle through check");
     castle_throw "castling out of check throws" wh_castle_out_chk "e1g1"
       (IllegalMove "King cannot castle out of check");
+    castle_throw "castling such that you capture a piece throws"
+      wh_cstl_take "e1g1"
+      (IllegalMove "White king cannot castle kingside");
+    castle_throw
+      "castling black king queenside without queenside castling rights \
+       throws"
+      b_no_queenside "e8c8"
+      (IllegalMove "Black king cannot castle queenside");
+    castle_throw
+      "castling black king kingside without kingside castling rights \
+       throws"
+      b_no_kingside "e8g8"
+      (IllegalMove "Black king cannot castle kingside");
+    castle_throw "castling without rook throws" wh_no_rook "e1g1"
+      (IllegalMove "White king cannot castle kingside");
     castle_throw "queenside rook has moved" whqrook_has_moved "e1c1"
-      (IllegalMove "White king cannot castle queenside ");
+      (IllegalMove "White king cannot castle queenside");
     castle_throw "kingside rook has moved" whkrook_has_moved "e1g1"
-      (IllegalMove "White king cannot castle kingside ");
+      (IllegalMove "White king cannot castle kingside");
     move_throws "King cannot move two up" only_king "e4e6"
       "King can only move one spot when not castling";
     move_throws "King cannot move two down" only_king "e4e2"
@@ -658,7 +793,7 @@ let w1move = "c2c3"
 
 let w2move = "a2a3"
 
-let b1 = "rn1kqbnr/pp1ppppp/2p5/4Kb2/3PN3/8/PPP2PPP/R1BQ1BNR w kq - 1 5"
+let b1 = "rn1kqbnr/pp1ppppp/2p5/4Kb2/3PN3/8/PPP2PPP/R1BQ1BNR b kq - 1 5"
 
 let b1move = "d7d6"
 
@@ -674,9 +809,9 @@ let w2 = "rn1q1bnr/pp2pppp/2p5/5b2/PkPPN3/8/1P3PPP/R1BQKBNR w KQ - 1 5"
 let pawn_check_tests =
   [
     check_true "right white pawn check works" w1 w1move;
-    check_true "left white pawn check works" w1 w1move;
-    check_true "right black pawn check works" w1 w1move;
-    check_true "left black pawn check works" w1 w1move;
+    check_true "left white pawn check works" w1 w2move;
+    check_true "right black pawn check works" b1 b1move;
+    check_true "left black pawn check works" b1 b2move;
     check_true "double move white pawn check works" dw dwmove;
     check_false
       "pawn next to and diagonal ahead right of black king does not \
@@ -705,7 +840,7 @@ let r2move2 = "d7d8"
 
 let r2move3 = "d7f7"
 
-let r3 = "8/3R4/6p1/1r3k1R/3K3p/7r/6P1/8 b - - 0 1"
+let r3 = "8/3R4/6pR/1r3k2/3K3p/7r/6P1/8 b - - 0 1"
 
 let r3move = "b5d5"
 
@@ -726,18 +861,21 @@ let r7_fen = "5bk1/5R2/3n4/8/8/1N6/8/2K5 b - - 0 1"
 let r7_move = "d6c4"
 
 let rook_check_tests =
-  [ (* check_true "left black rook checks correctly" r1 rmove1;
-       check_true "left black rook checks correctly" r1 rmove2;
-       check_true "top black rook checks correctly" r1 rmove3;
-       check_true "right white rook checks correctly" r2 r2move1;
-       check_true "left white rook checks correctly" r2 r2move2;
-       check_true "bottom white rook checks correctly" r2 r2move3;
-       check_true "top black rook checks correctly" r3 r3move;
-       check_true "top white rook checks correctly" r4 r4move;
-       check_false "rook cannot check through pieces vertically" r5_fen
-       r5_move; check_false "rook cannot check through pieces
-       horizontally" r6_fen r6_move; check_false "rook cannot check
-       diagonally" r7_fen r7_move; *) ]
+  [
+    check_true "left black rook checks correctly" r1 rmove1;
+    check_true "left black rook checks correctly" r1 rmove2;
+    check_true "top black rook checks correctly" r1 rmove3;
+    check_true "right white rook checks correctly" r2 r2move1;
+    check_true "left white rook checks correctly" r2 r2move2;
+    check_true "bottom white rook checks correctly" r2 r2move3;
+    check_true "top black rook checks correctly" r3 r3move;
+    check_true "top white rook checks correctly" r4 r4move;
+    check_false "rook cannot check through pieces vertically" r5_fen
+      r5_move;
+    check_false "rook cannot check through pieces horizontally" r6_fen
+      r6_move;
+    check_false "rook cannot check diagonally" r7_fen r7_move;
+  ]
 
 (*FENs for discovery check tests*)
 let disc_fen1 = "8/1K2b1q1/PP6/8/8/N7/8/8 b - - 0 1"
@@ -762,6 +900,21 @@ let discovery_check_tests =
       dfen3_move;
   ]
 
+let move_blocks_check name board mv expected =
+  let board = move mv "" board in
+  name >:: fun _ -> assert_equal expected (is_in_check board)
+
+let block_check_fen =
+  "r1bqkbnr/pppp2pp/B1n2p2/4p2Q/4P3/2N5/PPPP1PPP/R1B1K1NR b KQkq - 0 1"
+
+let block_check_tests =
+  [
+    move_blocks_check
+      "putting pawn in front of queen check results in no check"
+      (fen_to_board block_check_fen)
+      "g7g6" false;
+  ]
+
 let check_tests =
   List.flatten
     [
@@ -769,6 +922,7 @@ let check_tests =
       knight_check_tests;
       rook_check_tests;
       pawn_check_tests;
+      block_check_tests;
     ]
 
 (*Positions for bishop pins*)
@@ -846,6 +1000,14 @@ let pin_tests =
       "Moving this piece would place you in check";
     move_throws "top right white queen raises" qpin8 "d3d8"
       "Moving this piece would place you in check";
+  ]
+
+let general_move_tests =
+  [
+    move_throws "moving piece to its current square throws" qpin8 "g6g6"
+      "Cannot move piece to the square it is currently at";
+    move_throws "trying to move from an empty square throws" qpin8
+      "a8b8" "a8b8 does not contain a valid from square";
   ]
 
 let move_tests =
@@ -944,6 +1106,16 @@ let undo_random_tester name =
   let board = random_game (init ()) 60 in
   undo_seq_tester name (get_moves board)
 
+let undo_throws name board mv mv2 mv3 =
+  let board = move mv "" board in
+  let board = move mv2 "" board in
+  move mv3 "" board;
+  name >:: fun _ ->
+  assert_raises
+    (IllegalMove
+       "Attempted to undo a move with a piece that wasn't there")
+    (fun () -> board |> undo_prev |> undo_prev)
+
 let capture_seq =
   [
     ("e2e4", "");
@@ -1017,8 +1189,31 @@ let undo_move_tests =
         ("g4g5", "");
         ("h7h5", "");
         ("g5h6", "");
+        ("g7g5", "");
+        ("e2e3", "");
+        ("g5g4", "");
+        ("h2h4", "");
+        ("g4h3", "");
       ];
-    undo_seq_tester "undoing initial move sequence with castling works"
+    undo_seq_tester
+      "undoing initial move sequence with queenside castling works"
+      [
+        ("e2e4", "");
+        ("e7e5", "");
+        ("b1c3", "");
+        ("b8c6", "");
+        ("d2d3", "");
+        ("d7d6", "");
+        ("c1d2", "");
+        ("c8e6", "");
+        ("d1e2", "");
+        ("d8e7", "");
+        ("h2h3", "");
+        ("e8c8", "");
+        ("g1f3", "");
+      ];
+    undo_seq_tester
+      "undoing initial move sequence with kingside castling works"
       [
         ("e2e4", "");
         ("e7e5", "");
@@ -1038,6 +1233,12 @@ let undo_move_tests =
       "undoing every move in the opening with a variety of captures  \
        correctly matches initial move sequence"
       capture_seq;
+    undo_seq_tester
+      "undoing position with no moves returns same position" [];
+    undo_throws
+      "undoing after mutating the board separately, moving the piece \
+       to undo, throws an error"
+      (init ()) "e2e4" "a7a5" "e4e5";
     (* undo_random_tester "Performing 60 random moves on a board and\n\
        \ then undoing each individually to compare with the \
        normally\n\ \ generated board results in all equivalent boards"; *)
@@ -1064,6 +1265,10 @@ let fen_equals_board name board move_seq =
   let move_board = move_list move_seq (init ()) in
   name >:: fun _ ->
   assert_bool "boards were not equal" (Board.equals board move_board)
+
+let fen_throws name fen error =
+  name >:: fun _ ->
+  assert_raises (IllegalFen error) (fun () -> fen_to_board fen)
 
 let fen = "k6r/2qP4/3n1bPn/1r4p1/2B1P3/BNP2N2/3R3P/1QKb3R w - - 0 1"
 
@@ -1118,6 +1323,21 @@ let fen_tests =
       "loading a fen equivalent to a move sequence with multiple \
        captures is equivalent"
       captures_board capture_seq;
+    fen_throws "fen without en passant throws"
+      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"
+      "FEN does not contain en passant information";
+    fen_throws "fen without halfmove clock throws"
+      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
+      "FEN does not contain halfmove clock";
+    fen_throws "fen without fullmove clock throws"
+      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0"
+      "FEN does not contain fullmove clock";
+    fen_throws "fen with illegal symbols throws"
+      "rnbqkbnr/ppp$pppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      "$ is not a valid FEN number or symbol";
+    fen_throws "fen with illegal letter throws"
+      "rnbqkbnr/appppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      "a is not a valid FEN letter";
   ]
 
 let move_gen_tester name board expected =
@@ -1426,6 +1646,42 @@ let bongcloud_moves =
     ("e8e7", "");
   ]
 
+let threedraw_fen = "n6R/r7/3k4/8/8/8/8/6NK w - - 0 1"
+
+let threedraw =
+  [
+    ("h1g2", "");
+    ("d6d5", "");
+    ("g2h2", "");
+    ("d5e6", "");
+    ("h2h1", "");
+    ("e6d6", "");
+    ("g1f3", "");
+    ("a8b6", "");
+    ("f3g1", "");
+    ("b6a8", "");
+  ]
+
+let insuf_draw = "k2n2r1/8/8/8/8/8/B7/1K6 w - - 0 1"
+
+let insuf_draw2 = "k7/8/8/8/7b/8/B7/1K2R3 b - - 0 1"
+
+let insuf_draw3 = "k7/8/8/8/8/8/B2r4/2K5 w - - 0 1"
+
+let insuf_draw4 = "3k3K/7p/8/8/R7/8/2b5/8 b - - 0 1"
+
+let insuf_draw5 = "3kn3/8/8/8/8/8/8/KN6 w - - 0 1"
+
+let insuf_draw6 = "3kb3/8/8/8/8/8/8/KN6 w - - 0 1"
+
+let insuf_draw7 = "3kn3/8/8/8/8/8/8/K7 w - - 0 1"
+
+let insuf_draw8 = "3k4/8/8/8/8/8/8/KN6 b - - 0 1"
+
+let insuf_draw9 = "3k4/8/8/8/8/8/8/K7 w - - 0 1"
+
+let insuf_draw10 = "3k4/4n3/8/8/8/8/N7/KN6 w - - 0 1"
+
 let draw_tests =
   [
     draw_tester
@@ -1442,6 +1698,43 @@ let draw_tests =
     draw_tester "bongcloud without last move is not a draw" init
       (rmv_last bongcloud_moves)
       false;
+    draw_tester "triangular king movement results in draw" threedraw_fen
+      threedraw true;
+    draw_tester
+      "triangular king movement without last move is not a draw"
+      threedraw_fen (rmv_last threedraw) false;
+    draw_tester
+      "capturing rook leaving insufficient material results in a draw"
+      insuf_draw [ ("a2g8", "") ] true;
+    draw_tester "not capturing rook results in not having a draw"
+      insuf_draw [ ("a2b3", "") ] false;
+    draw_tester
+      "capturing last rook with a bishop leaving bishop bishop endgame \
+       is a draw"
+      insuf_draw2 [ ("h4e1", "") ] true;
+    draw_tester "bishop and rook against bishop is not a draw"
+      insuf_draw2 [ ("h4g3", "") ] false;
+    draw_tester "capturing rook leaving BK vs k is a draw" insuf_draw3
+      [ ("c1d2", "") ] true;
+    draw_tester "BK vs RK is not a draw" insuf_draw3 [ ("c1b1", "") ]
+      false;
+    draw_tester
+      "capturing last pawn with insufficient other material is draw"
+      insuf_draw4
+      [ ("c2a4", ""); ("h8h7", "") ]
+      true;
+    draw_tester "not capturing the last pawn in bpk vs K is not a draw"
+      insuf_draw4
+      [ ("c2a4", ""); ("h8g7", "") ]
+      false;
+    draw_tester "sequence with promotions is not draw" pf4
+      [ ("a2a1", "Q") ] false;
+    draw_tester "KN vs kn is a draw" insuf_draw5 [] true;
+    draw_tester "KN vs kb is a draw" insuf_draw6 [] true;
+    draw_tester "K vs kn is a draw" insuf_draw7 [] true;
+    draw_tester "KN vs k is a draw" insuf_draw8 [] true;
+    draw_tester "K vs k is a draw" insuf_draw9 [] true;
+    draw_tester "KNN vs kn is not a draw" insuf_draw10 [] false;
   ]
 
 let to_fen_tester name fen =
@@ -1460,6 +1753,7 @@ let to_fen_tests =
       captures_fen;
     to_fen_tester "pf6 translates to fen correctly" pf6;
     to_fen_tester "rf1 translates to fen correctly" rf1;
+    to_fen_tester "r7_fen translates to fen correctly" r7_fen;
   ]
 
 let board_tests =

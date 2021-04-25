@@ -14,7 +14,7 @@ exception EmptyMoveStack
 
 exception IllegalSquare of string
 
-exception IllegalPiece
+exception IllegalPiece of string
 
 exception IllegalFen of string
 
