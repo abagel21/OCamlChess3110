@@ -929,11 +929,7 @@ let rec undo_seq_compare undo_board move_seq =
       let new_board = move_list (List.rev t) fresh_init in
       if Board.equals new_board next_undo then
         undo_seq_compare next_undo (List.rev t)
-      else (
-        print_endline (Board.to_string next_undo);
-        print_endline " did not equal ";
-        print_endline (Board.to_string new_board);
-        false )
+      else false
 
 let undo_seq_tester name move_seq =
   let final_board = move_list move_seq (init ()) in
@@ -1296,6 +1292,174 @@ let move_gen_tests =
        generated" 20; *)
   ]
 
+let draw_tester name board moves expected =
+  let board = fen_to_board board in
+  let board = move_list moves board in
+  name >:: fun _ ->
+  assert_equal expected (draw board) ~printer:(fun x ->
+      if x then "true" else "false")
+
+let rmv_last lst =
+  match List.rev lst with [] -> [] | h :: t -> List.rev t
+
+let king_material_draw = "r6k/n7/8/8/8/8/7N/K6R w - - 0 1"
+
+let init = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+let hundred_distinct_moves =
+  [
+    ("a1a2", "");
+    ("h8h7", "");
+    ("a2a3", "");
+    ("h7h6", "");
+    ("a3a4", "");
+    ("h6h5", "");
+    ("a4a5", "");
+    ("h5h4", "");
+    ("a5a6", "");
+    ("h4h3", "");
+    ("a6b6", "");
+    ("h3g3", "");
+    ("b6c5", "");
+    ("g3f4", "");
+    ("c5c4", "");
+    ("f4f5", "");
+    ("c4c3", "");
+    ("f5f6", "");
+    ("c3c2", "");
+    ("f6f7", "");
+    ("c2c1", "");
+    ("f7f8", "");
+    ("c1d1", "");
+    ("f8g8", "");
+    ("d1d2", "");
+    ("g8g7", "");
+    ("d2d3", "");
+    ("g7g6", "");
+    ("d3d4", "");
+    ("g6g5", "");
+    ("d4d5", "");
+    ("g5f4", "");
+    ("d5d6", "");
+    ("f4e3", "");
+    ("d6d7", "");
+    ("e3d2", "");
+    ("d7e7", "");
+    ("d2c2", "");
+    ("e7f7", "");
+    ("c2b2", "");
+    ("f7g7", "");
+    ("b2a2", "");
+    ("g7h7", "");
+    ("a2a3", "");
+    ("h7h6", "");
+    ("a3a4", "");
+    ("h6h5", "");
+    ("a4a5", "");
+    ("h5h4", "");
+    ("a5a6", "");
+    ("h4h3", "");
+    ("a6b7", "");
+    ("h3g2", "");
+    ("b7b8", "");
+    ("g2g1", "");
+    ("b8c8", "");
+    ("g1f1", "");
+    ("c8d8", "");
+    ("f1e1", "");
+    ("d8e8", "");
+    ("e1d1", "");
+    ("e8f8", "");
+    ("d1c1", "");
+    ("f8g8", "");
+    ("c1b1", "");
+    ("g8h8", "");
+    ("b1a1", "");
+    ("h8h7", "");
+    ("a1a2", "");
+    ("h7h6", "");
+    ("a2a3", "");
+    ("h6h5", "");
+    ("a3a4", "");
+    ("h5h4", "");
+    ("a4a5", "");
+    ("h4h3", "");
+    ("a5a6", "");
+    ("h3g3", "");
+    ("a6b6", "");
+    ("g3f4", "");
+    ("b6c5", "");
+    ("f4f5", "");
+    ("c5c4", "");
+    ("f5f6", "");
+    ("c4c3", "");
+    ("f6f7", "");
+    ("c3c2", "");
+    ("f7f8", "");
+    ("c2c1", "");
+    ("f8g8", "");
+    ("c1d1", "");
+    ("g8g7", "");
+    ("d1d2", "");
+    ("g7g6", "");
+    ("d2d3", "");
+    ("g6g5", "");
+    ("d3d4", "");
+    ("g5f4", "");
+    ("d4d5", "");
+    ("f4e3", "");
+  ]
+
+let bongcloud_moves =
+  [
+    ("e2e4", "");
+    ("e7e5", "");
+    ("e1e2", "");
+    ("e8e7", "");
+    ("e2e1", "");
+    ("e7e8", "");
+    ("e1e2", "");
+    ("e8e7", "");
+    ("e2e1", "");
+    ("e7e8", "");
+  ]
+
+let draw_tests =
+  [
+    draw_tester
+      "moving kings across empty board results in fifty fold draw"
+      king_material_draw hundred_distinct_moves true;
+    draw_tester
+      "99 moves without capture or pawn move is not a draw by \
+       fiftyfold rule"
+      king_material_draw
+      (rmv_last hundred_distinct_moves)
+      false;
+    draw_tester "bongcloud threefold repetition is a draw" init
+      bongcloud_moves true;
+    draw_tester "bongcloud without last move is not a draw" init
+      (rmv_last bongcloud_moves)
+      false;
+  ]
+
+let to_fen_tester name fen =
+  let board = fen_to_board fen in
+  name >:: fun _ ->
+  assert_equal fen (to_fen board) ~printer:(fun x -> x)
+
+let to_fen_tests =
+  [
+    to_fen_tester "initial board translates to fen correctly" init;
+    to_fen_tester
+      "complex board with en passant and different castling translates \
+       to fen correctly"
+      psnt_board;
+    to_fen_tester "captures fen translates back to fen correctly"
+      captures_fen;
+    to_fen_tester "pf6 translates to fen correctly" pf6;
+    to_fen_tester "rf1 translates to fen correctly" rf1;
+  ]
+
 let board_tests =
   List.flatten
     [
@@ -1306,6 +1470,8 @@ let board_tests =
       fen_tests;
       move_gen_tests;
       equals_tests;
+      draw_tests;
+      to_fen_tests;
     ]
 
 let suite =

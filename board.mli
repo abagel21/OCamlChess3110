@@ -95,3 +95,6 @@ val draw : t -> bool
 
 (**[ get_moves t] returns the moves made in the game so far*)
 val get_moves : t -> (string * string) list
+
+(**[to_fen t] returns the FEN of a chess position*)
+val to_fen : t -> string

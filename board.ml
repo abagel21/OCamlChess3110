@@ -73,6 +73,7 @@ type t = {
   wpieces : pieces;
   bpieces : pieces;
   move_stack : full_move list;
+  fullmove_clock : int;
   halfmove_clock : int;
 }
 
@@ -131,6 +132,7 @@ let init_empty () =
       { pawns = 0; knights = 0; bishops = 0; rooks = 0; queens = 0 };
     move_stack = [];
     halfmove_clock = 0;
+    fullmove_clock = 0;
   }
 
 let init () =
@@ -148,6 +150,7 @@ let init () =
       { pawns = 8; knights = 2; bishops = 2; rooks = 2; queens = 1 };
     move_stack = [];
     halfmove_clock = 0;
+    fullmove_clock = 0;
   }
 
 (**[get_turn pos] returns true if it is white's move and false
@@ -822,6 +825,8 @@ let add_move
         prev_castling;
       }
       :: pos.move_stack;
+    fullmove_clock =
+      (if pos.turn then pos.fullmove_clock else pos.fullmove_clock + 1);
     halfmove_clock =
       ( if pawn_move then 0
       else
@@ -1156,6 +1161,11 @@ let fen_parse_other str pos =
             | [] -> raise (IllegalFen "No halfmove clock")
             | h :: t -> int_of_string h
           in
+          let fullmove =
+            match t with
+            | h :: h2 :: t -> int_of_string h2
+            | _ -> raise (IllegalFen "No fullmove clock")
+          in
           {
             pos with
             turn;
@@ -1166,6 +1176,7 @@ let fen_parse_other str pos =
                 (if turn then pos.wking else pos.bking)
                 (not turn);
             halfmove_clock = hlfmove;
+            fullmove_clock = fullmove;
           } )
 
 let adjust_pieces pos piece =
@@ -1317,6 +1328,8 @@ let undo_normal_move
     bpieces = update_pieces false pos.bpieces promotion capture;
     move_stack = new_list;
     halfmove_clock = hlf_clock;
+    fullmove_clock =
+      (if prev_turn then pos.fullmove_clock else pos.fullmove_clock - 1);
   }
 
 (**[undo_castling] undos the move [from_sqr] [to_sqr] in [pos] given
@@ -1348,6 +1361,9 @@ let undo_castling pos from_sqr to_sqr prev_castling ep_sqr new_list =
         bking = (if prev_turn then pos.bking else from_sqr);
         move_stack = new_list;
         halfmove_clock = pos.halfmove_clock - 1;
+        fullmove_clock =
+          ( if prev_turn then pos.fullmove_clock
+          else pos.fullmove_clock - 1 );
       }
 
 let undo_ep pos from_sqr to_sqr was_checked hlf_clock ep_sqr new_list =
@@ -1367,6 +1383,8 @@ let undo_ep pos from_sqr to_sqr was_checked hlf_clock ep_sqr new_list =
     bking = pos.bking;
     move_stack = new_list;
     halfmove_clock = hlf_clock;
+    fullmove_clock =
+      (if prev_turn then pos.fullmove_clock else pos.fullmove_clock - 1);
   }
 
 let undo_prev pos =
@@ -1654,6 +1672,52 @@ let move_generator pos =
   |> List.flatten
   |> List.filter (fun x -> x <> "")
 
+let build_boardstring board =
+  let acc = Buffer.create 64 in
+  for i = 0 to 7 do
+    let inc = ref 0 in
+    for j = 0 to 7 do
+      match board.(j).(7 - i) with
+      | None -> inc := !inc + 1
+      | Some k ->
+          let tinc = !inc in
+          inc := 0;
+          if tinc > 0 then Buffer.add_string acc (string_of_int tinc);
+          Buffer.add_string acc (Piece.to_string k)
+    done;
+    if !inc > 0 then Buffer.add_string acc (string_of_int !inc);
+    if i < 7 then Buffer.add_string acc "/"
+  done;
+  Buffer.contents acc
+
+let map_castling_str pos =
+  let temp = Buffer.create 4 in
+  match pos.castling with
+  | { wk; wq; bk; bq } ->
+      if wk then Buffer.add_char temp 'K';
+      if wq then Buffer.add_char temp 'Q';
+      if bk then Buffer.add_char temp 'k';
+      if bq then Buffer.add_char temp 'q';
+      Buffer.contents temp
+
+let to_fen pos =
+  let str = Buffer.create 80 in
+  Buffer.add_string str (build_boardstring pos.board);
+  Buffer.add_string str " ";
+  Buffer.add_string str (if get_turn pos then "w" else "b");
+  Buffer.add_string str " ";
+  Buffer.add_string str
+    (let cstl_str = map_castling_str pos in
+     if cstl_str = "" then "-" else cstl_str);
+  Buffer.add_string str " ";
+  Buffer.add_string str
+    (if pos.ep <> (-1, -1) then sqr_to_str pos.ep else "-");
+  Buffer.add_string str " ";
+  Buffer.add_string str (string_of_int pos.halfmove_clock);
+  Buffer.add_string str " ";
+  Buffer.add_string str (string_of_int pos.fullmove_clock);
+  Buffer.contents str
+
 let equals pos1 pos2 =
   let castling = pos1.castling = pos2.castling in
   let board = pos1.board = pos2.board in
@@ -1677,23 +1741,34 @@ let checkmate pos =
   (check_kings pos && check_kings { pos with turn = not pos.turn })
   || List.length (move_generator pos) <= 0
 
+let mv_to_str move =
+  ( sqr_to_str move.from_sqr ^ sqr_to_str move.to_sqr,
+    match move.promotion with None -> "" | Some k -> Piece.to_string k
+  )
+
 (**[threefold_repetition pos] returns true if the current player of
    [pos] can claim a draw by threefold repetition *)
 let threefold_repetition pos =
-  let testable_pos = { pos with board = Array.copy pos.board } in
+  let mv_stck = ref [] in
+  let compare_fen = to_fen pos in
   let rec three_rep_helper pos current_pos inc =
     match current_pos.move_stack with
     | [] -> false
     | h :: t ->
-        if match h.capture with None -> true | Some k -> false then
+        if match h.capture with None -> true | Some k -> false then (
+          mv_stck := mv_to_str h :: !mv_stck;
           let next_pos = undo_prev current_pos in
-          if equals next_pos pos then
-            if inc + 1 = 3 then true
+          if to_fen next_pos = compare_fen then
+            if inc + 1 = 3 then (
+              move_list !mv_stck current_pos;
+              true )
             else three_rep_helper pos next_pos (inc + 1)
-          else three_rep_helper pos next_pos inc
-        else false
+          else three_rep_helper pos next_pos inc )
+        else (
+          move_list !mv_stck current_pos;
+          false )
   in
-  three_rep_helper pos testable_pos 1
+  three_rep_helper compare_fen pos 1
 
 (**[fiftyfold_rule pos] returns true if the current player can claim a
    draw by the fiftyfold rule *)
