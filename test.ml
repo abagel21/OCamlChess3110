@@ -1076,11 +1076,11 @@ let random_move board () =
 
 let rec random_game board x =
   if x <= 0 then board
-  else if checkmate board then board
+  else if checkmate board || draw board then board
   else
     let a = random_move board () in
     let b = move a "Q" board in
-    random_game b x
+    random_game b (x - 1)
 
 let rec undo_seq_compare undo_board move_seq =
   match List.rev move_seq with
@@ -1091,7 +1091,10 @@ let rec undo_seq_compare undo_board move_seq =
       let new_board = move_list (List.rev t) fresh_init in
       if Board.equals new_board next_undo then
         undo_seq_compare next_undo (List.rev t)
-      else false
+      else (
+        print_endline (Board.to_string new_board);
+        print_endline (Board.to_string next_undo);
+        false )
 
 let undo_seq_tester name move_seq =
   let final_board = move_list move_seq (init ()) in
@@ -1103,7 +1106,7 @@ let undo_seq_tester name move_seq =
     is_equal_seq
 
 let undo_random_tester name =
-  let board = random_game (init ()) 60 in
+  let board = random_game (init ()) 100 in
   undo_seq_tester name (get_moves board)
 
 let undo_throws name board mv mv2 mv3 =

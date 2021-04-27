@@ -1762,7 +1762,7 @@ let mv_to_str move =
 let threefold_repetition pos =
   let mv_stck = ref [] in
   let compare_fen = to_fen_no_mvclck pos in
-  let rec three_rep_helper pos current_pos inc =
+  let rec three_rep_helper compare_fen current_pos inc =
     match current_pos.move_stack with
     | [] -> false
     | h :: t ->
@@ -1773,8 +1773,8 @@ let threefold_repetition pos =
             if inc + 1 = 3 then (
               move_list !mv_stck next_pos;
               true )
-            else three_rep_helper pos next_pos (inc + 1)
-          else three_rep_helper pos next_pos inc )
+            else three_rep_helper compare_fen next_pos (inc + 1)
+          else three_rep_helper compare_fen next_pos inc )
         else (
           move_list !mv_stck current_pos;
           false )
