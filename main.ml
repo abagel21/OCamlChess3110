@@ -128,7 +128,9 @@ let rec random_game board x =
   else
     let a = random_move board () in
     let b = move a "Q" board in
-    random_game b x
+    print_board b;
+    random_game b x;
+    
   )
 
 (** [start ()] initializes the board. *)
@@ -155,9 +157,10 @@ let rec start () =
             if not (checkmate board) then
               ANSITerminal.print_string [ ANSITerminal.red ]
                 (turn board ^ " is in check\n")
-            else
+            else(
               ANSITerminal.print_string [ ANSITerminal.red ]
-                (turn board ^ " has been checkmated! \n")
+                (turn board ^ " has been checkmated! \n");
+                exit 0)
           else ();
           if checkmate board then (
             ANSITerminal.print_string [ ANSITerminal.red ]

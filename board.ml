@@ -1442,7 +1442,8 @@ let avail_move_pawn_one piece pos checked =
   let g = (fst piece, snd piece + b) in
   if will_be_checked pos piece g then ""
   else if
-    if checked then(not (mv_and_chck pos piece g (get_turn pos)))
+    if checked then
+      (not (mv_and_chck pos piece g (get_turn pos)))
       && not (attacked_square pos piece (not (get_turn pos)) None)
     else true
   then
@@ -1462,8 +1463,9 @@ let avail_move_pawn_two piece pos checked =
       && not (will_be_checked pos piece g)
     then
       if
-        if checked then(not (mv_and_chck pos piece g (get_turn pos)))
-          && not (attacked_square pos piece (not (get_turn pos)) None)
+        if checked then
+          (not (mv_and_chck pos piece g (get_turn pos)))
+      && not (attacked_square pos piece (not (get_turn pos)) None)
         else true
       then sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + x)
       else ""
@@ -1480,8 +1482,9 @@ let avail_move_pawn_diag piece pos x checked =
     && verify_enemy_or_empty pos g
   then
     if
-      if checked then(not (mv_and_chck pos piece g (get_turn pos)))
-        && not (attacked_square pos piece (not (get_turn pos)) None)
+      if checked then
+        (not (mv_and_chck pos piece g (get_turn pos)))
+      && not (attacked_square pos piece (not (get_turn pos)) None)
       else true
     then
       match get_piece_internal g pos with
@@ -1514,8 +1517,9 @@ let avail_move_diag piece pos x y checked =
         && verify_enemy_or_empty pos g )
     then a := !a
     else if
-      if checked then(not (mv_and_chck pos piece g (get_turn pos)))
-        && not (attacked_square pos piece (not (get_turn pos)) None)
+      if checked then
+        (not (mv_and_chck pos piece g (get_turn pos)))
+      && not (attacked_square pos piece (not (get_turn pos)) None)
       else true
     then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
     else a := !a
@@ -1614,8 +1618,9 @@ let avail_move_aux piece pos x checked dirxn =
         && verify_enemy_or_empty pos g )
     then a := !a
     else if checked then
-      if(not (mv_and_chck pos piece g (get_turn pos)))
-        && not (attacked_square pos piece (not (get_turn pos)) None)
+      if
+        (not (mv_and_chck pos piece g (get_turn pos)))
+      && not (attacked_square pos piece (not (get_turn pos)) None)
       then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
       else a := !a
     else a := (sqr_to_str piece ^ sqr_to_str g) :: !a
