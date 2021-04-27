@@ -1571,9 +1571,8 @@ let avail_castles piece pos c =
       get_piece_internal (4 + (c / 2), 0) pos = None
       && get_piece_internal (4 + c, 0) pos = None
       && (not (will_be_checked pos (4, 0) (4 + c, 0)))
-      &&
-      (try check_castle pos 4 (4 + c)
-      with exn -> false) && verify_enemy_or_empty pos (4 + c, 0)
+      && (try check_castle pos 4 (4 + c) with exn -> false)
+      && verify_enemy_or_empty pos (4 + c, 0)
     then sqr_to_str (4, 0) ^ sqr_to_str (4 + c, 0)
     else ""
   else if (not pos.turn) && piece = (4, 7) then
@@ -1581,9 +1580,8 @@ let avail_castles piece pos c =
       get_piece_internal (4 + (c / 2), 7) pos = None
       && get_piece_internal (4 + c, 7) pos = None
       && (not (will_be_checked pos (4, 7) (4 + c, 7)))
-      &&
-      (try check_castle pos 4 (4 + c)
-      with exn -> false ) && verify_enemy_or_empty pos (4 + c, 7)
+      && (try check_castle pos 4 (4 + c) with exn -> false)
+      && verify_enemy_or_empty pos (4 + c, 7)
     then sqr_to_str (4, 7) ^ sqr_to_str (4 + c, 7)
     else ""
   else ""
@@ -1624,15 +1622,14 @@ let avail_move_aux piece pos x checked dirxn =
         && rook_valid_helper pos piece g
         && verify_enemy_or_empty pos g )
     then a := !a
-    else if
-      checked 
-      then
-        (if not (mv_and_chck pos piece g (get_turn pos))
-      || is_king (extract_opt (get_piece_internal piece pos))
-         && not (attacked_square pos g (not (get_turn pos)) None)
-        then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
-          else a:=!a)
-        else a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+    else if checked then
+      if
+        (not (mv_and_chck pos piece g (get_turn pos)))
+        || is_king (extract_opt (get_piece_internal piece pos))
+           && not (attacked_square pos g (not (get_turn pos)) None)
+      then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
+      else a := !a
+    else a := (sqr_to_str piece ^ sqr_to_str g) :: !a
   done;
   !a
 
@@ -1667,7 +1664,7 @@ let rec avail_moves piece_list pos checked =
   | [] -> []
 
 let move_generator pos =
-  ( pos.checked)
+  pos.checked
   |> avail_moves (get_piece_locs pos) pos
   |> List.flatten
   |> List.filter (fun x -> x <> "")
@@ -1811,7 +1808,6 @@ let insufficient_material pos =
   else false
 
 let draw pos =
-  (*[trace back through previous positions] *)
   threefold_repetition pos
   || fiftyfold_rule pos
   || insufficient_material pos

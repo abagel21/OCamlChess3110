@@ -1239,9 +1239,10 @@ let undo_move_tests =
       "undoing after mutating the board separately, moving the piece \
        to undo, throws an error"
       (init ()) "e2e4" "a7a5" "e4e5";
-    (* undo_random_tester "Performing 60 random moves on a board and\n\
-       \ then undoing each individually to compare with the \
-       normally\n\ \ generated board results in all equivalent boards"; *)
+    undo_random_tester
+      "Performing 60 random moves on a board and then undoing each \
+       individually to compare with the normally generated board \
+       results in all equivalent boards";
   ]
 
 let fen_test name board colid expected =
@@ -1507,9 +1508,10 @@ let move_gen_tests =
     move_gen_tester
       "en passant complex position contains all legal moves" psnt_board
       psnt_moves;
-    (* move_gen_random "running 20 random games with the move
-       generator\n\ \ throws no errors from illegal moves being
-       generated" 20; *)
+    move_gen_random
+      "running 20 random games with the move generator throws no \
+       errors from illegal moves being generated"
+      20;
   ]
 
 let draw_tester name board moves expected =
