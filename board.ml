@@ -1854,30 +1854,6 @@ let equals pos1 pos2 =
   let halfmove_clock = pos1.halfmove_clock = pos2.halfmove_clock in
   let wpieces = pos1.wpieces = pos2.wpieces in
   let bpieces = pos1.bpieces = pos2.bpieces in
-  if not castling then print_endline "castling";
-  if not board then print_endline "boards unequal";
-  if not ep then print_endline "ep";
-  if not turn then print_endline "turn";
-  if not wking then print_endline "wking";
-  if not bking then print_endline "bking";
-  if not halfmove_clock then print_endline "halfmove_clock";
-  if not wpieces then
-    print_endline
-      ( "wpieces" ^ "\n" ^ to_string pos1 ^ "\n" ^ to_string pos2 ^ "\n"
-      ^ string_of_bool (pos1.board = pos2.board)
-      ^ "\n"
-      ^ pieces_printer pos1.wpieces
-      ^ "\n"
-      ^ pieces_printer pos2.wpieces );
-  if not bpieces then
-    print_endline
-      ( "bpieces" ^ "\n" ^ to_string pos1 ^ "\n" ^ to_string pos2 ^ "\n"
-      ^ string_of_bool (pos1.board = pos2.board)
-      ^ "\n"
-      ^ pieces_printer pos1.bpieces
-      ^ "\n"
-      ^ pieces_printer pos2.bpieces );
-  if not checked then print_endline "checked";
   castling && board && ep && turn && checked && wking && bking
   && halfmove_clock && wpieces && bpieces
 
