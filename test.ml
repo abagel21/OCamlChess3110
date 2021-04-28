@@ -1003,7 +1003,7 @@ let pin_tests =
   ]
 
 let checked_state = "4R3/2Q5/P7/P6k/5b2/6p1/6K1/5B1q w - - 0 1"
-
+let pawn_moves_straight = "r1bq4/4b1p1/ppk5/P2pP3/1p1P1K2/P1P4N/1BR4P/RN6 w - - 0 1"
 let general_move_tests =
   [
     move_throws "moving piece to its current square throws" qpin8 "g6g6"
@@ -1012,6 +1012,7 @@ let general_move_tests =
       "a8b8" "a8b8 does not contain a valid from square";
     move_throws "Can't move any piece but the king" checked_state "e8e7"
       "Invalid move, you are in check!";
+    check_false "Pawn moving forward shouldn't check king" pawn_moves_straight "c3c4";
   ]
 
 let move_tests =
