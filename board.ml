@@ -170,6 +170,30 @@ let get_piece_helper str pos =
     else pos.board.(rank).(col)
   else raise (IllegalSquare (str ^ " is not a valid square"))
 
+(**[get_piece_internal square pos] retrieves the piece at [rank, col] in
+   [pos.board]. Requires: rank, col are within bounds for [pos.board]*)
+let get_piece_internal square pos =
+  match square with rank, col -> pos.board.(rank).(col)
+
+let to_string pos =
+  let rec to_string_helper pos rank col =
+    if col < 0 then ""
+    else
+      let next_col = if rank = 7 then col - 1 else col in
+      let next_rank = if rank = 7 then 0 else rank + 1 in
+      let rank_label = Char.escaped (Char.chr (Char.code '1' + col)) in
+      match get_piece_internal (rank, col) pos with
+      | None ->
+          " |  "
+          ^ (if rank = 7 then " | " ^ rank_label ^ "\n" else "")
+          ^ to_string_helper pos next_rank next_col
+      | Some k ->
+          " | " ^ Piece.to_string k
+          ^ (if rank = 7 then " | " ^ rank_label ^ "\n" else "")
+          ^ to_string_helper pos next_rank next_col
+  in
+  to_string_helper pos 0 7 ^ "   a   b   c   d   e   f   g   h"
+
 let get_piece str pos =
   match get_piece_helper str pos with
   | Some k -> Piece.to_string k
@@ -194,11 +218,6 @@ let verify_move_string (str : string) =
   let to_col = Char.code str.[3] - Char.code '0' in
   let valid_tc = to_col > 0 && to_col <= 8 in
   length && valid_fr && valid_fc && valid_tr && valid_tc
-
-(**[get_piece_internal square pos] retrieves the piece at [rank, col] in
-   [pos.board]. Requires: rank, col are within bounds for [pos.board]*)
-let get_piece_internal square pos =
-  match square with rank, col -> pos.board.(rank).(col)
 
 (**[sqr_from_str] returns the square representation of the coordinate in
    [str]*)
@@ -394,7 +413,7 @@ let king_attack pos rank col color =
       else false
 
 (**[attacked_square pos sqr color] returns true if [sqr] is attacked by
-   a piece of [color] in [pos]*)
+   a piece of [color] in [pos], including [k] if the pieces is a king*)
 let attacked_square pos sqr color k =
   match sqr with
   | rank, col ->
@@ -862,8 +881,9 @@ let add_move
     pos with
     turn = not pos.turn;
     checked =
-      piece_causes_check pos to_sqr
-      || causes_discovery { pos with turn = turn_check } from_sqr to_sqr;
+      attacked_square pos
+        (if pos.turn then bking else wking)
+        pos.turn None;
     ep = (-1, -1);
     bking;
     wking;
@@ -1180,25 +1200,6 @@ let move str promote_str pos =
     raise
       (IllegalMove
          (trm_str ^ " is not a valid coordinate string of a move"))
-
-let to_string pos =
-  let rec to_string_helper pos rank col =
-    if col < 0 then ""
-    else
-      let next_col = if rank = 7 then col - 1 else col in
-      let next_rank = if rank = 7 then 0 else rank + 1 in
-      let rank_label = Char.escaped (Char.chr (Char.code '1' + col)) in
-      match get_piece_internal (rank, col) pos with
-      | None ->
-          " |  "
-          ^ (if rank = 7 then " | " ^ rank_label ^ "\n" else "")
-          ^ to_string_helper pos next_rank next_col
-      | Some k ->
-          " | " ^ Piece.to_string k
-          ^ (if rank = 7 then " | " ^ rank_label ^ "\n" else "")
-          ^ to_string_helper pos next_rank next_col
-  in
-  to_string_helper pos 0 7 ^ "   a   b   c   d   e   f   g   h"
 
 (**[add_piece pos piece square] adds [piece] to [pos] at [square]*)
 let add_piece pos piece square =
