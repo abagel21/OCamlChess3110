@@ -12,7 +12,7 @@ let print_board board = print_endline (Board.to_string board ^ "\n")
     algebraic notation from [str] and moves the piece on [board]. *)
 let play_move str board =
   match String.length (String.trim str) with
-  | 4 -> Board.move (String.sub str 0 4) "" board
+  | 4 -> Board.move (String.sub str 0 4) "Q" board
   | 5 -> Board.move (String.sub str 0 4) (String.sub str 4 1) board
   | _ -> raise (IllegalMove str)
 
@@ -132,8 +132,13 @@ let rec random_game board x =
     random_game (Board.init ()) x )
   else
     let a = random_move board () in
-    let b = move a "Q" board in
-    random_game b x
+    try
+      let b = move a "Q" board in
+      print_board b;
+      random_game b x
+    with exn ->
+      print_endline a;
+      exit 0
 
 (** [start ()] initializes the board. *)
 let rec start () =

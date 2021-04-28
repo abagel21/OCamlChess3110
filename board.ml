@@ -930,7 +930,7 @@ let move_en_passant pos from_sqr to_sqr =
           else temp_pos.wpieces );
         bpieces =
           ( if temp_pos.turn then temp_pos.bpieces
-          else rmv_pawn temp_pos.wpieces );
+          else rmv_pawn temp_pos.bpieces );
       }
 
 (**[promote square pos piece] promotes the pawn on [square] in [pos] to
@@ -1120,7 +1120,8 @@ let checked_move piece pos from_sqr to_sqr new_p : t =
     if is_king piece then not (will_be_checked pos from_sqr to_sqr)
     else
       (not (mv_and_chck pos from_sqr to_sqr (get_turn pos)))
-      || not (attacked_square pos to_sqr (not (get_turn pos)) None)
+      || false
+         && not (attacked_square pos to_sqr (not (get_turn pos)) None)
   in
   if a then check_and_move piece pos from_sqr to_sqr new_p
   else raise (IllegalMove "Invalid move, you are in check!")
@@ -1469,7 +1470,7 @@ let undo_ep pos from_sqr to_sqr was_checked hlf_clock ep_sqr new_list =
   let pc = get_piece_internal to_sqr pos in
   pos.board.(fst from_sqr).(snd from_sqr) <- pc;
   pos.board.(fst to_sqr).(snd to_sqr) <- None;
-  pos.board.(fst from_sqr + 1).(snd from_sqr) <-
+  pos.board.(fst ep_sqr).(snd from_sqr) <-
     (if pos.turn then wpawn else bpawn);
   let prev_turn = not (get_turn pos) in
   {
@@ -1549,7 +1550,8 @@ let avail_move_pawn_one piece pos checked =
   else if
     if checked then
       (not (mv_and_chck pos piece g (get_turn pos)))
-      && not (attacked_square pos piece (not (get_turn pos)) None)
+      || is_king (extract_opt (get_piece_internal piece pos))
+         && not (attacked_square pos g (not (get_turn pos)) None)
     else true
   then
     match get_piece_internal g pos with
@@ -1570,7 +1572,8 @@ let avail_move_pawn_two piece pos checked =
       if
         if checked then
           (not (mv_and_chck pos piece g (get_turn pos)))
-          && not (attacked_square pos piece (not (get_turn pos)) None)
+          || is_king (extract_opt (get_piece_internal piece pos))
+             && not (attacked_square pos g (not (get_turn pos)) None)
         else true
       then sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + x)
       else ""
@@ -1589,7 +1592,8 @@ let avail_move_pawn_diag piece pos x checked =
     if
       if checked then
         (not (mv_and_chck pos piece g (get_turn pos)))
-        && not (attacked_square pos piece (not (get_turn pos)) None)
+        || is_king (extract_opt (get_piece_internal piece pos))
+           && not (attacked_square pos g (not (get_turn pos)) None)
       else true
     then
       match get_piece_internal g pos with
@@ -1624,7 +1628,8 @@ let avail_move_diag piece pos x y checked =
     else if
       if checked then
         (not (mv_and_chck pos piece g (get_turn pos)))
-        && not (attacked_square pos piece (not (get_turn pos)) None)
+        || is_king (extract_opt (get_piece_internal piece pos))
+           && not (attacked_square pos g (not (get_turn pos)) None)
       else true
     then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
     else a := !a
@@ -1648,7 +1653,8 @@ let avail_knight piece pos x y checked =
   else if
     if checked then
       (not (mv_and_chck pos piece g (get_turn pos)))
-      && not (attacked_square pos piece (not (get_turn pos)) None)
+      || is_king (extract_opt (get_piece_internal piece pos))
+         && not (attacked_square pos g (not (get_turn pos)) None)
     else true
   then sqr_to_str piece ^ sqr_to_str g
   else ""
@@ -1725,7 +1731,8 @@ let avail_move_aux piece pos x checked dirxn =
     else if checked then
       if
         (not (mv_and_chck pos piece g (get_turn pos)))
-        && not (attacked_square pos piece (not (get_turn pos)) None)
+        || is_king (extract_opt (get_piece_internal piece pos))
+           && not (attacked_square pos g (not (get_turn pos)) None)
       then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
       else a := !a
     else a := (sqr_to_str piece ^ sqr_to_str g) :: !a
@@ -1856,7 +1863,7 @@ let equals pos1 pos2 =
   if not halfmove_clock then print_endline "halfmove_clock";
   if not wpieces then
     print_endline
-      ( "wpieces" ^ "\n" ^ to_string pos1 ^ "\n" ^ to_string pos2
+      ( "wpieces" ^ "\n" ^ to_string pos1 ^ "\n" ^ to_string pos2 ^ "\n"
       ^ string_of_bool (pos1.board = pos2.board)
       ^ "\n"
       ^ pieces_printer pos1.wpieces
@@ -1864,7 +1871,7 @@ let equals pos1 pos2 =
       ^ pieces_printer pos2.wpieces );
   if not bpieces then
     print_endline
-      ( "bpieces" ^ "\n" ^ to_string pos1 ^ "\n" ^ to_string pos2
+      ( "bpieces" ^ "\n" ^ to_string pos1 ^ "\n" ^ to_string pos2 ^ "\n"
       ^ string_of_bool (pos1.board = pos2.board)
       ^ "\n"
       ^ pieces_printer pos1.bpieces

@@ -443,7 +443,7 @@ let pf7_move = "a7a5"
 
 let pf7_move2 = "a7a6"
 
-let pf8 = "8/3q2P1/8/8/3q4/8/3p4/8 w - - 0 1"
+let pf8 = "8/1k1q2P1/8/8/3q4/8/3p4/3K4 w - - 0 1"
 
 let pf8_move = "g7g8"
 
@@ -1002,12 +1002,16 @@ let pin_tests =
       "Moving this piece would place you in check";
   ]
 
+let checked_state = "4R3/2Q5/P7/P6k/5b2/6p1/6K1/5B1q w - - 0 1"
+
 let general_move_tests =
   [
     move_throws "moving piece to its current square throws" qpin8 "g6g6"
       "Cannot move piece to the square it is currently at";
     move_throws "trying to move from an empty square throws" qpin8
       "a8b8" "a8b8 does not contain a valid from square";
+    move_throws "Can't move any piece but the king" checked_state "e8e7"
+      "Invalid move, you are in check!";
   ]
 
 let move_tests =
@@ -1020,6 +1024,7 @@ let move_tests =
       queen_tests;
       pin_tests;
       king_tests;
+      general_move_tests;
     ]
 
 let seq_equals name move_seq1 move_seq2 expected =
@@ -1105,12 +1110,21 @@ let undo_seq_tester name move_seq =
      sequence"
     is_equal_seq
 
-let rec undo_random_tester name num =
-  if num = 0 then []
-  else
-    let board = random_game (init ()) 100 in
-    undo_seq_tester name (get_moves board)
-    :: undo_random_tester name (num - 1)
+let undo_seq_bool name move_seq =
+  let final_board = move_list move_seq (init ()) in
+  undo_seq_compare final_board move_seq
+
+let undo_random_tester name num =
+  let rec undo_helper num =
+    if num = 0 then true
+    else
+      let this_board = random_game (init ()) 100 in
+      undo_seq_bool name (get_moves this_board) && undo_helper (num - 1)
+  in
+  let all_equal = undo_helper num in
+  name >:: fun _ ->
+  assert_bool "some of the random games were not equal while undoing"
+    all_equal
 
 let undo_throws name board mv mv2 mv3 =
   let board = move mv "" board in
@@ -1245,12 +1259,12 @@ let undo_move_tests =
       "undoing after mutating the board separately, moving the piece \
        to undo, throws an error"
       (init ()) "e2e4" "a7a5" "e4e5";
-  ]
-  @ undo_random_tester
+    undo_random_tester
       "Performing 60 random moves on a board and then undoing each \
        individually to compare with the normally generated board \
        results in all equivalent boards"
-      100
+      1000;
+  ]
 
 let fen_test name board colid expected =
   let col = make_col board colid in
