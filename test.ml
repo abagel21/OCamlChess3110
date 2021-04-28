@@ -1001,13 +1001,15 @@ let pin_tests =
     move_throws "top right white queen raises" qpin8 "d3d8"
       "Moving this piece would place you in check";
   ]
-
+let checked_state = "4R3/2Q5/P7/P6k/5b2/6p1/6K1/5B1q w - - 0 1"
 let general_move_tests =
   [
     move_throws "moving piece to its current square throws" qpin8 "g6g6"
       "Cannot move piece to the square it is currently at";
     move_throws "trying to move from an empty square throws" qpin8
       "a8b8" "a8b8 does not contain a valid from square";
+    move_throws "Can't move any piece but the king" checked_state "e8e7"
+    "Invalid move, you are in check"
   ]
 
 let move_tests =
@@ -1020,6 +1022,7 @@ let move_tests =
       queen_tests;
       pin_tests;
       king_tests;
+      general_move_tests
     ]
 
 let seq_equals name move_seq1 move_seq2 expected =
