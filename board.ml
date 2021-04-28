@@ -1027,7 +1027,8 @@ let checked_move piece pos from_sqr to_sqr new_p : t =
     if is_king piece then not (will_be_checked pos from_sqr to_sqr)
     else
       (not (mv_and_chck pos from_sqr to_sqr (get_turn pos)))
-      || not (attacked_square pos to_sqr (not (get_turn pos)) None)
+        || false
+           && not (attacked_square pos to_sqr (not (get_turn pos)) None)
   in
   if a then check_and_move piece pos from_sqr to_sqr new_p
   else raise (IllegalMove "Invalid move, you are in check!")
@@ -1623,13 +1624,14 @@ let avail_move_aux piece pos x checked dirxn =
         && rook_valid_helper pos piece g
         && verify_enemy_or_empty pos g )
     then a := !a
-    else if checked then
-      if
+    else 
+      if checked then 
+      (if
         (not (mv_and_chck pos piece g (get_turn pos)))
         || is_king (extract_opt (get_piece_internal piece pos))
            && not (attacked_square pos g (not (get_turn pos)) None)
       then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
-      else a := !a
+      else a := !a)
     else a := (sqr_to_str piece ^ sqr_to_str g) :: !a
   done;
   !a

@@ -12,7 +12,7 @@ let print_board board = print_endline (Board.to_string board ^ "\n")
     algebraic notation from [str] and moves the piece on [board]. *)
 let play_move str board =
   match String.length (String.trim str) with
-  | 4 -> Board.move (String.sub str 0 4) "" board
+  | 4 -> Board.move (String.sub str 0 4) "Q" board
   | 5 -> Board.move (String.sub str 0 4) (String.sub str 4 1) board
   | _ -> raise (IllegalMove str)
 
