@@ -1442,7 +1442,8 @@ let avail_move_pawn_one piece pos checked =
   let g = (fst piece, snd piece + b) in
   if will_be_checked pos piece g then ""
   else if
-    if checked then(not (mv_and_chck pos piece g (get_turn pos)))
+    if checked then
+      (not (mv_and_chck pos piece g (get_turn pos)))
       && not (attacked_square pos piece (not (get_turn pos)) None)
     else true
   then
@@ -1462,7 +1463,8 @@ let avail_move_pawn_two piece pos checked =
       && not (will_be_checked pos piece g)
     then
       if
-        if checked then(not (mv_and_chck pos piece g (get_turn pos)))
+        if checked then
+          (not (mv_and_chck pos piece g (get_turn pos)))
           && not (attacked_square pos piece (not (get_turn pos)) None)
         else true
       then sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + x)
@@ -1480,7 +1482,8 @@ let avail_move_pawn_diag piece pos x checked =
     && verify_enemy_or_empty pos g
   then
     if
-      if checked then(not (mv_and_chck pos piece g (get_turn pos)))
+      if checked then
+        (not (mv_and_chck pos piece g (get_turn pos)))
         && not (attacked_square pos piece (not (get_turn pos)) None)
       else true
     then
@@ -1508,13 +1511,14 @@ let avail_move_diag piece pos x y checked =
     in
     if
       not
-        (in_range g
+        ( in_range g
         && bishop_valid_helper pos piece g
         && (not (will_be_checked pos piece g))
         && verify_enemy_or_empty pos g )
     then a := !a
     else if
-      if checked then(not (mv_and_chck pos piece g (get_turn pos)))
+      if checked then
+        (not (mv_and_chck pos piece g (get_turn pos)))
         && not (attacked_square pos piece (not (get_turn pos)) None)
       else true
     then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
@@ -1614,7 +1618,8 @@ let avail_move_aux piece pos x checked dirxn =
         && verify_enemy_or_empty pos g )
     then a := !a
     else if checked then
-      if(not (mv_and_chck pos piece g (get_turn pos)))
+      if
+        (not (mv_and_chck pos piece g (get_turn pos)))
         && not (attacked_square pos piece (not (get_turn pos)) None)
       then a := (sqr_to_str piece ^ sqr_to_str g) :: !a
       else a := !a
@@ -1729,6 +1734,17 @@ let equals pos1 pos2 =
   let halfmove_clock = pos1.halfmove_clock = pos2.halfmove_clock in
   let wpieces = pos1.wpieces = pos2.wpieces in
   let bpieces = pos1.bpieces = pos2.bpieces in
+  if not castling then print_endline "castling";
+  if not board then
+    print_endline (to_string pos1 ^ "\n" ^ to_string pos2);
+  if not ep then print_endline "ep";
+  if not turn then print_endline "turn";
+  if not wking then print_endline "wking";
+  if not bking then print_endline "bking";
+  if not halfmove_clock then print_endline "halfmove_clock";
+  if not wpieces then print_endline "wpieces";
+  if not bpieces then print_endline "bpieces";
+  if not checked then print_endline "checked";
   castling && board && ep && turn && checked && wking && bking
   && halfmove_clock && wpieces && bpieces
 
@@ -1753,7 +1769,9 @@ let threefold_repetition pos =
   let compare_fen = to_fen_no_mvclck pos in
   let rec three_rep_helper compare_fen current_pos inc =
     match current_pos.move_stack with
-    | [] -> false
+    | [] ->
+        move_list !mv_stck current_pos;
+        false
     | h :: t ->
         if match h.capture with None -> true | Some k -> false then (
           mv_stck := mv_to_str h :: !mv_stck;

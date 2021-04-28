@@ -1105,9 +1105,12 @@ let undo_seq_tester name move_seq =
      sequence"
     is_equal_seq
 
-let undo_random_tester name =
-  let board = random_game (init ()) 100 in
-  undo_seq_tester name (get_moves board)
+let rec undo_random_tester name num =
+  if num = 0 then []
+  else
+    let board = random_game (init ()) 100 in
+    undo_seq_tester name (get_moves board)
+    :: undo_random_tester name (num - 1)
 
 let undo_throws name board mv mv2 mv3 =
   let board = move mv "" board in
@@ -1242,11 +1245,12 @@ let undo_move_tests =
       "undoing after mutating the board separately, moving the piece \
        to undo, throws an error"
       (init ()) "e2e4" "a7a5" "e4e5";
-    undo_random_tester
+  ]
+  @ undo_random_tester
       "Performing 60 random moves on a board and then undoing each \
        individually to compare with the normally generated board \
-       results in all equivalent boards";
-  ]
+       results in all equivalent boards"
+      20
 
 let fen_test name board colid expected =
   let col = make_col board colid in
