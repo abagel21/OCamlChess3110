@@ -127,10 +127,10 @@ let rec random_game board x =
   )
   else
     let a = random_move board () in
-    let b = move a "Q" board in
+    try let b = move a "Q" board in
     print_board b;
     random_game b x;
-    
+  with exn -> print_endline a; exit 0
   )
 
 (** [start ()] initializes the board. *)
