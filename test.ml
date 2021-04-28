@@ -1091,10 +1091,10 @@ let rec undo_seq_compare undo_board move_seq =
       let new_board = move_list (List.rev t) fresh_init in
       if Board.equals new_board next_undo then
         undo_seq_compare next_undo (List.rev t)
-      else (
-        print_endline (Board.to_string new_board);
-        print_endline (Board.to_string next_undo);
-        false )
+      else
+        (* print_endline (Board.to_string new_board); print_endline
+           (Board.to_string next_undo); *)
+        false
 
 let undo_seq_tester name move_seq =
   let final_board = move_list move_seq (init ()) in
@@ -1250,7 +1250,7 @@ let undo_move_tests =
       "Performing 60 random moves on a board and then undoing each \
        individually to compare with the normally generated board \
        results in all equivalent boards"
-      20
+      100
 
 let fen_test name board colid expected =
   let col = make_col board colid in
