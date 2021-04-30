@@ -1,12 +1,11 @@
 open Board
 
-(** [point_aux pos] calculates the total point values of
-    pieces on board [pos]. *)
+(** [point_aux pos] calculates the total point values of pieces on board
+    [pos]. *)
 let point_aux pos =
   let w_pieces, b_pieces = Board.get_pieces pos in
   let calc_aux pieces =
-    (9 * pieces.queens)
-    + (5 * pieces.rooks)
+    (9 * pieces.queens) + (5 * pieces.rooks)
     + (3 * (pieces.bishops + pieces.knights))
   in
   (calc_aux w_pieces, calc_aux b_pieces)
@@ -68,8 +67,5 @@ and min_turn pos depth =
     done;
     (!best, !min_val)
 
-(** [minimax pos depth] determines the best move calculating up to [depth]. *)
 let minimax pos depth =
-  fst
-    (if Board.get_turn pos then max_turn pos depth
-    else min_turn pos depth)
+  fst ((if Board.get_turn pos then max_turn else min_turn) pos depth)
