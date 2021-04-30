@@ -8,6 +8,15 @@ type r
     previous board states. *)
 type t
 
+(** [pieces] represents the pieces remaining on the board. *)
+type pieces = {
+  pawns : int;
+  knights : int;
+  bishops : int;
+  rooks : int;
+  queens : int;
+}
+
 exception IllegalMove of string
 
 exception EmptyMoveStack
@@ -27,6 +36,10 @@ val init : unit -> t
     [pos]. Raises: [IllegalSquare str] if [str] is not a valid chess
     square. *)
 val get_piece : string -> t -> string
+
+(** [get_pieces pos] returns the kinds remaining pieces on [pos] and who
+    owns them as (White's pieces, Black's pieces). *)
+val get_pieces : t -> pieces * pieces
 
 (** [move str promote_str pos] takes in a coordinate-based move [str]
     and a promotion string [promote_str] and returns the new state after
@@ -52,8 +65,9 @@ val undo_prev : t -> t
     Black's. *)
 val get_turn : t -> bool
 
-(** [get_castling pos] returns a list containing values corresponding to the validity of castling in
-    board state [pos]. EX: [white kingside castling, white queenside castling, black kingside castling, black queenside castling] *)
+(** [get_castling pos] returns a list containing values corresponding to
+    the validity of castling in board state [pos]. EX:
+    [white kingside castling, white queenside castling, black kingside castling, black queenside castling] *)
 val get_castling : t -> bool list
 
 (** [to_string pos] outputs a pretty-printed string of board state
@@ -90,7 +104,8 @@ val move_generator : t -> string list
 (** [checkmate t] returns true if the player is checkmated *)
 val checkmate : t -> bool
 
-(**[draw t] returns true if the player to move can claim a draw, else false*)
+(**[draw t] returns true if the player to move can claim a draw, else
+   false*)
 val draw : t -> bool
 
 (**[ get_moves t] returns the moves made in the game so far*)
