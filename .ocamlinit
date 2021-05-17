@@ -1,4 +1,5 @@
 #require "ounit2";;
+#require "graphics";;
 #require "bisect_ppx.runtime";;
 #require "ANSITerminal";;
 #directory "_build";;

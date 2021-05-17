@@ -6,7 +6,7 @@ TEST=test.byte
 MAIN=main.byte
 OCAMLBUILD=ocamlbuild  -use-ocamlfind \
 	-plugin-tag 'package(bisect_ppx-ocamlbuild)'
-PKGS=unix,ounit2,str,qcheck
+PKGS=unix,ounit2,str,qcheck,graphics
 
 default: build
 	OCAMLRUNPARAM=b utop
@@ -18,7 +18,7 @@ test:
 	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential
 
 play:
-	$(OCAMLBUILD) -tag 'debug' $(MAIN) && OCAMLRUNPARAM=b ./$(MAIN)
+	export DISPLAY=:0; $(OCAMLBUILD) -tag 'debug' $(MAIN) && OCAMLRUNPARAM=b ./$(MAIN)
 
 docs: docs-public docs-private
 	

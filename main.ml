@@ -1,6 +1,7 @@
 open Board
 open Random
 open Minimax
+open Graphics
 
 (** [turn board] returns the current players move on [board]. *)
 let turn board =
@@ -295,12 +296,29 @@ let rec start () =
 let main () =
   ANSITerminal.print_string
     [ ANSITerminal.magenta ]
-    "Welcome to OCamlChess";
+    "Welcome to\n     OCamlChess";
   print_endline "";
   start ()
 
 (* Execute the game engine. *)
-let () = main ()
+let () =
+  set_window_title "OChessl";
+  open_graph "";
+  resize_window 1000 1000;
+  for i = 0 to 7 do
+    for j = 0 to 7 do
+      if i mod 2 = 0 && j mod 2 = 0 then set_color (rgb 230 207 147)
+      else if j mod 2 = 0 && i mod 2 = 1 then
+        set_color (rgb 207 169 103)
+      else if j mod 2 = 1 && i mod 2 = 0 then
+        set_color (rgb 207 169 103)
+      else if j mod 2 = 1 && i mod 2 = 1 then
+        set_color (rgb 230 207 147);
+      draw_rect (i * 100) (j * 100) 100 100;
+      fill_rect (i * 100) (j * 100) 100 100
+    done
+  done;
+  main ()
 
 (** Kept the functions below in case we develop more playable modes and
     the true/false isn't enough.*)

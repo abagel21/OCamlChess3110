@@ -1,5 +1,8 @@
 B _build
+PKG graphics
 PKG ounit2
 PKG ANSITerminal
 PKG ocamlbuild
 PKG bisect_ppx-ocamlbuild
+PKG camlimages.png
+PKG camlimages.graphics

@@ -1,4 +1,5 @@
 open Piece
+open Graphics
 
 (**TODO 1. implement piece to_string 2. Implement pawn movement
    (including en passant) Alex 4. implement pins (if a move causes the
@@ -274,7 +275,7 @@ let is_horiz_attacker piece color =
       match Piece.get_piece k with
       | Rook -> get_color k = color
       | Queen -> get_color k = color
-      | _ -> false)
+      | _ -> false )
 
 (**[is_diag_attacker piece color] returns true if [piece] attacks
    diagonally per the rules of chess*)
@@ -285,7 +286,7 @@ let is_diag_attacker piece color =
       match Piece.get_piece k with
       | Bishop -> get_color k = color
       | Queen -> get_color k = color
-      | _ -> false)
+      | _ -> false )
 
 (**[perp_attack pos rank col color] returns true if there is a piece
    horizontally or vertically attacking the square at (rank, col) of
@@ -336,7 +337,7 @@ let is_pawn_attacker piece color =
   | Some k -> (
       match Piece.get_piece k with
       | Pawn -> get_color k = color
-      | _ -> false)
+      | _ -> false )
 
 (**[pawn_attack pos rank col color] returns true if there is a pawn
    attacking the square at (rank, col) of [color]*)
@@ -370,7 +371,7 @@ let is_knight_attacker piece color =
   | Some k -> (
       match Piece.get_piece k with
       | Knight -> get_color k = color
-      | _ -> false)
+      | _ -> false )
 
 (** [sqr_inbounds sqr] returns whether [sqr] is inbounds. *)
 let sqr_inbounds (rank, col) =
@@ -382,8 +383,8 @@ let rec check_valid_sqrs pos psble_knight valid_sqr color =
   match (psble_knight, valid_sqr) with
   | [], [] -> false
   | kh :: kt, vh :: vt ->
-      (if vh then is_knight_attacker (get_piece_internal kh pos) color
-      else false)
+      ( if vh then is_knight_attacker (get_piece_internal kh pos) color
+      else false )
       || check_valid_sqrs pos kt vt color
   | _ -> false
 
@@ -701,7 +702,7 @@ let piece_causes_check pos square =
       | Bishop -> bishop_checks pos square
       | Rook -> rook_checks pos square
       | Queen -> queen_checks pos square
-      | King -> false)
+      | King -> false )
 
 let set_castling pos from_sqr =
   match get_piece_internal from_sqr pos with
@@ -720,7 +721,7 @@ let set_castling pos from_sqr =
               { pos.castling with bk = false }
             else pos.castling
           else pos.castling
-      | _ -> pos.castling)
+      | _ -> pos.castling )
 
 let sqr_to_str sqr =
   match sqr with
@@ -911,11 +912,11 @@ let add_move
     fullmove_clock =
       (if pos.turn then pos.fullmove_clock else pos.fullmove_clock + 1);
     halfmove_clock =
-      (if pawn_move then 0
+      ( if pawn_move then 0
       else
         match capture with
         | None -> pos.halfmove_clock + 1
-        | Some k -> 0);
+        | Some k -> 0 );
   }
 
 (**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr]
@@ -948,11 +949,11 @@ let move_en_passant pos from_sqr to_sqr =
       {
         temp_pos with
         wpieces =
-          (if temp_pos.turn then rmv_pawn temp_pos.wpieces
-          else temp_pos.wpieces);
+          ( if temp_pos.turn then rmv_pawn temp_pos.wpieces
+          else temp_pos.wpieces );
         bpieces =
-          (if temp_pos.turn then temp_pos.bpieces
-          else rmv_pawn temp_pos.bpieces);
+          ( if temp_pos.turn then temp_pos.bpieces
+          else rmv_pawn temp_pos.bpieces );
       }
 
 (**[promote square pos piece] promotes the pawn on [square] in [pos] to
@@ -972,25 +973,25 @@ let promote square pos piece =
             pos.board.(rank).(col) <- piece;
             match pos.move_stack with
             | [] -> pos
-            | ({ from_sqr; to_sqr; capture; ep; castle; promotion } as
-              move)
+            | ( { from_sqr; to_sqr; capture; ep; castle; promotion } as
+              move )
               :: t ->
                 {
                   pos with
                   wpieces =
-                    (if pos.turn then pos.wpieces
-                    else update_pieces true pos.wpieces None piece);
+                    ( if pos.turn then pos.wpieces
+                    else update_pieces true pos.wpieces None piece );
                   bpieces =
-                    (if pos.turn then
-                     update_pieces false pos.bpieces None piece
-                    else pos.bpieces);
+                    ( if pos.turn then
+                      update_pieces false pos.bpieces None piece
+                    else pos.bpieces );
                   checked =
                     piece_causes_check
                       { pos with turn = not pos.turn }
                       to_sqr
                     || causes_discovery pos from_sqr to_sqr;
                   move_stack = { move with promotion = piece } :: t;
-                })
+                } )
       else pos
 
 (**[pawn_double_move_helper pos from_sqr to_sqr] moves the pawn on
@@ -1060,7 +1061,7 @@ let possibly_castle pos from_sqr to_sqr =
     pos.board.(frank).(fcol) <- None;
     pos.board.(trank).(tcol) <- curr_piece;
     add_move final_pos from_sqr to_sqr true false None capture false
-      false pos.castling)
+      false pos.castling )
   else
     let curr_piece = pos.board.(frank).(fcol) in
     if frank > trank then (
@@ -1070,7 +1071,7 @@ let possibly_castle pos from_sqr to_sqr =
       pos.board.(0).(fcol) <- None;
       pos.board.(3).(fcol) <- rook;
       add_move final_pos from_sqr to_sqr true false None None true false
-        pos.castling)
+        pos.castling )
     else
       let rook = pos.board.(7).(fcol) in
       pos.board.(frank).(fcol) <- None;
@@ -1094,7 +1095,7 @@ let will_be_checked pos from_sqr to_sqr =
       | _ ->
           if attacked_square pos from_sqr (not (get_turn pos)) None then
             mv_and_chck pos from_sqr to_sqr (get_turn pos)
-          else false)
+          else false )
 
 (**[check_and_move piece pos from_sqr to_sqr] moves the piece [piece]
    from [from_sqr] to [to_sqr] in [pos] if it is a legal move for
@@ -1163,8 +1164,8 @@ let move_helper piece pos from_sqr to_sqr new_p =
   else
     raise
       (IllegalMove
-         ((if get_turn pos then "White" else "Black")
-         ^ " does not own the piece on " ^ sqr_to_str from_sqr))
+         ( (if get_turn pos then "White" else "Black")
+         ^ " does not own the piece on " ^ sqr_to_str from_sqr ))
 
 (**[parse_promote_str str] returns the valid piece representation of
    [str]. Throws [IllegalPiece] if the string is an illegal piece *)
@@ -1270,7 +1271,7 @@ let fen_parse_other str pos =
                 (not turn) None;
             halfmove_clock = hlfmove;
             fullmove_clock = fullmove;
-          })
+          } )
 
 let adjust_pieces pos piece =
   let pc =
@@ -1323,8 +1324,8 @@ let rec fen_to_board_helper str pos rank col ind =
     | _ ->
         raise
           (IllegalFen
-             (Char.escaped str.[ind]
-             ^ " is not a valid FEN number or symbol"))
+             ( Char.escaped str.[ind]
+             ^ " is not a valid FEN number or symbol" ))
 
 and letter_fen_matching str pos rank col prevind nextind =
   let nk = ref (-1, -1) in
@@ -1411,7 +1412,7 @@ let undo_normal_move
           (IllegalMove
              "Attempted to undo a move with a piece that wasn't there")
     | Some k -> (
-        match Piece.get_piece k with King -> true | _ -> false)
+        match Piece.get_piece k with King -> true | _ -> false )
   in
   let prev_turn = not (get_turn pos) in
   {
@@ -1442,7 +1443,7 @@ let undo_castling pos from_sqr to_sqr prev_castling ep_sqr new_list =
          pos.board.(trank).(tcol) <- None;
          pos.board.(frank).(fcol) <- curr_piece;
          pos.board.(0).(fcol) <- rook;
-         pos.board.(3).(fcol) <- None)
+         pos.board.(3).(fcol) <- None )
        else
          let rook = pos.board.(5).(fcol) in
          pos.board.(trank).(tcol) <- None;
@@ -1460,8 +1461,8 @@ let undo_castling pos from_sqr to_sqr prev_castling ep_sqr new_list =
         move_stack = new_list;
         halfmove_clock = pos.halfmove_clock - 1;
         fullmove_clock =
-          (if prev_turn then pos.fullmove_clock
-          else pos.fullmove_clock - 1);
+          ( if prev_turn then pos.fullmove_clock
+          else pos.fullmove_clock - 1 );
       }
 
 let add_pawn pieces =
@@ -1623,10 +1624,10 @@ let avail_move_diag piece pos x y checked =
     in
     if
       not
-        (in_range g
+        ( in_range g
         && bishop_valid_helper pos piece g
         && (not (will_be_checked pos piece g))
-        && verify_enemy_or_empty pos g)
+        && verify_enemy_or_empty pos g )
     then a := !a
     else if
       if checked then
@@ -1649,9 +1650,9 @@ let avail_knight piece pos x y checked =
   let g = (fst piece + x, snd piece + y) in
   if
     not
-      (in_range g
+      ( in_range g
       && verify_enemy_or_empty pos g
-      && not (will_be_checked pos piece g))
+      && not (will_be_checked pos piece g) )
   then ""
   else if
     if checked then
@@ -1726,10 +1727,10 @@ let avail_move_aux piece pos x checked dirxn =
     in
     if
       not
-        (in_range g
+        ( in_range g
         && (not (will_be_checked pos piece g))
         && rook_valid_helper pos piece g
-        && verify_enemy_or_empty pos g)
+        && verify_enemy_or_empty pos g )
     then a := !a
     else if checked then
       if
@@ -1891,12 +1892,12 @@ let threefold_repetition pos =
           if to_fen_no_mvclck next_pos = compare_fen then
             if inc + 1 = 3 then (
               move_list !mv_stck next_pos;
-              true)
+              true )
             else three_rep_helper compare_fen next_pos (inc + 1)
-          else three_rep_helper compare_fen next_pos inc)
+          else three_rep_helper compare_fen next_pos inc )
         else (
           move_list !mv_stck current_pos;
-          false)
+          false )
   in
   three_rep_helper compare_fen pos 1
 
@@ -1947,3 +1948,31 @@ let get_moves pos =
           ((convert_sqrs_to_string from_sqr to_sqr, promote_str) :: acc)
   in
   gm_helper pos.move_stack []
+
+let draw_board board =
+  set_text_size 30;
+  for i = 0 to 7 do
+    for j = 0 to 7 do
+      if i mod 2 = 0 && j mod 2 = 0 then set_color (rgb 230 207 147)
+      else if j mod 2 = 0 && i mod 2 = 1 then
+        set_color (rgb 207 169 103)
+      else if j mod 2 = 1 && i mod 2 = 0 then
+        set_color (rgb 207 169 103)
+      else if j mod 2 = 1 && i mod 2 = 1 then
+        set_color (rgb 230 207 147);
+      draw_rect (i * 100) (j * 100) 100 100;
+      fill_rect (i * 100) (j * 100) 100 100;
+      match board.board.(7 - i).(7 - j) with
+      | None -> ()
+      | Some k -> (
+          if Piece.get_color k then set_color black else set_color white;
+          moveto ((100 * i) + 46) ((100 * j) + 46);
+          match Piece.get_piece k with
+          | Pawn -> draw_char 'P'
+          | Knight -> draw_char 'K'
+          | Bishop -> draw_char 'B'
+          | Rook -> draw_char 'R'
+          | Queen -> draw_char 'Q'
+          | King -> draw_char 'K' )
+    done
+  done
