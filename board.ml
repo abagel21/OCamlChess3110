@@ -1950,7 +1950,8 @@ let get_moves pos =
   gm_helper pos.move_stack []
 
 let draw_board board =
-  set_text_size 30;
+  set_font "r24";
+  clear_graph ();
   for i = 0 to 7 do
     for j = 0 to 7 do
       if i mod 2 = 0 && j mod 2 = 0 then set_color (rgb 230 207 147)
@@ -1960,19 +1961,31 @@ let draw_board board =
         set_color (rgb 207 169 103)
       else if j mod 2 = 1 && i mod 2 = 1 then
         set_color (rgb 230 207 147);
-      draw_rect (i * 100) (j * 100) 100 100;
-      fill_rect (i * 100) (j * 100) 100 100;
-      match board.board.(7 - i).(7 - j) with
+      draw_rect ((i * 100) + 50) ((j * 100) + 50) 100 100;
+      fill_rect ((i * 100) + 50) ((j * 100) + 50) 100 100;
+      match board.board.(i).(j) with
       | None -> ()
       | Some k -> (
-          if Piece.get_color k then set_color black else set_color white;
-          moveto ((100 * i) + 46) ((100 * j) + 46);
+          if Piece.get_color k then set_color white else set_color black;
+          moveto ((100 * i) + 92) ((100 * j) + 92);
           match Piece.get_piece k with
           | Pawn -> draw_char 'P'
-          | Knight -> draw_char 'K'
+          | Knight -> draw_char 'N'
           | Bishop -> draw_char 'B'
           | Rook -> draw_char 'R'
           | Queen -> draw_char 'Q'
           | King -> draw_char 'K' )
     done
+  done;
+  set_font
+    "-schumacher-clean-bold-r-normal--16-160-75-75-c-80-iso646.1991-irv";
+  for i = Char.code 'a' to Char.code 'h' do
+    moveto ((100 * (i - Char.code 'a')) + 92) 30;
+    draw_char (Char.chr i);
+    moveto ((100 * (i - Char.code 'a')) + 92) 865;
+    draw_char (Char.chr i);
+    moveto 865 ((100 * (i - Char.code 'a')) + 92);
+    draw_char (Char.chr (Char.code '1' + i - Char.code 'a'));
+    moveto 30 ((100 * (i - Char.code 'a')) + 92);
+    draw_char (Char.chr (Char.code '1' + i - Char.code 'a'))
   done

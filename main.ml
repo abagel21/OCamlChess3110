@@ -69,7 +69,7 @@ let rec play_bot board () =
       ( try
           let mod_board = play_move str board in
           ANSITerminal.erase Screen;
-          print_board mod_board;
+          Board.draw_board mod_board;
           if is_in_check mod_board then
             if not (checkmate mod_board) then
               ANSITerminal.print_string [ ANSITerminal.red ]
@@ -97,7 +97,7 @@ let rec play_bot board () =
               exit 0 )
           else
             let bot_board = play_move (minimax mod_board 1) mod_board in
-            print_board bot_board;
+            Board.draw_board bot_board;
             if is_in_check bot_board then
               if not (checkmate bot_board) then
                 ANSITerminal.print_string [ ANSITerminal.red ]
@@ -150,7 +150,7 @@ let rec game_loop board () b =
         exit 0
     | "undo" ->
         let old_board = undo_prev board in
-        print_board old_board;
+        Board.draw_board old_board;
         game_loop old_board () b
     | "help" ->
         print (move_generator board);
@@ -162,7 +162,7 @@ let rec game_loop board () b =
           let turn = int_of_string temp in
           if turn < get_turn_num board then (
             let old_board = revert_prev board turn in
-            print_board old_board;
+            Board.draw_board old_board;
             game_loop old_board () b )
           else
             print_endline
@@ -182,7 +182,7 @@ let rec game_loop board () b =
         ( try
             let mod_board = play_move str board in
             ANSITerminal.erase Screen;
-            print_board mod_board;
+            Board.draw_board mod_board;
             if is_in_check mod_board then
               if not (checkmate mod_board) then
                 ANSITerminal.print_string [ ANSITerminal.red ]
@@ -216,7 +216,7 @@ let rec game_loop board () b =
   else
     let c = random_move board () in
     let d = move c "" board in
-    print_board d;
+    Board.draw_board board;
     print_endline ("\nBlack moved : " ^ c ^ "\n");
     game_loop d () b
 
@@ -226,17 +226,17 @@ let rec random_game board x =
     exit 0 )
   else if checkmate board || draw board then (
     if is_in_check board then (
-      print_board board;
+      Board.draw_board board;
       print_endline "Checkmate!";
       random_game (Board.init ()) (x - 1) )
-    else print_board board;
+    else Board.draw_board board;
     print_endline "Stalemate!";
     random_game (Board.init ()) x )
   else
     let a = random_move board () in
     try
       let b = move a "Q" board in
-      print_board b;
+      Board.draw_board b;
       random_game b x
     with exn ->
       print_endline a;
@@ -252,20 +252,20 @@ let rec start () =
   match String.trim (read_line ()) with
   | "start" ->
       let board = Board.init () in
-      print_board board;
+      Board.draw_board board;
       game_loop board () true
   | "random" ->
-      print_board (Board.init ());
+      Board.draw_board (Board.init ());
       game_loop (Board.init ()) () false
   | "random game" -> random_game (Board.init ()) 100
   | "bot" ->
-      print_board (Board.init ());
+      Board.draw_board (Board.init ());
       play_bot (Board.init ()) ()
   | str ->
       begin
         try
           let board = fen_to_board str in
-          print_board board;
+          Board.draw_board board;
           if is_in_check board then
             if not (checkmate board) then
               ANSITerminal.print_string [ ANSITerminal.red ]
@@ -304,7 +304,7 @@ let main () =
 let () =
   set_window_title "OChessl";
   open_graph "";
-  resize_window 1000 1000;
+  resize_window 900 900;
   for i = 0 to 7 do
     for j = 0 to 7 do
       if i mod 2 = 0 && j mod 2 = 0 then set_color (rgb 230 207 147)

@@ -122,3 +122,6 @@ val get_moves : t -> (string * string) list
 
 (**[to_fen t] returns the FEN of a chess position*)
 val to_fen : t -> string
+
+(**[draw_board t] draws the current chess piece position on the open graphics context*)
+val draw_board : t -> unit
