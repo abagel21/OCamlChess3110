@@ -13,7 +13,9 @@ let point_aux pos =
 (** [point_calc m pos] calculates the piece value difference between
     White and Black if move [m] is taken on board [pos]. *)
 let point_calc m pos =
-  let points = point_aux (Board.move m "" pos) in
+  let next_board = Board.move m "Q" pos in
+  let points = point_aux next_board in
+  Board.undo_prev next_board;
   fst points - snd points
 
 (** [heuristic pos] returns a pair with the move that maximizes the
@@ -31,6 +33,7 @@ let heuristic pos =
     |> List.sort (fun (_, p) (_, p') ->
            if w_turn then compare p p' else compare p' p)
     |> List.hd
+
 (* list never empty *)
 
 (** [max_turn pos depth] determines the best value for the maximizing
@@ -43,9 +46,10 @@ let rec max_turn pos depth =
     let best = ref "" in
     for a = 0 to List.length actions - 1 do
       let next_board = Board.move (List.nth actions a) "" pos in
-      let a' = ref (fst (min_turn next_board (depth - 1))) in
-      let val' = ref (snd (min_turn next_board (depth - 1))) in
+      let next_a, next_val = min_turn next_board (depth - 1) in
+      let a', val' = (ref next_a, ref next_val) in
       if !val' > !max_val then max_val := !val';
+      undo_prev next_board;
       best := !a'
     done;
     (!best, !max_val)
@@ -60,12 +64,13 @@ and min_turn pos depth =
     let best = ref "" in
     for a = 0 to List.length actions - 1 do
       let next_board = Board.move (List.nth actions a) "" pos in
-      let a' = ref (fst (max_turn next_board (depth - 1))) in
-      let val' = ref (snd (max_turn next_board (depth - 1))) in
+      let next_a, next_val = max_turn next_board (depth - 1) in
+      let a', val' = (ref next_a, ref next_val) in
       if !val' < !min_val then min_val := !val';
+      undo_prev next_board;
       best := !a'
     done;
     (!best, !min_val)
 
 let minimax pos depth =
-  fst ((if Board.get_turn pos then max_turn else min_turn) pos depth)
+  fst ((if get_turn pos then max_turn else min_turn) pos depth)

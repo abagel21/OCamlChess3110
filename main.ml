@@ -1,5 +1,6 @@
 open Board
 open Random
+open Minimax
 
 (** [turn board] returns the current players move on [board]. *)
 let turn board =
@@ -39,6 +40,94 @@ let random_move board () =
   let a = gen_random (List.length d) in
   List.nth d a
 
+let rec play_bot board () =
+  let player_turn = turn board in
+  print_endline (player_turn ^ " to move: \n");
+  print_endline
+    " 1. Enter a move in the format '[a-g][1-8][a-g][1-8]' to indicate \
+     the square to move from and to respectively\n\
+    \ 2. Enter 'help' to gather possible moves\n\
+    \ 3. Enter 'moves' to review the moves made\n\
+    \ 4. Enter 'random' to get a random available move\n\
+    \ 5. Enter 'QUIT' to exit";
+  match String.lowercase_ascii (String.trim (read_line ())) with
+  | "quit" ->
+      ANSITerminal.print_string [ ANSITerminal.cyan ]
+        "Thanks for playing\n";
+      exit 0
+  | "help" ->
+      print (move_generator board);
+      play_bot board ()
+  | "moves" ->
+      return_moves 1 (get_moves board);
+      play_bot board ()
+  | "random" ->
+      print_endline (random_move board ());
+      play_bot board ()
+  | str ->
+      ( try
+          let mod_board = play_move str board in
+          ANSITerminal.erase Screen;
+          print_board mod_board;
+          if is_in_check mod_board then
+            if not (checkmate mod_board) then
+              ANSITerminal.print_string [ ANSITerminal.red ]
+                (turn mod_board ^ " is in check\n")
+            else (
+              ANSITerminal.print_string [ ANSITerminal.red ]
+                (turn mod_board ^ " has been checkmated! \n");
+              exit 0 )
+          else if checkmate mod_board then (
+            ANSITerminal.print_string [ ANSITerminal.red ]
+              " Draw by stalemate! \n";
+            exit 0 )
+          else if draw mod_board then
+            if insufficient_material mod_board then (
+              ANSITerminal.print_string [ ANSITerminal.red ]
+                " Draw by insufficient material! \n";
+              exit 0 )
+            else if fiftyfold_rule mod_board then (
+              ANSITerminal.print_string [ ANSITerminal.red ]
+                " Draw by threefold repetition! \n";
+              exit 0 )
+            else (
+              ANSITerminal.print_string [ ANSITerminal.red ]
+                " Draw by threefold repetition! \n";
+              exit 0 )
+          else
+            let bot_board = play_move (minimax mod_board 1) mod_board in
+            print_board bot_board;
+            if is_in_check bot_board then
+              if not (checkmate bot_board) then
+                ANSITerminal.print_string [ ANSITerminal.red ]
+                  (turn bot_board ^ " is in check\n")
+              else (
+                ANSITerminal.print_string [ ANSITerminal.red ]
+                  (turn bot_board ^ " has been checkmated! \n");
+                exit 0 )
+            else if checkmate bot_board then (
+              ANSITerminal.print_string [ ANSITerminal.red ]
+                " Draw by stalemate! \n";
+              exit 0 )
+            else if draw bot_board then
+              if insufficient_material bot_board then (
+                ANSITerminal.print_string [ ANSITerminal.red ]
+                  " Draw by insufficient material! \n";
+                exit 0 )
+              else if fiftyfold_rule bot_board then (
+                ANSITerminal.print_string [ ANSITerminal.red ]
+                  " Draw by threefold repetition! \n";
+                exit 0 )
+              else (
+                ANSITerminal.print_string [ ANSITerminal.red ]
+                  " Draw by threefold repetition! \n";
+                exit 0 )
+            else play_bot bot_board ()
+        with IllegalMove k ->
+          ANSITerminal.print_string [ ANSITerminal.red ] k );
+      print_endline "";
+      play_bot board ()
+
 (** [game_loop board ()] manages the game loop. *)
 let rec game_loop board () b =
   if b || get_turn board then (
@@ -53,8 +142,8 @@ let rec game_loop board () b =
       \ 5. Enter 'moves' to review the moves made\n\
       \ 6. Enter 'random' to recieve a random available move\n\
       \ 7. Enter 'QUIT' to exit";
-    match String.trim (read_line ()) with
-    | "QUIT" ->
+    match String.lowercase_ascii (String.trim (read_line ())) with
+    | "quit" ->
         ANSITerminal.print_string [ ANSITerminal.cyan ]
           "Thanks for playing\n";
         exit 0
@@ -101,11 +190,23 @@ let rec game_loop board () b =
                 ANSITerminal.print_string [ ANSITerminal.red ]
                   (turn mod_board ^ " has been checkmated! \n");
                 exit 0 )
-            else ();
-            if checkmate mod_board then (
+            else if checkmate mod_board then (
               ANSITerminal.print_string [ ANSITerminal.red ]
-                " Stalemate! \n";
+                " Draw by stalemate! \n";
               exit 0 )
+            else if draw mod_board then
+              if insufficient_material mod_board then (
+                ANSITerminal.print_string [ ANSITerminal.red ]
+                  " Draw by insufficient material! \n";
+                exit 0 )
+              else if fiftyfold_rule mod_board then (
+                ANSITerminal.print_string [ ANSITerminal.red ]
+                  " Draw by threefold repetition! \n";
+                exit 0 )
+              else (
+                ANSITerminal.print_string [ ANSITerminal.red ]
+                  " Draw by threefold repetition! \n";
+                exit 0 )
             else game_loop mod_board () b
           with IllegalMove k ->
             ANSITerminal.print_string [ ANSITerminal.red ] k );
@@ -143,9 +244,10 @@ let rec random_game board x =
 (** [start ()] initializes the board. *)
 let rec start () =
   print_endline
-    "Enter 'start' to begin with the starting chess position or  enter \n\
-    \    'random' to play against a computer making random moves  \
-     enter a FEN formatted string to load a specific board \n";
+    "Enter 'start' to play against a friend from the starting \
+     position. Enter 'bot' to play against the engine. Enter 'random' \
+     to play against a computer making random moves. Enter a FEN \
+     formatted string to load a specific board. \n";
   match String.trim (read_line ()) with
   | "start" ->
       let board = Board.init () in
@@ -155,6 +257,9 @@ let rec start () =
       print_board (Board.init ());
       game_loop (Board.init ()) () false
   | "random game" -> random_game (Board.init ()) 100
+  | "bot" ->
+      print_board (Board.init ());
+      play_bot (Board.init ()) ()
   | str ->
       begin
         try

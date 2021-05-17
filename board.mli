@@ -108,6 +108,15 @@ val checkmate : t -> bool
    false*)
 val draw : t -> bool
 
+(**[insufficient_material t] returns true if the player to move can claim a draw by insufficient material, else false*)
+val insufficient_material : t -> bool
+
+(**[threefold_repetition t] returns true if the player to move can claim a draw by threefold repetition, else false*)
+val threefold_repetition : t -> bool
+
+(**[fiftyfold_rule t] returns true if the player to move can claim a draw by the fiftyfold rule*)
+val fiftyfold_rule : t -> bool
+
 (**[ get_moves t] returns the moves made in the game so far*)
 val get_moves : t -> (string * string) list
 
