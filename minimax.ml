@@ -71,6 +71,7 @@ let point_calc m pos =
   Board.undo_prev next_board;
   orig - points
 
+let eval = point_calc
 (** [heuristic pos] returns a pair with the move that maximizes the
     point values obtained by the current player on a board [pos], and
     the value is what the move is worth. *)
@@ -85,7 +86,7 @@ let heuristic pos =
     List.hd
       (List.sort
          (fun (a, b) (c, d) -> compare d b)
-         (List.map (fun a -> (a, point_calc a pos)) moves))
+         (List.map (fun a -> (a, eval a pos)) moves))
 
 (* list never empty *)
 
@@ -99,8 +100,8 @@ let rec max_turn pos depth =
     let best = ref (List.hd actions) in
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
-      let temp_points = point_calc temp_move pos in
-      if temp_points > !max_val then
+      let temp_points = eval temp_move pos in
+      if temp_points >= !max_val then
         let next_board = Board.move temp_move "Q" pos in
         let next_a, next_val = min_turn next_board (depth - 1) in
         if temp_points + next_val > !max_val then (
@@ -127,8 +128,8 @@ and min_turn pos depth =
     let best = ref (List.hd actions ) in
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
-      let temp_points = -point_calc temp_move pos in
-      if temp_points < !min_val then
+      let temp_points = -eval temp_move pos in
+      if temp_points <= !min_val then
         let next_board = Board.move temp_move "Q" pos in
         let next_a, next_val = max_turn next_board (depth - 1) in
         if temp_points + next_val < !min_val then (
