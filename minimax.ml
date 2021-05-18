@@ -61,6 +61,7 @@ let point_aux pos =
     + pieces.pawns
   in
   calc_aux w_pieces + calc_aux b_pieces
+  + if is_in_check pos then -5 else 0 (**arbitrary to be determined*)
 
 (** [point_calc m pos] calculates the piece value difference between
     White and Black if move [m] is taken on board [pos]. *)
@@ -72,6 +73,7 @@ let point_calc m pos =
   orig - points
 
 let eval = point_calc
+
 (** [heuristic pos] returns a pair with the move that maximizes the
     point values obtained by the current player on a board [pos], and
     the value is what the move is worth. *)
@@ -82,7 +84,6 @@ let heuristic pos =
     ("", if w_turn then Int.max_int else Int.min_int)
   else
     let moves = Board.move_generator pos in
-
     List.hd
       (List.sort
          (fun (a, b) (c, d) -> compare d b)
@@ -101,15 +102,21 @@ let rec max_turn pos depth =
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
       let temp_points = eval temp_move pos in
-      if temp_points >= !max_val then
-        let next_board = Board.move temp_move "Q" pos in
+      let next_board = Board.move temp_move "Q" pos in
+      if checkmate next_board then (
+        max_val := max_int;
+        undo_prev next_board;
+        best := temp_move)
+      else
         let next_a, next_val = min_turn next_board (depth - 1) in
+
         if temp_points + next_val > !max_val then (
           best := temp_move;
           undo_prev next_board;
           max_val := temp_points + next_val)
-        else (undo_prev next_board; best := !best)
-      else ()
+        else (
+          undo_prev next_board;
+          best := !best)
       (* let next_board = Board.move (List.nth actions a) "" pos in let
          next_a, next_val = min_turn next_board (depth - 1) in let a',
          val' = (ref next_a, ref next_val) in if !val' > !max_val then
@@ -125,19 +132,24 @@ and min_turn pos depth =
   else
     let actions = Board.move_generator pos in
     let min_val = ref 0 in
-    let best = ref (List.hd actions ) in
+    let best = ref (List.hd actions) in
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
       let temp_points = -eval temp_move pos in
-      if temp_points <= !min_val then
-        let next_board = Board.move temp_move "Q" pos in
+      let next_board = Board.move temp_move "Q" pos in
+      if checkmate next_board then (
+        min_val := min_int;
+        undo_prev next_board;
+        best := temp_move)
+      else
         let next_a, next_val = max_turn next_board (depth - 1) in
         if temp_points + next_val < !min_val then (
           best := temp_move;
           undo_prev next_board;
           min_val := temp_points + next_val)
-        else (undo_prev next_board; best := !best)
-      else ()
+        else (
+          undo_prev next_board;
+          best := !best)
     done;
     (!best, !min_val)
 
