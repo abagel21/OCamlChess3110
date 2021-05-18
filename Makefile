@@ -1,4 +1,4 @@
-MODULES=piece board main
+MODULES=piece board main minimax
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
