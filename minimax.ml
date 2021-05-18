@@ -96,17 +96,17 @@ let rec max_turn pos depth =
   else
     let actions = Board.move_generator pos in
     let max_val = ref 0 in
-    let best = ref "" in
+    let best = ref (List.hd actions) in
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
       let temp_points = point_calc temp_move pos in
       if temp_points > !max_val then
         let next_board = Board.move temp_move "Q" pos in
         let next_a, next_val = min_turn next_board (depth - 1) in
-        if temp_points - next_val > !max_val then (
+        if temp_points + next_val > !max_val then (
           best := temp_move;
           undo_prev next_board;
-          max_val := temp_points - next_val)
+          max_val := temp_points + next_val)
         else (undo_prev next_board; best := !best)
       else ()
       (* let next_board = Board.move (List.nth actions a) "" pos in let
@@ -124,17 +124,17 @@ and min_turn pos depth =
   else
     let actions = Board.move_generator pos in
     let min_val = ref 0 in
-    let best = ref "" in
+    let best = ref (List.hd actions ) in
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
-      let temp_points = point_calc temp_move pos in
+      let temp_points = -point_calc temp_move pos in
       if temp_points < !min_val then
         let next_board = Board.move temp_move "Q" pos in
-        let next_a, next_val = min_turn next_board (depth - 1) in
-        if temp_points - next_val < !min_val then (
+        let next_a, next_val = max_turn next_board (depth - 1) in
+        if temp_points + next_val < !min_val then (
           best := temp_move;
           undo_prev next_board;
-          min_val := temp_points - next_val)
+          min_val := temp_points + next_val)
         else (undo_prev next_board; best := !best)
       else ()
     done;
