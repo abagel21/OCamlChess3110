@@ -146,7 +146,7 @@ let init () =
       { pawns = 8; knights = 2; bishops = 2; rooks = 2; queens = 1 };
     move_stack = [];
     halfmove_clock = 0;
-    fullmove_clock = 0;
+    fullmove_clock = 1;
   }
 
 (**[get_turn pos] returns true if it is white's move and false
@@ -603,10 +603,9 @@ let set_castling pos from_sqr =
       | _ -> pos.castling )
 
 let sqr_to_str sqr =
-  match sqr with
-  | a, b ->
-      String.make 1 (Char.lowercase_ascii (char_of_int (a + 97)))
-      ^ string_of_int (b + 1)
+  let rank, col = sqr in
+  String.make 1 (Char.lowercase_ascii (char_of_int (rank + 97)))
+  ^ string_of_int (col + 1)
 
 let convert_sqrs_to_string sqr1 sqr2 = sqr_to_str sqr1 ^ sqr_to_str sqr2
 
@@ -624,7 +623,6 @@ let add_piece pos sqr piece =
    results in the [color] king being in check, else false*)
 let mv_and_chck pos from_sqr to_sqr color =
   let from_piece = get_piece_internal from_sqr pos in
-
   let to_piece = get_piece_internal to_sqr pos in
   rmv_piece pos from_sqr;
   add_piece pos to_sqr from_piece;
@@ -640,156 +638,132 @@ let mv_and_chck pos from_sqr to_sqr color =
   add_piece pos from_sqr from_piece;
   removing_checks
 
-let update_pieces color pieces capture promotion =
-  let pieces =
-    match capture with
-    | None -> pieces
-    | Some k ->
-        if Piece.get_color k = color then
-          match Piece.get_piece k with
-          | Pawn -> { pieces with pawns = pieces.pawns - 1 }
-          | Knight -> { pieces with knights = pieces.knights - 1 }
-          | Bishop -> { pieces with bishops = pieces.bishops - 1 }
-          | Rook -> { pieces with rooks = pieces.rooks - 1 }
-          | Queen -> { pieces with queens = pieces.queens - 1 }
-          | King -> raise (IllegalMove "Cannot capture king")
-        else pieces
-  in
-  match promotion with
-  | None -> pieces
-  | Some k ->
-      if Piece.get_color k = color then
-        match Piece.get_piece k with
-        | Knight ->
-            {
-              pieces with
-              knights = pieces.knights + 1;
-              pawns = pieces.pawns - 1;
-            }
-        | Bishop ->
-            {
-              pieces with
-              bishops = pieces.bishops + 1;
-              pawns = pieces.pawns - 1;
-            }
-        | Rook ->
-            {
-              pieces with
-              rooks = pieces.rooks + 1;
-              pawns = pieces.pawns - 1;
-            }
-        | Queen ->
-            {
-              pieces with
-              queens = pieces.queens + 1;
-              pawns = pieces.pawns - 1;
-            }
-        | King | Pawn ->
-            raise (Failure "Cannot promote to king or pawn")
-      else pieces
-
-let update_pieces_undo color pieces promotion capture =
-  let pieces =
-    match promotion with
-    | None -> pieces
-    | Some k ->
-        if Piece.get_color k = color then
-          match Piece.get_piece k with
-          | Knight ->
-              {
-                pieces with
-                knights = pieces.knights - 1;
-                pawns = pieces.pawns + 1;
-              }
-          | Bishop ->
-              {
-                pieces with
-                bishops = pieces.bishops - 1;
-                pawns = pieces.pawns + 1;
-              }
-          | Rook ->
-              {
-                pieces with
-                rooks = pieces.rooks - 1;
-                pawns = pieces.pawns + 1;
-              }
-          | Queen ->
-              {
-                pieces with
-                queens = pieces.queens - 1;
-                pawns = pieces.pawns + 1;
-              }
-          | King | Pawn ->
-              raise (IllegalMove "Cannot promote to king or pawn")
-        else pieces
-  in
+let update_pieces_capture color pieces capture =
   match capture with
   | None -> pieces
   | Some k ->
       if Piece.get_color k = color then
         match Piece.get_piece k with
-        | Knight -> { pieces with knights = pieces.knights + 1 }
-        | Bishop -> { pieces with bishops = pieces.bishops + 1 }
-        | Rook -> { pieces with rooks = pieces.rooks + 1 }
-        | Queen -> { pieces with queens = pieces.queens + 1 }
-        | Pawn -> { pieces with pawns = pieces.pawns + 1 }
-        | _ -> raise (Failure "Cannot promote to king or pawn")
+        | Pawn -> { pieces with pawns = pieces.pawns - 1 }
+        | Knight -> { pieces with knights = pieces.knights - 1 }
+        | Bishop -> { pieces with bishops = pieces.bishops - 1 }
+        | Rook -> { pieces with rooks = pieces.rooks - 1 }
+        | Queen -> { pieces with queens = pieces.queens - 1 }
+        | King -> raise (IllegalMove "Cannot capture king")
       else pieces
+
+let update_pieces_promotion color pieces pc =
+  if Piece.get_color pc = color then
+    let p = pieces.pawns in
+    match Piece.get_piece pc with
+    | Knight ->
+        { pieces with knights = pieces.knights + 1; pawns = p - 1 }
+    | Bishop ->
+        { pieces with bishops = pieces.bishops + 1; pawns = p - 1 }
+    | Rook -> { pieces with rooks = pieces.rooks + 1; pawns = p - 1 }
+    | Queen -> { pieces with queens = pieces.queens + 1; pawns = p - 1 }
+    | King | Pawn -> raise (Failure "Cannot promote to king or pawn")
+  else pieces
+
+let update_pieces color pieces capture promotion =
+  let pieces = update_pieces_capture color pieces capture in
+  match promotion with
+  | None -> pieces
+  | Some k -> update_pieces_promotion color pieces k
+
+let up_undo_promotion color pieces pc =
+  if Piece.get_color pc = color then
+    let pawns = pieces.pawns in
+    match Piece.get_piece pc with
+    | Knight ->
+        { pieces with knights = pieces.knights - 1; pawns = pawns + 1 }
+    | Bishop ->
+        { pieces with bishops = pieces.bishops - 1; pawns = pawns + 1 }
+    | Rook ->
+        { pieces with rooks = pieces.rooks - 1; pawns = pawns + 1 }
+    | Queen ->
+        { pieces with queens = pieces.queens - 1; pawns = pawns + 1 }
+    | King | Pawn ->
+        raise (IllegalMove "Cannot promote to king or pawn")
+  else pieces
+
+let up_undo_capture color pieces pc =
+  if Piece.get_color pc = color then
+    match Piece.get_piece pc with
+    | Knight -> { pieces with knights = pieces.knights + 1 }
+    | Bishop -> { pieces with bishops = pieces.bishops + 1 }
+    | Rook -> { pieces with rooks = pieces.rooks + 1 }
+    | Queen -> { pieces with queens = pieces.queens + 1 }
+    | Pawn -> { pieces with pawns = pieces.pawns + 1 }
+    | _ -> raise (Failure "Cannot promote to king or pawn")
+  else pieces
+
+let update_pieces_undo color pieces promotion capture =
+  let pieces =
+    match promotion with
+    | None -> pieces
+    | Some k -> up_undo_promotion color pieces k
+  in
+
+  match capture with
+  | None -> pieces
+  | Some k -> up_undo_capture color pieces k
+
+(**[update_move_stack] updates the move stack after a move is made*)
+let update_move_stack
+    pos
+    (from_sqr, to_sqr)
+    capture
+    ep
+    promotion
+    castle
+    prev_castling =
+  {
+    from_sqr;
+    to_sqr;
+    capture;
+    ep_sqr = pos.ep;
+    ep;
+    promotion;
+    castle;
+    was_checked = is_in_check pos;
+    halfmove_clock = pos.halfmove_clock;
+    prev_castling;
+  }
+  :: pos.move_stack
+
+let update_halfmove_clock pos p_move capture =
+  if p_move then 0
+  else match capture with None -> pos.halfmove_clock + 1 | Some k -> 0
+
+let update_checked pos wking bking =
+  attacked_square pos (if pos.turn then bking else wking) pos.turn None
+
+let update_fullmove_clock pos =
+  if pos.turn then pos.fullmove_clock else pos.fullmove_clock + 1
 
 (**[add_move pos from_sqr to_sqr k] returns a new position given that
    the board array is already shifted with king position updated if [k],
-   fifty_rep updated if [pawn_move] or [capture] is not None, and the
-   move stack updated*)
-let add_move
-    pos
-    (from_sqr : square)
-    (to_sqr : square)
-    k
-    pawn_move
-    promotion
-    capture
-    castle
-    ep
-    prev_castling =
+   fifty_rep updated if [p_move] or [capture] is not None, and the move
+   stack updated*)
+let add_move pos from_sqr to_sqr k p_move prmt capture cstl ep prev_cstl
+    =
   let wking = if k && pos.turn then to_sqr else pos.wking in
   let bking = if k && not pos.turn then to_sqr else pos.bking in
   {
     pos with
     turn = not pos.turn;
-    checked =
-      attacked_square pos
-        (if pos.turn then bking else wking)
-        pos.turn None;
+    checked = update_checked pos wking bking;
     ep = (-1, -1);
     bking;
     wking;
-    wpieces = update_pieces true pos.wpieces capture promotion;
-    bpieces = update_pieces false pos.bpieces capture promotion;
+    wpieces = update_pieces true pos.wpieces capture prmt;
+    bpieces = update_pieces false pos.bpieces capture prmt;
     move_stack =
-      (* List.rev ( (convert_sqrs_to_string from_sqr to_sqr,
-         promote_str) promotion : Piece.t option; :: List.rev
-         pos.move_stack ); *)
-      {
-        from_sqr;
-        to_sqr;
-        capture;
-        ep_sqr = pos.ep;
-        ep;
-        promotion;
-        castle;
-        was_checked = is_in_check pos;
-        halfmove_clock = pos.halfmove_clock;
-        prev_castling;
-      }
-      :: pos.move_stack;
-    fullmove_clock =
-      (if pos.turn then pos.fullmove_clock else pos.fullmove_clock + 1);
-    halfmove_clock =
-      ( if pawn_move then 0
-      else
-        match capture with
-        | None -> pos.halfmove_clock + 1
-        | Some k -> 0 );
+      update_move_stack pos (from_sqr, to_sqr) capture ep prmt cstl
+        prev_cstl;
+    fullmove_clock = update_fullmove_clock pos;
+    halfmove_clock = update_halfmove_clock pos p_move capture;
   }
 
 (**[move_normal_piece pos from_sqr to_sqr] moves a piece from [from_sqr]
