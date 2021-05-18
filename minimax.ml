@@ -95,7 +95,7 @@ let rec max_turn pos depth =
   if depth = 0 || Board.checkmate pos then heuristic pos
   else
     let actions = Board.move_generator pos in
-    let max_val = ref Int.min_int in
+    let max_val = ref 0 in
     let best = ref "" in
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
@@ -123,7 +123,7 @@ and min_turn pos depth =
   if depth = 0 || Board.checkmate pos then heuristic pos
   else
     let actions = Board.move_generator pos in
-    let min_val = ref Int.max_int in
+    let min_val = ref 0 in
     let best = ref "" in
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
