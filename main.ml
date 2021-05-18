@@ -184,9 +184,10 @@ let rec game_loop board () b =
             ANSITerminal.erase Screen;
             Board.draw_board mod_board;
             if is_in_check mod_board then
-              if not (checkmate mod_board) then
+              if not (checkmate mod_board) then(
                 ANSITerminal.print_string [ ANSITerminal.red ]
-                  (turn mod_board ^ " is in check\n")
+                  (turn mod_board ^ " is in check\n");
+                  game_loop mod_board () b)
               else (
                 ANSITerminal.print_string [ ANSITerminal.red ]
                   (turn mod_board ^ " has been checkmated! \n");
