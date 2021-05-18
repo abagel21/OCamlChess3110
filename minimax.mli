@@ -1,3 +1,4 @@
+(**A simple minimax move selection algorithm *)
 open Board
 
 (** [minimax pos depth] takes in a board state [pos] and determines

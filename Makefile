@@ -1,4 +1,4 @@
-MODULES=piece board main
+MODULES=piece board minimax main
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
@@ -15,7 +15,7 @@ build:
 	 $(OCAMLBUILD) $(OBJECTS)
 
 test:
-	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential
+	export DISPLAY=:0; $(OCAMLBUILD) -tag 'debug' $(TEST) && OCAMLRUNPARAM=b ./$(TEST) -runner sequential
 
 play:
 	export DISPLAY=:0; $(OCAMLBUILD) -tag 'debug' $(MAIN) && OCAMLRUNPARAM=b ./$(MAIN)
@@ -24,12 +24,12 @@ docs: docs-public docs-private
 	
 docs-public: build
 	mkdir -p _doc.public
-	ocamlfind ocamldoc -I _build -package ANSITerminal \
+	ocamlfind ocamldoc -I _build -package ANSITerminal -package graphics \
 		-html -stars -d _doc.public $(MLIS)
 
 docs-private: build
 	mkdir -p _doc.private
-	ocamlfind ocamldoc -I _build -package ANSITerminal \
+	ocamlfind ocamldoc -I _build -package ANSITerminal -package graphics \
 		-html -stars -d _doc.private \
 		-inv-merge-ml-mli -m A $(MLIS) $(MLS)
 zip :

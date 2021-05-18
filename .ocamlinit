@@ -5,3 +5,4 @@
 #directory "_build";;
 #load "piece.cmo";;
 #load "board.cmo";;
+#load "minimax.cmo";;

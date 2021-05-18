@@ -1,12 +1,5 @@
-(** Representation of static chess pieces.
-
-    This module represents the chess pieces used by the game state and
-    board. *)
-
-(** The type of player color. *)
 type color_id = bool
 
-(** The type of piece identifier. *)
 type piece_id =
   | Pawn
   | Knight
@@ -15,7 +8,6 @@ type piece_id =
   | Queen
   | King
 
-(** The abstract type of values representing chess pieces. *)
 type t = {
   color : color_id;
   piece_id : piece_id;

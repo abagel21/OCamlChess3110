@@ -1,6 +1,11 @@
+(** Representation of static chess pieces.
+
+    This module represents the chess pieces used by the game state and
+    board. *)
+
 type t
 
-(** The type of owner identifier *)
+(** The type of the color of a piece *)
 type color_id = bool
 
 (** The type of piece identifier *)
