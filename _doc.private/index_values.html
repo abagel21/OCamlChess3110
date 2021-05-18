@@ -1,0 +1,871 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Piece" rel="Chapter" href="Piece.html">
+<link title="Board" rel="Chapter" href="Board.html">
+<link title="Minimax" rel="Chapter" href="Minimax.html">
+<link title="Main" rel="Chapter" href="Main.html"><title>Index of values</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Index of values</h1>
+<table>
+<tr><td align="left"><div>A</div></td></tr>
+<tr><td><a href="Board.html#VALadd_move">add_move</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">add_move pos from_sqr to_sqr k</code> returns a new position given that
+   the board array is already shifted with king position updated if <code class="code">k</code>,
+   fifty_rep updated if <code class="code">pawn_move</code> or <code class="code">capture</code> is not None, and the
+   move stack updated</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALadd_pawn">add_pawn</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALadd_piece">add_piece</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">add_piece pos sqr piece</code> adds <code class="code">piece</code> to <code class="code">pos</code> at <code class="code">sqr</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALadjust_pieces">adjust_pieces</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALattacked_square">attacked_square</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">attacked_square pos sqr color</code> returns true if <code class="code">sqr</code> is attacked by
+   a piece of <code class="code">color</code> in <code class="code">pos</code>, including <code class="code">k</code> if the pieces is a king</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALavail_castles">avail_castles</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_knight">avail_knight</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move">avail_move</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move_aux">avail_move_aux</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">avail_move_aux piece pos x checked dirxn</code> finds available moves for
+    <code class="code">piece</code> on board <code class="code">pos</code>, and checks vertical moves if <code class="code">dirxn</code> is
+    <code class="code">true</code> or horizontal moves if it is <code class="code">false</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALavail_move_bishop">avail_move_bishop</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move_diag">avail_move_diag</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move_horiz">avail_move_horiz</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move_king">avail_move_king</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move_knight">avail_move_knight</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move_pawn_diag">avail_move_pawn_diag</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move_pawn_general">avail_move_pawn_general</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move_pawn_one">avail_move_pawn_one</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move_pawn_two">avail_move_pawn_two</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move_rook">avail_move_rook</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_move_vert">avail_move_vert</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALavail_moves">avail_moves</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>B</div></td></tr>
+<tr><td><a href="Board.html#VALbbishop">bbishop</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALbishop_checks">bishop_checks</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">bishop_checks pos square</code> returns true if the bishop on <code class="code">square</code>
+   checks the opposing player's king</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALbishop_valid_helper">bishop_valid_helper</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">bishop_valid_helper pos from_sqr to_sqr</code> verifies that the moves
+   (from_sqr, to_sqr) is a legal move for a bishop</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALbknight">bknight</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALblking">blking</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALbot_move_loop">bot_move_loop</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALbot_prompt">bot_prompt</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALbpawn">bpawn</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALbqueen">bqueen</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALbrook">brook</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALbuild_boardstring">build_boardstring</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>C</div></td></tr>
+<tr><td><a href="Board.html#VALcauses_discovery">causes_discovery</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">causes_discovery pos from_sqr to_sqr</code> returns true if moving the
+   piece on <code class="code">from_sqr</code> to <code class="code">to_sqr</code> causes check for the opposing king</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALcheck_and_move">check_and_move</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">check_and_move piece pos from_sqr to_sqr</code> moves the piece <code class="code">piece</code>
+   from <code class="code">from_sqr</code> to <code class="code">to_sqr</code> in <code class="code">pos</code> if it is a legal move for
+   <code class="code">piece</code>, promotes the piece to <code class="code">new_p</code> if it is a pawn, and returns
+   the new state if the move is legal, else returns <code class="code">pos</code> Precondition:
+   <code class="code">piece</code> is owned by the current player of <code class="code">pos</code>, the current player
+   of <code class="code">pos</code> is not in check</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALcheck_castle">check_castle</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALcheck_checkmate">check_checkmate</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALcheck_checkmate_bot">check_checkmate_bot</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALcheck_draw">check_draw</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALcheck_draw_bot">check_draw_bot</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALcheck_kings">check_kings</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALcheck_valid_sqrs">check_valid_sqrs</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">check_valid_sqrs pos psble_knight valid_sqr color</code> returns true if
+   any square in <code class="code">psble_knight</code> is <code class="code">color</code></p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALchecked_move">checked_move</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">checked_move piece pos from_sqr to_sqr</code> moves the piece <code class="code">piece</code> from
+   <code class="code">from_sqr</code> to <code class="code">to_sqr</code> in <code class="code">pos</code> if it is a legal move for <code class="code">piece</code> and
+   returns the new state if the move is legal, else returns <code class="code">pos</code>
+   Precondition: <code class="code">piece</code> is owned by the current player of <code class="code">pos</code>, the
+   current player of <code class="code">pos</code> is in check</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALcheckmate">checkmate</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">checkmate t</code> returns true if the player is checkmated</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALconvert_sqrs_to_string">convert_sqrs_to_string</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>D</div></td></tr>
+<tr><td><a href="Board.html#VALdiag_attack">diag_attack</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">diag_attack pos rank col color</code> returns true if there is a piece
+   diagonally attacking the square at (rank, col) of <code class="code">color</code></p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALdraw">draw</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">draw t</code> returns true if the player to move can claim a draw, else
+   false</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALdraw_board">draw_board</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">draw_board t</code> draws the current chess piece position on the open graphics context</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALdraw_board_labels">draw_board_labels</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">draw_board_labels</code> draws the a-g and 1-8 labels on the chess board
+   graphic</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALdraw_pieces">draw_pieces</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALdraw_squares">draw_squares</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>E</div></td></tr>
+<tr><td><a href="Board.html#VALequals">equals</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">equals pos1 pos2</code> returns whether board states <code class="code">pos1</code> and <code class="code">pos2</code>
+    are equal.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Minimax.html#VALeval">eval</a> [<a href="Minimax.html">Minimax</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALextract_opt">extract_opt</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>F</div></td></tr>
+<tr><td><a href="Piece.html#VALfen_of_pieces">fen_of_pieces</a> [<a href="Piece.html">Piece</a>]</td>
+<td><div class="info">
+<p>The associated FEN representations of pieces.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALfen_parse_castling">fen_parse_castling</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">fen_parse_castling str pos</code> takes in the castling portion of a FEN
+   string, a partially constructed position, and the index where the
+   castling rights string ends and returns a boolean array of length 4
+   storing the castling rights</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALfen_parse_other">fen_parse_other</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">fen_parse_other str pos</code> takes in a position with board array parsed
+   from <code class="code">str</code> and adds the en passant, castling, and turn information</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALfiftyfold_rule">fiftyfold_rule</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">fiftyfold_rule pos</code> returns true if the current player can claim a
+   draw by the fiftyfold rule</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALfind_king_sqr">find_king_sqr</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">find_king_sqr pos</code> returns the position of the king of the current
+   player</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALfirst_piece">first_piece</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">first_piece pos rank col rankinc colinc</code> returns the first piece
+   along the line designated by rank = rank + rankinc, col = col +
+   colinc</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALfullmove_clock">fullmove_clock</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">get_turn_num t</code> returns the current turn number of t</p>
+
+</div>
+</td></tr>
+<tr><td align="left"><div>G</div></td></tr>
+<tr><td><a href="Main.html#VALgame_end">game_end</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALgame_end_bot">game_end_bot</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALgame_loop">game_loop</a> [<a href="Main.html">Main</a>]</td>
+<td><div class="info">
+<p><code class="code">game_loop board ()</code> manages the game loop.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Main.html#VALgen_random">gen_random</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALget_castling">get_castling</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">get_castling pos</code> returns a list containing values corresponding to
+    the validity of castling in board state <code class="code">pos</code> in the form
+    <code class="code">white kingside castling, white queenside castling, 
+    black kingside castling, black queenside castling</code></p>
+
+</div>
+</td></tr>
+<tr><td><a href="Piece.html#VALget_color">get_color</a> [<a href="Piece.html">Piece</a>]</td>
+<td><div class="info">
+<p><code class="code">get_color t</code> returns the color of <code class="code">t</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALget_moves">get_moves</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code"> get_moves t</code> returns the moves made in the game so far in the form ('<code class="code">a-g</code><code class="code">1-8</code><code class="code">a-g</code><code class="code">1-8</code>', promote_str)</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALget_piece">get_piece</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">get_piece str pos</code> takes the <code class="code">str</code> coordinate (rankcol) square
+    representation and returns the name of the piece on that square in
+    <code class="code">pos</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Piece.html#VALget_piece">get_piece</a> [<a href="Piece.html">Piece</a>]</td>
+<td><div class="info">
+<p><code class="code">get_piece t</code> returns the type of piece of <code class="code">t</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALget_piece_helper">get_piece_helper</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALget_piece_internal">get_piece_internal</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">get_piece_internal square pos</code> retrieves the piece at <code class="code">rank, col</code> in
+   <code class="code">pos.board</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALget_piece_locs">get_piece_locs</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALget_pieces">get_pieces</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">get_pieces pos</code> returns the remaining pieces in <code class="code">pos</code> and separated by 
+    ownership in the form (White's pieces, Black's pieces) where each set of 
+    pieces is in the form of type <code class="code">pieces</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALget_turn">get_turn</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">get_turn pos</code> returns true if it is white's move and false
+   otherwise.</p>
+
+</div>
+</td></tr>
+<tr><td align="left"><div>H</div></td></tr>
+<tr><td><a href="Minimax.html#VALheuristic">heuristic</a> [<a href="Minimax.html">Minimax</a>]</td>
+<td><div class="info">
+<p><code class="code">heuristic pos</code> returns a pair with the move that maximizes the
+    point values obtained by the current player on a board <code class="code">pos</code>, and
+    the value is what the move is worth.</p>
+
+</div>
+</td></tr>
+<tr><td align="left"><div>I</div></td></tr>
+<tr><td><a href="Board.html#VALin_range">in_range</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALinit">init</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">init ()</code> returns the representation of the initial position of a chess
+    game.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALinit_board_list">init_board_list</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALinit_empty">init_empty</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">init_empty</code> returns a board representation that is empty</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALinit_empty_board_array">init_empty_board_array</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">init_empty_board_array</code> returns board array that is completely empty</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Main.html#VALinitial_prompt">initial_prompt</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALinsufficient_material">insufficient_material</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">insufficient_material pos</code> returns true if the game is drawn by
+   insufficient material</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALis_diag_attacker">is_diag_attacker</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">is_diag_attacker piece color</code> returns true if <code class="code">piece</code> attacks
+   diagonally per the rules of chess</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALis_horiz_attacker">is_horiz_attacker</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">is_horiz_attacker piece color</code> returns true if <code class="code">piece</code> attacks
+   horizontally per the rules of chess</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALis_in_check">is_in_check</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">is_in_check pos</code> returns true if the current player is in check</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALis_king">is_king</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">is_king piece</code> returns true if the option piece is a king,else false</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALis_knight_attacker">is_knight_attacker</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">is_knight_attacker piece color</code> returns true if <code class="code">piece</code> is a knight
+   of <code class="code">color</code></p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALis_pawn_attacker">is_pawn_attacker</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">is_pawn_attacker piece color</code> returns true if <code class="code">piece</code> is a pawn of
+   <code class="code">color</code></p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALis_rook">is_rook</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>K</div></td></tr>
+<tr><td><a href="Board.html#VALking_attack">king_attack</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">king_attack pos rank col color</code> returns true if sqr is attacked by a
+   king, else false</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALking_valid_helper">king_valid_helper</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">king_valid_helper pos from_sqr to_sqr</code> verifies that the moves
+   (from_sqr, to_sqr) is a legal move for a king</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALknight_attack">knight_attack</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">knight_attack pos rank col color</code> returns true if there is a knight
+   attacking the square at (rank, col) of <code class="code">color</code></p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALknight_checks">knight_checks</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">knight_checks pos square</code> returns true if the knight on <code class="code">square</code>
+   checks the opposing player's king</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALknight_valid_helper">knight_valid_helper</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">knight_valid_helper pos from_sqr to_sqr</code> ensures that the move
+   (from_sqr, to_sqr) is legal for a knight and if so, executes the move
+   and returns the new state.</p>
+
+</div>
+</td></tr>
+<tr><td align="left"><div>L</div></td></tr>
+<tr><td><a href="Board.html#VALletter">letter</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">letter chr</code> returns true if <code class="code">chr</code> is a lowercase or uppercase
+   letter, else false</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALletter_fen_matching">letter_fen_matching</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALload_fen">load_fen</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">load_fen fen</code> takes in a fen representation of a board and
+    returns the board state equivalent.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALload_fen_helper">load_fen_helper</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">load_fen_helper str pos rank col ind</code> is a recursive helper for
+   turning a FEN string into a board.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Main.html#VALloop_move">loop_move</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>M</div></td></tr>
+<tr><td><a href="Main.html#VALmain">main</a> [<a href="Main.html">Main</a>]</td>
+<td><div class="info">
+<p><code class="code">main ()</code> delivers initial instructions and triggers the board
+    setup.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Piece.html#VALmake_piece">make_piece</a> [<a href="Piece.html">Piece</a>]</td>
+<td><div class="info">
+<p><code class="code">make_piece c piece_id</code> creates a piece of type <code class="code">piece_id</code> belonging
+    to player <code class="code">c</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALmap_castling_str">map_castling_str</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Minimax.html#VALmax_turn">max_turn</a> [<a href="Minimax.html">Minimax</a>]</td>
+<td><div class="info">
+<p><code class="code">max_turn pos depth</code> determines the best value for the maximizing
+    player on a board <code class="code">pos</code> until the search has reached <code class="code">depth</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Minimax.html#VALmin_turn">min_turn</a> [<a href="Minimax.html">Minimax</a>]</td>
+<td><div class="info">
+<p><code class="code">min_turn pos depth</code> determines the best value for the minimizing
+    player on a board <code class="code">pos</code> until the search has reached <code class="code">depth</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Minimax.html#VALminimax">minimax</a> [<a href="Minimax.html">Minimax</a>]</td>
+<td><div class="info">
+<p><code class="code">minimax pos depth</code> takes in a board state <code class="code">pos</code> and determines
+    the best move by running through every legal move up to a certain <code class="code">depth</code>
+    while maximizing the player's valuation and minimizing the opponents.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALmove">move</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">move str promote_str pos</code> takes in a coordinate-based move <code class="code">str</code>
+    and a promotion string <code class="code">promote_str</code> representing a piece and returns the 
+    new state after the move if it is legal on board <code class="code">pos</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALmove_en_passant">move_en_passant</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">move_en_passant pos from_sqr to_sqr</code> executes the move from_sqr
+   to_sqr as an en passant move and returns the modified state.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALmove_generator">move_generator</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">move_generator t</code> returns the possible moves of pos t</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALmove_helper">move_helper</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">move_helper piece pos from_sqr to_sqr</code> moves the piece <code class="code">piece</code> from
+   <code class="code">from_sqr</code> to <code class="code">to_sqr</code> if it is a legal move in <code class="code">pos</code> and returns the
+   new state if the move is legal, else returns <code class="code">pos</code></p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALmove_list">move_list</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">move_list moves board</code> performs every move in <code class="code">moves</code> in board
+    state <code class="code">board</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Main.html#VALmove_loop">move_loop</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALmove_normal_piece">move_normal_piece</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">move_normal_piece pos from_sqr to_sqr</code> moves a piece from <code class="code">from_sqr</code>
+   to <code class="code">to_sqr</code> taking into account whether there was a pawn move (<code class="code">pm</code>)
+   or en passant (<code class="code">ep</code>)</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALmv_and_chck">mv_and_chck</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">mv_and_chck pos sqr</code> returns true if removing the piece at <code class="code">sqr</code>
+   results in the <code class="code">color</code> king being in check, else false</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALmv_to_str">mv_to_str</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>P</div></td></tr>
+<tr><td><a href="Board.html#VALparse_promote_str">parse_promote_str</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">parse_promote_str str</code> returns the valid piece representation of
+   <code class="code">str</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALpawn_attack">pawn_attack</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">pawn_attack pos rank col color</code> returns true if there is a pawn
+   attacking the square at (rank, col) of <code class="code">color</code></p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALpawn_double_move_helper">pawn_double_move_helper</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">pawn_double_move_helper pos from_sqr to_sqr</code> moves the pawn on
+   <code class="code">from_sqr</code> to <code class="code">to_sqr</code> and updates the en passant square</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALpawn_valid_helper">pawn_valid_helper</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">pawn_valid_helper pos from_sqr to_sqr</code> verifies that the move
+   (from_sqr, to_sqr) is a legal move for a pawn and executes it,
+   returning the new state.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALperp_attack">perp_attack</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">perp_attack pos rank col color</code> returns true if there is a piece
+   horizontally or vertically attacking the square at (rank, col) of
+   <code class="code">color</code></p>
+
+</div>
+</td></tr>
+<tr><td><a href="Main.html#VALplay_bot">play_bot</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALplay_move">play_move</a> [<a href="Main.html">Main</a>]</td>
+<td><div class="info">
+<p><code class="code">play_move str board</code> parses a standard chess move in UCI long
+    algebraic notation from <code class="code">str</code> and moves the piece on <code class="code">board</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Minimax.html#VALpoint_aux">point_aux</a> [<a href="Minimax.html">Minimax</a>]</td>
+<td><div class="info">
+<p><code class="code">point_aux pos</code> calculates the total point values of pieces on board
+    <code class="code">pos</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Minimax.html#VALpoint_calc">point_calc</a> [<a href="Minimax.html">Minimax</a>]</td>
+<td><div class="info">
+<p><code class="code">point_calc m pos</code> calculates the piece value difference between
+    White and Black if move <code class="code">m</code> is taken on board <code class="code">pos</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALpossibly_castle">possibly_castle</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">possibly_castle pos from_sqr to_sqr</code> moves the king normally or
+   castles depending on the call.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Main.html#VALprint">print</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALprint_board">print_board</a> [<a href="Main.html">Main</a>]</td>
+<td><div class="info">
+<p><code class="code">print_board board</code> pretty-prints <code class="code">board</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALpromote">promote</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">promote square pos piece</code> promotes the pawn on <code class="code">square</code> in <code class="code">pos</code> to
+   <code class="code">piece</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALpromotion_causes_check">promotion_causes_check</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">promotion_causes_check pos square</code> checks if the promoted piece on
+   <code class="code">square</code> causes check for the opposing king</p>
+
+</div>
+</td></tr>
+<tr><td align="left"><div>Q</div></td></tr>
+<tr><td><a href="Board.html#VALqueen_checks">queen_checks</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">queen_checks pos square</code> returns true if the queen on <code class="code">square</code>
+   checks the opposing player's king</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALqueen_valid_helper">queen_valid_helper</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">queen_check_helper pos from_sqr to_sqr</code> verifies that the moves
+   (from_sqr, to_sqr) is a legal move for a queen</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Main.html#VALquit_game">quit_game</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>R</div></td></tr>
+<tr><td><a href="Main.html#VALrandom_game">random_game</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALrandom_loop">random_loop</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALrandom_move">random_move</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALrank_rep">rank_rep</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALreturn_moves">return_moves</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALrevert_loop">revert_loop</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALrevert_prev">revert_prev</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">revert_prev board x</code> moves the game back <code class="code">x</code> moves.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALrmv_pawn">rmv_pawn</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALrmv_piece">rmv_piece</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">rmv_piece pos sqr</code> removes the piece in <code class="code">pos</code> at <code class="code">sqr</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALrook_checks">rook_checks</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">rook_checks pos square</code> returns true if the rook on <code class="code">square</code> checks
+   the opposing player's king</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALrook_valid_helper">rook_valid_helper</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">rook_valid_helper pos from_sqr to_sqr</code> verifies that the move
+   (from_sqr, to_sqr) is a legal move for a rook.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALrv_col_util">rv_col_util</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALrv_rank_util">rv_rank_util</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>S</div></td></tr>
+<tr><td><a href="Board.html#VALset_castles1">set_castles1</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALset_castles2">set_castles2</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALset_castling">set_castling</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALsqr_from_str">sqr_from_str</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">sqr_from_str</code> returns the square representation of the coordinate in
+   <code class="code">str</code></p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALsqr_inbounds">sqr_inbounds</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">sqr_inbounds sqr</code> returns whether <code class="code">sqr</code> is inbounds.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALsqr_to_str">sqr_to_str</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALstart">start</a> [<a href="Main.html">Main</a>]</td>
+<td><div class="info">
+<p><code class="code">start ()</code> initializes the board.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Main.html#VALstart_loop">start_loop</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>T</div></td></tr>
+<tr><td><a href="Board.html#VALthreefold_repetition">threefold_repetition</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">threefold_repetition pos</code> returns true if the current player of
+   <code class="code">pos</code> can claim a draw by threefold repetition</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALto_fen">to_fen</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">to_fen t</code> returns the FEN representation of <code class="code">t</code></p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALto_fen_no_mvclck">to_fen_no_mvclck</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALto_string">to_string</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">to_string pos</code> outputs a pretty-printed string of the board state in
+    <code class="code">pos</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Piece.html#VALto_string">to_string</a> [<a href="Piece.html">Piece</a>]</td>
+<td><div class="info">
+<p><code class="code">to_string t</code> returns the FEN representation of piece <code class="code">t</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Main.html#VALturn">turn</a> [<a href="Main.html">Main</a>]</td>
+<td><div class="info">
+<p><code class="code">turn board</code> returns the current players move on <code class="code">board</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Main.html#VALtwo_player_prompt">two_player_prompt</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>U</div></td></tr>
+<tr><td><a href="Board.html#VALundo_castling">undo_castling</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">undo_castling</code> undos the move <code class="code">from_sqr</code> <code class="code">to_sqr</code> in <code class="code">pos</code> given
+   that it was a castling move</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALundo_ep">undo_ep</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Main.html#VALundo_loop">undo_loop</a> [<a href="Main.html">Main</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALundo_normal_move">undo_normal_move</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">undo_normal_move pos from_sqr to_sqr capture</code> reverts the move
+   <code class="code">from_sqr</code> <code class="code">to_sqr</code>.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALundo_prev">undo_prev</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">undo_prev pos</code> takes in a board state <code class="code">pos</code> and returns the
+    previous board state.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALupdate_pieces">update_pieces</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALupdate_pieces_undo">update_pieces_undo</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td align="left"><div>V</div></td></tr>
+<tr><td><a href="Board.html#VALverify_enemy_or_empty">verify_enemy_or_empty</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">verify_enemy_or_empty pos to_sqr</code> returns true if <code class="code">to_sqr</code> is empty
+   or occupied by an enemy piece</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALverify_move_string">verify_move_string</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">verify_move_string str</code> checks whether <code class="code">str</code> is a valid coordinate
+   representation chess move.</p>
+
+</div>
+</td></tr>
+<tr><td align="left"><div>W</div></td></tr>
+<tr><td><a href="Board.html#VALwbishop">wbishop</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALwhking">whking</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALwill_be_checked">will_be_checked</a> [<a href="Board.html">Board</a>]</td>
+<td><div class="info">
+<p><code class="code">will_be_checked pos from_sqr to_sqr</code> checks whether the player's
+   move would put themself in check</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Board.html#VALwknight">wknight</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALwpawn">wpawn</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALwqueen">wqueen</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+<tr><td><a href="Board.html#VALwrook">wrook</a> [<a href="Board.html">Board</a>]</td>
+<td></td></tr>
+</table>
+</body>
+</html>

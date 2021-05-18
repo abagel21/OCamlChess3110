@@ -1,0 +1,306 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Piece.html">
+<link rel="next" href="Minimax.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Piece" rel="Chapter" href="Piece.html">
+<link title="Board" rel="Chapter" href="Board.html">
+<link title="Minimax" rel="Chapter" href="Minimax.html">
+<link title="Main" rel="Chapter" href="Main.html"><title>Board</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Piece.html" title="Piece">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Minimax.html" title="Minimax">Next</a>
+</div>
+<h1>Module <a href="type_Board.html">Board</a></h1>
+
+<pre><span id="MODULEBoard"><span class="keyword">module</span> Board</span>: <code class="code">sig</code> <a href="Board.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Representation of a chess game position.
+    This module represents the sum of information of a chess position and the functionality required to manipulate it.</p>
+</div>
+</div>
+<hr width="100%">
+
+<pre><span id="TYPEr"><span class="keyword">type</span> <code class="type"></code>r</span> </pre>
+<div class="info ">
+<div class="info-desc">
+<p><code class="code">r</code> represents the squares of a chess board and the pieces on them.</p>
+</div>
+</div>
+
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+<div class="info ">
+<div class="info-desc">
+<p><code class="code">t</code> represents a full chess position, including the squares, pieces
+    on those squares, castling rights, turn, en passant rights, halfmove clock, 
+    and move sequence made to reach the position.</p>
+</div>
+</div>
+
+
+<pre><code><span id="TYPEpieces"><span class="keyword">type</span> <code class="type"></code>pieces</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpieces.pawns">pawns</span>&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpieces.knights">knights</span>&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpieces.bishops">bishops</span>&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpieces.rooks">rooks</span>&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpieces.queens">queens</span>&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr></table>
+<code>}</code>
+
+<div class="info ">
+<div class="info-desc">
+<p><code class="code">pieces</code> represents the pieces remaining on the board.</p>
+</div>
+</div>
+
+
+<pre><span id="EXCEPTIONIllegalMove"><span class="keyword">exception</span> IllegalMove</span> <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info ">
+<div class="info-desc">
+<p><code class="code">IllegalMove s</code> is the exception thrown when the user attempts to make an 
+    illegal move</p>
+</div>
+</div>
+
+<pre><span id="EXCEPTIONEmptyMoveStack"><span class="keyword">exception</span> EmptyMoveStack</span></pre>
+<div class="info ">
+<div class="info-desc">
+<p><code class="code">EmptyMoveStack</code> is the exception thrown when a user attempts to undo when 
+    no previous move has been made</p>
+</div>
+</div>
+
+<pre><span id="EXCEPTIONIllegalSquare"><span class="keyword">exception</span> IllegalSquare</span> <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info ">
+<div class="info-desc">
+<p><code class="code">IllegalSquare s</code> is the exception thrown when a user attempts to move from 
+    a square that does not exist</p>
+</div>
+</div>
+
+<pre><span id="EXCEPTIONIllegalPiece"><span class="keyword">exception</span> IllegalPiece</span> <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info ">
+<div class="info-desc">
+<p><code class="code">IllegalPiece s</code> is the exception thrown when an illegal string is fed into 
+    the promote string for <code class="code">move</code></p>
+</div>
+</div>
+
+<pre><span id="EXCEPTIONIllegalFen"><span class="keyword">exception</span> IllegalFen</span> <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info ">
+<div class="info-desc">
+<p><code class="code">IllegalFen s</code> is the exception thrown when an illegal fen is given to 
+    <code class="code">load_fen</code></p>
+</div>
+</div>
+
+<pre><span id="VALinit"><span class="keyword">val</span> init</span> : <code class="type">unit -> <a href="Board.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">init ()</code> returns the representation of the initial position of a chess
+    game.</p>
+</div>
+</div>
+
+<pre><span id="VALget_piece"><span class="keyword">val</span> get_piece</span> : <code class="type">string -> <a href="Board.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">get_piece str pos</code> takes the <code class="code">str</code> coordinate (rankcol) square
+    representation and returns the name of the piece on that square in
+    <code class="code">pos</code>. Raises: <code class="code">IllegalSquare str</code> if <code class="code">str</code> is not a valid chess
+    square.</p>
+</div>
+</div>
+
+<pre><span id="VALget_pieces"><span class="keyword">val</span> get_pieces</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> <a href="Board.html#TYPEpieces">pieces</a> * <a href="Board.html#TYPEpieces">pieces</a></code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">get_pieces pos</code> returns the remaining pieces in <code class="code">pos</code> and separated by 
+    ownership in the form (White's pieces, Black's pieces) where each set of 
+    pieces is in the form of type <code class="code">pieces</code>.</p>
+</div>
+</div>
+
+<pre><span id="VALmove"><span class="keyword">val</span> move</span> : <code class="type">string -> string -> <a href="Board.html#TYPEt">t</a> -> <a href="Board.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">move str promote_str pos</code> takes in a coordinate-based move <code class="code">str</code>
+    and a promotion string <code class="code">promote_str</code> representing a piece and returns the 
+    new state after the move if it is legal on board <code class="code">pos</code>.</p>
+
+<p>Raises: <code class="code">IllegalMove</code> if the move is illegal, or <code class="code">IllegalSquare str</code>
+    if one of the squares is out of bounds.</p>
+
+<p>Requires: str is a valid coordinate-based move of the form
+    '<code class="code">a-g</code><code class="code">1-8</code><code class="code">a-g</code><code class="code">1-8</code>' and <code class="code">promote_str</code> is either the empty string
+    or one of "Q", "R", "B", or "N".</p>
+</div>
+</div>
+
+<pre><span id="VALundo_prev"><span class="keyword">val</span> undo_prev</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> <a href="Board.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">undo_prev pos</code> takes in a board state <code class="code">pos</code> and returns the
+    previous board state. Raises: <code class="code">EmptyMoveStack</code> if the move stack is
+    empty.</p>
+</div>
+</div>
+
+<pre><span id="VALget_turn"><span class="keyword">val</span> get_turn</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">get_turn t</code> is <code class="code">true</code> if it is White's turn, and <code class="code">false</code> if it is
+    Black's.</p>
+</div>
+</div>
+
+<pre><span id="VALget_castling"><span class="keyword">val</span> get_castling</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> bool list</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">get_castling pos</code> returns a list containing values corresponding to
+    the validity of castling in board state <code class="code">pos</code> in the form
+    <code class="code">white kingside castling, white queenside castling, 
+    black kingside castling, black queenside castling</code></p>
+</div>
+</div>
+
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">to_string pos</code> outputs a pretty-printed string of the board state in
+    <code class="code">pos</code>.</p>
+</div>
+</div>
+
+<pre><span id="VALequals"><span class="keyword">val</span> equals</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> <a href="Board.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">equals pos1 pos2</code> returns whether board states <code class="code">pos1</code> and <code class="code">pos2</code>
+    are equal.</p>
+</div>
+</div>
+
+<pre><span id="VALload_fen"><span class="keyword">val</span> load_fen</span> : <code class="type">string -> <a href="Board.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">load_fen fen</code> takes in a fen representation of a board and
+    returns the board state equivalent. Requires: <code class="code">fen</code> is a valid FEN
+    format string.</p>
+</div>
+</div>
+
+<pre><span id="VALmove_list"><span class="keyword">val</span> move_list</span> : <code class="type">(string * string) list -> <a href="Board.html#TYPEt">t</a> -> <a href="Board.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">move_list moves board</code> performs every move in <code class="code">moves</code> in board
+    state <code class="code">board</code>. Raises: IllegalMove if any move in <code class="code">moves</code> is illegal, 
+    IllegalPiece if any move in <code class="code">moves</code> contains an invalid promotion string, 
+    and IllegalSquare if any move in <code class="code">moves</code> contains an illegal from/to square</p>
+</div>
+</div>
+
+<pre><span id="VALis_in_check"><span class="keyword">val</span> is_in_check</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">is_in_check pos</code> returns whether the current player is in check in
+    board state <code class="code">pos</code>.</p>
+</div>
+</div>
+
+<pre><span id="VALrevert_prev"><span class="keyword">val</span> revert_prev</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> int -> <a href="Board.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">revert_prev board x</code> moves the game back <code class="code">x</code> moves. Requires: x is less 
+    than the fullmove clock of <code class="code">board</code></p>
+</div>
+</div>
+
+<pre><span id="VALfullmove_clock"><span class="keyword">val</span> fullmove_clock</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> int</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">get_turn_num t</code> returns the current turn number of t</p>
+</div>
+</div>
+
+<pre><span id="VALmove_generator"><span class="keyword">val</span> move_generator</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> string list</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">move_generator t</code> returns the possible moves of pos t</p>
+</div>
+</div>
+
+<pre><span id="VALcheckmate"><span class="keyword">val</span> checkmate</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">checkmate t</code> returns true if the player is checkmated</p>
+</div>
+</div>
+
+<pre><span id="VALdraw"><span class="keyword">val</span> draw</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">draw t</code> returns true if the player to move can claim a draw, else
+   false</p>
+</div>
+</div>
+
+<pre><span id="VALinsufficient_material"><span class="keyword">val</span> insufficient_material</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">insufficient_material t</code> returns true if the player to move can claim a draw by insufficient material, else false</p>
+</div>
+</div>
+
+<pre><span id="VALthreefold_repetition"><span class="keyword">val</span> threefold_repetition</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">threefold_repetition t</code> returns true if the player to move can claim a draw by threefold repetition, else false</p>
+</div>
+</div>
+
+<pre><span id="VALfiftyfold_rule"><span class="keyword">val</span> fiftyfold_rule</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">fiftyfold_rule t</code> returns true if the player to move can claim a draw by the fiftyfold rule</p>
+</div>
+</div>
+
+<pre><span id="VALget_moves"><span class="keyword">val</span> get_moves</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> (string * string) list</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code"> get_moves t</code> returns the moves made in the game so far in the form ('<code class="code">a-g</code><code class="code">1-8</code><code class="code">a-g</code><code class="code">1-8</code>', promote_str)</p>
+</div>
+</div>
+
+<pre><span id="VALto_fen"><span class="keyword">val</span> to_fen</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">to_fen t</code> returns the FEN representation of <code class="code">t</code></p>
+</div>
+</div>
+
+<pre><span id="VALdraw_board"><span class="keyword">val</span> draw_board</span> : <code class="type"><a href="Board.html#TYPEt">t</a> -> unit</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">draw_board t</code> draws the current chess piece position on the open graphics context</p>
+</div>
+</div>
+</body></html>

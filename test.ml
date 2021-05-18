@@ -39,7 +39,10 @@
    only that it makes reasonable ones with the information given.
    Through this, we ensured that the underlying functionality of our
    chess game in board.ml, and then that the method in which the user
-   interacts with this functionality is also correct.*)
+   interacts with this functionality is also correct. As we write this,
+   our bisect coverage of board.ml is 98% and we have done countless
+   runs through the software, giving us confidence that this strategy
+   has been implemented to its fullest.*)
 
 open OUnit2
 open Board
@@ -665,7 +668,7 @@ let b_no_queenside =
   "r3k2r/pppn2pp/4bp2/2Q1p3/4P3/2NB4/PPPP1PPP/R1B1K2R b KQk - 0 1"
 
 let b_no_kingside =
-  "r3k2r/pppn2pp/4bp2/3Qp3/4P3/2NB4/PPPP1PPP/R1B1K2R b KQ - 0 1"
+  "r3k2r/pppn2pp/4bp2/3Qp3/4P3/2NB4/PPPP1PPP/R1B1K2R b KQq - 0 1"
 
 let wh_cstl_thr_chk =
   "rnb2k1r/pppQ1ppp/8/2b1p3/2B1P3/2Nq4/PPPP1PPP/R1B1K2R w KQkq - 0 1"
@@ -758,7 +761,7 @@ let king_tests =
     move_throws "King cannot move two SE" only_king "e4g2"
       "King can only move one spot when not castling";
     move_throws "King cannot move like a knight" only_king "e4c3"
-      "King cannot move in that direction";
+      "Illegal move for a king";
     move_throws "King cannot move backwards along a check"
       wh_king_along_chk "f7e8" "Invalid move, you are in check!";
     move_no_throw "King can move up one" only_king "e4e5" "e5" "K";
@@ -1860,8 +1863,6 @@ let to_fen_tests =
 
 let revert_tester name expected board i =
   let final_board = revert_prev board i in
-  print_endline (Board.to_string final_board);
-  print_endline (Board.to_string board);
   name >:: fun _ ->
   assert_bool "Reverted board and normal board were not equal"
     (Board.equals final_board expected)

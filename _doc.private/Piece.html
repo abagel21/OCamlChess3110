@@ -1,0 +1,143 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="next" href="Board.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Piece" rel="Chapter" href="Piece.html">
+<link title="Board" rel="Chapter" href="Board.html">
+<link title="Minimax" rel="Chapter" href="Minimax.html">
+<link title="Main" rel="Chapter" href="Main.html"><title>Piece</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Board.html" title="Board">Next</a>
+</div>
+<h1>Module <a href="type_Piece.html">Piece</a></h1>
+
+<pre><span id="MODULEPiece"><span class="keyword">module</span> Piece</span>: <code class="code">sig</code> <a href="Piece.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Representation of static chess pieces.</p>
+
+<p>This module represents the chess pieces used by the game state and
+    board.</p>
+</div>
+</div>
+<hr width="100%">
+
+<pre><span id="TYPEcolor_id"><span class="keyword">type</span> <code class="type"></code>color_id</span> = <code class="type">bool</code> </pre>
+<div class="info ">
+<div class="info-desc">
+<p>The type of the color of a piece</p>
+</div>
+</div>
+
+
+<pre><code><span id="TYPEpiece_id"><span class="keyword">type</span> <code class="type"></code>piece_id</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpiece_id.Pawn"><span class="constructor">Pawn</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpiece_id.Knight"><span class="constructor">Knight</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpiece_id.Bishop"><span class="constructor">Bishop</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpiece_id.Rook"><span class="constructor">Rook</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpiece_id.Queen"><span class="constructor">Queen</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpiece_id.King"><span class="constructor">King</span></span></code></td>
+
+</tr></table>
+
+<div class="info ">
+<div class="info-desc">
+<p>The type of piece identifier</p>
+</div>
+</div>
+
+
+<pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.color">color</span>&nbsp;: <code class="type"><a href="Piece.html#TYPEcolor_id">color_id</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.piece_id">piece_id</span>&nbsp;: <code class="type"><a href="Piece.html#TYPEpiece_id">piece_id</a></code>;</code></td>
+
+</tr></table>
+<code>}</code>
+
+
+
+<pre><span id="VALmake_piece"><span class="keyword">val</span> make_piece</span> : <code class="type"><a href="Piece.html#TYPEcolor_id">color_id</a> -> <a href="Piece.html#TYPEpiece_id">piece_id</a> -> <a href="Piece.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">make_piece c piece_id</code> creates a piece of type <code class="code">piece_id</code> belonging
+    to player <code class="code">c</code>.</p>
+</div>
+</div>
+
+<pre><span id="VALget_color"><span class="keyword">val</span> get_color</span> : <code class="type"><a href="Piece.html#TYPEt">t</a> -> <a href="Piece.html#TYPEcolor_id">color_id</a></code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">get_color t</code> returns the color of <code class="code">t</code>.</p>
+</div>
+</div>
+
+<pre><span id="VALget_piece"><span class="keyword">val</span> get_piece</span> : <code class="type"><a href="Piece.html#TYPEt">t</a> -> <a href="Piece.html#TYPEpiece_id">piece_id</a></code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">get_piece t</code> returns the type of piece of <code class="code">t</code>.</p>
+</div>
+</div>
+
+<pre><span id="VALfen_of_pieces"><span class="keyword">val</span> fen_of_pieces</span> : <code class="type">(<a href="Piece.html#TYPEpiece_id">piece_id</a> * string) list</code></pre><div class="info ">
+<div class="info-desc">
+<p>The associated FEN representations of pieces.</p>
+</div>
+</div>
+
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Piece.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p><code class="code">to_string t</code> returns the FEN representation of piece <code class="code">t</code>.</p>
+</div>
+</div>
+</body></html>

@@ -395,32 +395,30 @@ let knight_attack pos rank col color =
 
 (**[king_attack pos rank col color] returns true if sqr is attacked by a
    king, else false*)
-let king_attack pos rank col color =
+let king_attack pos (rank, col) color =
   let ksqr = if color then pos.bking else pos.wking in
-  match ksqr with
-  | krank, kcol ->
-      if abs (krank - rank) <= 1 && abs (kcol - col) <= 1 then true
-      else false
+  let krank, kcol = ksqr in
+  if abs (krank - rank) <= 1 && abs (kcol - col) <= 1 then true
+  else false
 
 (**[attacked_square pos sqr color] returns true if [sqr] is attacked by
    a piece of [color] in [pos], including [k] if the pieces is a king*)
 let attacked_square pos sqr color k =
-  match sqr with
-  | rank, col ->
-      let perp = perp_attack pos rank col color k in
-      let diag = diag_attack pos rank col color k in
-      let pawn = pawn_attack pos rank col color in
-      let knight = knight_attack pos rank col color in
-      perp || diag || pawn || knight
+  let rank, col = sqr in
+  let perp = perp_attack pos rank col color k in
+  let diag = diag_attack pos rank col color k in
+  let pawn = pawn_attack pos rank col color in
+  let knight = knight_attack pos rank col color in
+  perp || diag || pawn || knight
 
-let rv_rank_util a pos col i_start i_final =
+let rook_rank_util a pos col i_start i_final =
   for i = i_start to i_final do
     match get_piece_internal (i, col) pos with
     | None -> a := !a && true
     | Some k -> a := !a && false
   done
 
-let rv_col_util a pos rank i_start i_final =
+let rook_col_util a pos rank i_start i_final =
   for i = i_start to i_final do
     match get_piece_internal (rank, i) pos with
     | None -> a := !a && true
@@ -434,50 +432,48 @@ let rook_valid_helper pos from_sqr to_sqr =
   let (frank, fcol), (trank, tcol) = (from_sqr, to_sqr) in
   if frank = trank || fcol = tcol then
     if frank = trank && fcol < tcol then
-      rv_col_util a pos frank (fcol + 1) (tcol - 1)
+      rook_col_util a pos frank (fcol + 1) (tcol - 1)
     else if frank = trank && tcol < fcol then
-      rv_col_util a pos frank (tcol + 1) (fcol - 1)
+      rook_col_util a pos frank (tcol + 1) (fcol - 1)
     else if fcol = tcol && frank < trank then
-      rv_rank_util a pos fcol (frank + 1) (trank - 1)
-    else rv_rank_util a pos fcol (trank + 1) (frank - 1)
+      rook_rank_util a pos fcol (frank + 1) (trank - 1)
+    else rook_rank_util a pos fcol (trank + 1) (frank - 1)
   else a := !a && false;
   !a
+
+let bishop_inc_helper res i_start i_final frank fcol pos =
+  for i = i_start to i_final do
+    match get_piece_internal (frank + i, fcol + i) pos with
+    | None -> res := !res && true
+    | Some k -> res := !res && false
+  done
+
+let bishop_dec_helper res i_start i_final frank fcol pos =
+  for i = i_start to i_final do
+    match get_piece_internal (frank + i, fcol - i) pos with
+    | None -> res := !res && true
+    | Some k -> res := !res && false
+  done
+
+let check_diags res pos (frank, fcol) (trank, tcol) inc_end =
+  if frank < trank then
+    if fcol < tcol then
+      bishop_inc_helper res 1 (inc_end - 1) frank fcol pos
+    else bishop_dec_helper res 1 (inc_end - 1) frank fcol pos
+  else if fcol > tcol then
+    bishop_inc_helper res (inc_end + 1) (-1) frank fcol pos
+  else bishop_dec_helper res (inc_end + 1) (-1) frank fcol pos
 
 (**[bishop_valid_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a bishop*)
 let bishop_valid_helper pos from_sqr to_sqr =
-  let a = ref true in
-  match (from_sqr, to_sqr) with
-  | (frank, fcol), (trank, tcol) ->
-      if abs (trank - frank) <> abs (tcol - fcol) then false
-      else
-        let b = trank - frank in
-        if frank < trank then
-          if fcol < tcol then
-            for i = 1 to b - 1 do
-              match get_piece_internal (frank + i, fcol + i) pos with
-              | None -> a := !a && true
-              | Some k -> a := !a && false
-            done
-          else
-            for i = 1 to b - 1 do
-              match get_piece_internal (frank + i, fcol - i) pos with
-              | None -> a := !a && true
-              | Some k -> a := !a && false
-            done
-        else if fcol > tcol then
-          for i = b + 1 to -1 do
-            match get_piece_internal (frank + i, fcol + i) pos with
-            | None -> a := !a && true
-            | Some k -> a := !a && false
-          done
-        else
-          for i = b + 1 to -1 do
-            match get_piece_internal (frank + i, fcol - i) pos with
-            | None -> a := !a && true
-            | Some k -> a := !a && false
-          done;
-        !a
+  let res = ref true in
+  let (frank, fcol), (trank, tcol) = (from_sqr, to_sqr) in
+  if abs (trank - frank) <> abs (tcol - fcol) then false
+  else
+    let inc_end = trank - frank in
+    check_diags res pos (frank, fcol) (trank, tcol) inc_end;
+    !res
 
 (**[knight_valid_helper pos from_sqr to_sqr] ensures that the move
    (from_sqr, to_sqr) is legal for a knight and if so, executes the move
@@ -505,95 +501,71 @@ let is_rook x (pos : t) =
     match c with Rook -> b == d | _ -> false
   else false
 
-let check_castle pos frank trank =
-  if get_turn pos then
-    if frank > trank then
-      if
-        match pos.castling with
-        | { wk; wq; bk; bq } ->
-            wk
-            && is_rook pos.board.(0).(0) pos
-            && rook_valid_helper pos (frank, 0) (0, 0)
-      then
-        if
-          (not
-             (attacked_square pos (2, 0)
-                (not (get_turn pos))
-                (get_piece_internal (4, 0) pos)))
-          && not
-               (attacked_square pos (3, 0)
-                  (not (get_turn pos))
-                  (get_piece_internal (4, 0) pos))
-        then true
-        else raise (IllegalMove "King cannot castle through check")
-      else raise (IllegalMove "White king cannot castle queenside")
-    else if
-      match pos.castling with
-      | { wk; wq; bk; bq } ->
-          wq
-          && is_rook pos.board.(7).(0) pos
-          && rook_valid_helper pos (frank, 0) (7, 0)
-    then
-      if
-        (not
-           (attacked_square pos (6, 0)
-              (not (get_turn pos))
-              (get_piece_internal (4, 0) pos)))
-        && not
-             (attacked_square pos (5, 0)
-                (not (get_turn pos))
-                (get_piece_internal (4, 0) pos))
-      then true
-      else raise (IllegalMove "King cannot castle through check")
-    else raise (IllegalMove "White king cannot castle kingside")
-  else if frank > trank then
-    if
-      match pos.castling with
-      | { wk; wq; bk; bq } ->
-          bq
-          && is_rook pos.board.(0).(7) pos
-          && rook_valid_helper pos (frank, 7) (0, 7)
-    then
-      if
-        (not
-           (attacked_square pos (2, 7)
-              (not (get_turn pos))
-              (get_piece_internal (4, 7) pos)))
-        && not
-             (attacked_square pos (3, 7)
-                (not (get_turn pos))
-                (get_piece_internal (4, 7) pos))
-      then true
-      else raise (IllegalMove "King cannot castle through check")
-    else raise (IllegalMove "Black king cannot castle queenside")
-  else if
-    match pos.castling with
-    | { wk; wq; bk; bq } ->
-        bk
-        && is_rook pos.board.(7).(7) pos
-        && rook_valid_helper pos (frank, 7) (7, 7)
+let check_castling_squares (rank, col) (krank, kcol) pos =
+  not
+    (attacked_square pos (rank, col)
+       (not (get_turn pos))
+       (get_piece_internal (krank, kcol) pos))
+
+let get_wk pos = match pos.castling with { wk; wq; bk; bq } -> wk
+
+let get_wq pos = match pos.castling with { wk; wq; bk; bq } -> wq
+
+let get_bk pos = match pos.castling with { wk; wq; bk; bq } -> bk
+
+let get_bq pos = match pos.castling with { wk; wq; bk; bq } -> bq
+
+(**[check_rights_and_rooks pos rsqr to_sqr cstl_rights] returns true if
+   the player of pos has castling rights andthe rook is in the correct
+   place for castling and the path for castling is clear of other pieces*)
+let check_rights_and_rooks pos (rrank, rcol) (trank, tcol) cstl_right =
+  cstl_right
+  && is_rook pos.board.(rrank).(rcol) pos
+  && rook_valid_helper pos (trank, tcol) (rrank, rcol)
+
+let cstl_passes
+    pos
+    turn
+    right
+    (krank, kcol)
+    (rrank, rcol)
+    fst_cmp
+    frank
+    cstl_right =
+  let turn_str = if turn then "White" else "Black" in
+  let side_str = if right then "king" else "queen" in
+  if check_rights_and_rooks pos (rrank, rcol) (frank, rcol) cstl_right
   then
     if
-      (not
-         (attacked_square pos (6, 7)
-            (not (get_turn pos))
-            (get_piece_internal (4, 7) pos)))
-      && not
-           (attacked_square pos (5, 7)
-              (not (get_turn pos))
-              (get_piece_internal (4, 7) pos))
+      check_castling_squares (fst_cmp, kcol) (krank, kcol) pos
+      && check_castling_squares (fst_cmp + 1, kcol) (krank, kcol) pos
     then true
     else raise (IllegalMove "King cannot castle through check")
-  else raise (IllegalMove "Black king cannot castle kingside")
+  else
+    raise
+      (IllegalMove
+         (turn_str ^ " king cannot castle " ^ side_str ^ "side"))
+
+(**[can_castle pos frank trank turn right] returns true if [pos] can
+   castle on the right if [right], or on the left if [not right] *)
+let can_castle pos frank trank turn right =
+  if turn then
+    if right then
+      cstl_passes pos turn right (4, 0) (7, 0) 5 frank (get_wk pos)
+    else cstl_passes pos turn right (4, 0) (0, 0) 2 frank (get_wq pos)
+  else if right then
+    cstl_passes pos turn right (4, 7) (7, 7) 5 frank (get_bk pos)
+  else cstl_passes pos turn right (4, 7) (0, 7) 2 frank (get_bq pos)
+
+let check_castle pos frank trank =
+  can_castle pos frank trank (get_turn pos) (frank <= trank)
 
 (**[king_valid_helper pos from_sqr to_sqr] verifies that the moves
    (from_sqr, to_sqr) is a legal move for a king*)
 let king_valid_helper pos from_sqr to_sqr =
-  let frank = fst from_sqr in
-  let fcol = snd from_sqr in
-  let trank = fst to_sqr in
-  let tcol = snd to_sqr in
-  if king_attack pos (fst to_sqr) (snd to_sqr) (get_turn pos) then
+  let frank, fcol = from_sqr in
+  let trank, tcol = to_sqr in
+  if king_attack pos to_sqr (get_turn pos) then
     raise (IllegalMove "King cannot move adjacent to enemy king")
   else if bishop_valid_helper pos from_sqr to_sqr then
     if abs (frank - trank) + abs (fcol - tcol) = 2 then true
@@ -609,25 +581,25 @@ let king_valid_helper pos from_sqr to_sqr =
     else
       raise
         (IllegalMove "King can only move one spot when not castling")
-  else raise (IllegalMove "King cannot move in that direction")
+  else raise (IllegalMove "Illegal move for a king")
+
+let set_castling_helper pos from_sqr =
+  if snd from_sqr = 0 then
+    if fst from_sqr = 0 then { pos.castling with wq = false }
+    else if fst from_sqr = 7 then { pos.castling with wk = false }
+    else pos.castling
+  else if snd from_sqr = 7 then
+    if fst from_sqr = 0 then { pos.castling with bq = false }
+    else if fst from_sqr = 7 then { pos.castling with bk = false }
+    else pos.castling
+  else pos.castling
 
 let set_castling pos from_sqr =
   match get_piece_internal from_sqr pos with
   | None -> raise (IllegalMove "Illegal from square")
   | Some k -> (
       match Piece.get_piece k with
-      | Rook ->
-          if snd from_sqr = 0 then
-            if fst from_sqr = 0 then { pos.castling with wq = false }
-            else if fst from_sqr = 7 then
-              { pos.castling with wk = false }
-            else pos.castling
-          else if snd from_sqr = 7 then
-            if fst from_sqr = 0 then { pos.castling with bq = false }
-            else if fst from_sqr = 7 then
-              { pos.castling with bk = false }
-            else pos.castling
-          else pos.castling
+      | Rook -> set_castling_helper pos from_sqr
       | _ -> pos.castling )
 
 let sqr_to_str sqr =
