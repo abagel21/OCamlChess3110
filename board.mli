@@ -119,6 +119,9 @@ val move_generator : t -> string list
 (** [checkmate t] returns true if the player is checkmated *)
 val checkmate : t -> bool
 
+(**[stalemate t] returns true if the player is stalemated*)
+val stalemate : t -> bool
+
 (**[draw t] returns true if the player to move can claim a draw, else
    false*)
 val draw : t -> bool

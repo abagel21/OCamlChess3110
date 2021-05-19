@@ -1477,6 +1477,15 @@ let avail_move_pawn_one piece pos checked =
     | Some k -> ""
   else ""
 
+let pawn_two_helper pos to_sqr piece checked pawn_inc =
+  if
+    if checked then
+      (not (mv_and_chck pos piece to_sqr (get_turn pos)))
+      || is_king (extract_opt (get_piece_internal piece pos))
+    else true
+  then sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + pawn_inc)
+  else ""
+
 let avail_move_pawn_two piece pos checked =
   if (pos.turn && snd piece = 1) || ((not pos.turn) && snd piece = 6)
   then
@@ -1486,17 +1495,22 @@ let avail_move_pawn_two piece pos checked =
       rook_valid_helper pos piece to_sqr
       && get_piece_internal to_sqr pos = None
       && not (will_be_checked pos piece to_sqr)
-    then
-      if
-        if checked then
-          (not (mv_and_chck pos piece to_sqr (get_turn pos)))
-          || is_king (extract_opt (get_piece_internal piece pos))
-        else true
-      then
-        sqr_to_str piece ^ sqr_to_str (fst piece, snd piece + pawn_inc)
-      else ""
+    then pawn_two_helper pos to_sqr piece checked pawn_inc
     else ""
   else ""
+
+let pawn_diag_helper pos to_sqr piece =
+  match get_piece_internal to_sqr pos with
+  | Some k -> sqr_to_str piece ^ sqr_to_str to_sqr
+  | None ->
+      if to_sqr = pos.ep then sqr_to_str piece ^ sqr_to_str to_sqr
+      else ""
+
+let can_move pos to_sqr piece checked =
+  if checked then
+    (not (mv_and_chck pos piece to_sqr (get_turn pos)))
+    || is_king (extract_opt (get_piece_internal piece pos))
+  else true
 
 let avail_move_pawn_diag piece pos x checked =
   let pawn_inc = if pos.turn then 1 else -1 in
@@ -1507,17 +1521,8 @@ let avail_move_pawn_diag piece pos x checked =
     && (not (will_be_checked pos piece to_sqr))
     && verify_enemy_or_empty pos to_sqr
   then
-    if
-      if checked then
-        (not (mv_and_chck pos piece to_sqr (get_turn pos)))
-        || is_king (extract_opt (get_piece_internal piece pos))
-      else true
-    then
-      match get_piece_internal to_sqr pos with
-      | Some k -> sqr_to_str piece ^ sqr_to_str to_sqr
-      | None ->
-          if to_sqr = pos.ep then sqr_to_str piece ^ sqr_to_str to_sqr
-          else ""
+    if can_move pos to_sqr piece checked then
+      pawn_diag_helper pos to_sqr piece
     else ""
   else ""
 
@@ -1542,14 +1547,10 @@ let avail_move_diag piece pos x y checked =
         && bishop_valid_helper pos piece to_sqr
         && (not (will_be_checked pos piece to_sqr))
         && verify_enemy_or_empty pos to_sqr )
-    then move_arr := !move_arr
-    else if
-      if checked then
-        (not (mv_and_chck pos piece to_sqr (get_turn pos)))
-        || is_king (extract_opt (get_piece_internal piece pos))
-      else true
-    then move_arr := (sqr_to_str piece ^ sqr_to_str to_sqr) :: !move_arr
-    else move_arr := !move_arr
+    then ()
+    else if can_move pos to_sqr piece checked then
+      move_arr := (sqr_to_str piece ^ sqr_to_str to_sqr) :: !move_arr
+    else ()
   done;
   !move_arr
 
@@ -1567,12 +1568,8 @@ let avail_knight piece pos x y checked =
       && verify_enemy_or_empty pos to_sqr
       && not (will_be_checked pos piece to_sqr) )
   then ""
-  else if
-    if checked then
-      (not (mv_and_chck pos piece to_sqr (get_turn pos)))
-      || is_king (extract_opt (get_piece_internal piece pos))
-    else true
-  then sqr_to_str piece ^ sqr_to_str to_sqr
+  else if can_move pos to_sqr piece checked then
+    sqr_to_str piece ^ sqr_to_str to_sqr
   else ""
 
 let avail_move_knight piece pos checked =
@@ -1622,7 +1619,7 @@ let avail_move_king piece pos =
         then
           move_arr :=
             (sqr_to_str piece ^ sqr_to_str to_sqr) :: !move_arr
-      with exn -> move_arr := !move_arr
+      with exn -> ()
     done
   done;
   if not pos.checked then
@@ -1630,6 +1627,13 @@ let avail_move_king piece pos =
     :: avail_castles piece pos (-2)
     :: !move_arr
   else !move_arr
+
+let avail_aux_check pos to_sqr piece move_arr =
+  if
+    (not (mv_and_chck pos piece to_sqr (get_turn pos)))
+    || is_king (extract_opt (get_piece_internal piece pos))
+  then move_arr := (sqr_to_str piece ^ sqr_to_str to_sqr) :: !move_arr
+  else ()
 
 (** [avail_move_aux piece pos x checked dirxn] finds available moves for
     [piece] on board [pos], and checks vertical moves if [dirxn] is
@@ -1647,14 +1651,8 @@ let avail_move_aux piece pos x checked dirxn =
         && (not (will_be_checked pos piece to_sqr))
         && rook_valid_helper pos piece to_sqr
         && verify_enemy_or_empty pos to_sqr )
-    then move_arr := !move_arr
-    else if checked then
-      if
-        (not (mv_and_chck pos piece to_sqr (get_turn pos)))
-        || is_king (extract_opt (get_piece_internal piece pos))
-      then
-        move_arr := (sqr_to_str piece ^ sqr_to_str to_sqr) :: !move_arr
-      else move_arr := !move_arr
+    then ()
+    else if checked then avail_aux_check pos to_sqr piece move_arr
     else move_arr := (sqr_to_str piece ^ sqr_to_str to_sqr) :: !move_arr
   done;
   !move_arr
@@ -1695,18 +1693,21 @@ let move_generator pos =
   |> List.flatten
   |> List.filter (fun x -> x <> "")
 
+let boardstring_helper board i j inc acc =
+  match board.(j).(7 - i) with
+  | None -> inc := !inc + 1
+  | Some k ->
+      let tinc = !inc in
+      inc := 0;
+      if tinc > 0 then Buffer.add_string acc (string_of_int tinc);
+      Buffer.add_string acc (Piece.to_string k)
+
 let build_boardstring board =
   let acc = Buffer.create 64 in
   for i = 0 to 7 do
     let inc = ref 0 in
     for j = 0 to 7 do
-      match board.(j).(7 - i) with
-      | None -> inc := !inc + 1
-      | Some k ->
-          let tinc = !inc in
-          inc := 0;
-          if tinc > 0 then Buffer.add_string acc (string_of_int tinc);
-          Buffer.add_string acc (Piece.to_string k)
+      boardstring_helper board i j inc acc
     done;
     if !inc > 0 then Buffer.add_string acc (string_of_int !inc);
     if i < 7 then Buffer.add_string acc "/"
@@ -1776,7 +1777,9 @@ let check_kings pos =
 
 let checkmate pos =
   (check_kings pos && check_kings { pos with turn = not pos.turn })
-  || List.length (move_generator pos) <= 0
+  || (List.length (move_generator pos) <= 0 && is_in_check pos)
+
+let stalemate pos = List.length (move_generator pos) <= 0
 
 let mv_to_str move =
   ( sqr_to_str move.from_sqr ^ sqr_to_str move.to_sqr,
@@ -1839,6 +1842,7 @@ let draw pos =
   threefold_repetition pos
   || fiftyfold_rule pos
   || insufficient_material pos
+  || stalemate pos
 
 let get_moves pos =
   let rec gm_helper move_stack acc =

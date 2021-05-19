@@ -201,10 +201,6 @@ and move_loop str board b =
 
 and game_end board b =
   if is_in_check board then check_checkmate board b
-  else if checkmate board then (
-    ANSITerminal.print_string [ ANSITerminal.red ]
-      " Draw by stalemate! \n";
-    exit 0 )
   else if draw board then check_draw board
 
 and check_checkmate board b =
@@ -225,6 +221,10 @@ and check_draw board =
   else if fiftyfold_rule board then (
     ANSITerminal.print_string [ ANSITerminal.red ]
       " Draw by threefold repetition! \n";
+    exit 0 )
+  else if stalemate board then (
+    ANSITerminal.print_string [ ANSITerminal.red ]
+      " Draw by stalemate! \n";
     exit 0 )
   else (
     ANSITerminal.print_string [ ANSITerminal.red ]
