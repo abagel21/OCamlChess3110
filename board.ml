@@ -226,7 +226,7 @@ let sqr_from_str str =
 
 let extract_opt = function
   | Some k -> k
-  | None -> raise (IllegalPiece "Cannot extract from none")
+  | None -> raise (IllegalMove "Illegal from square")
 
 (**[verify_enemy_or_empty pos to_sqr] returns true if [to_sqr] is empty
    or occupied by an enemy piece*)
@@ -879,43 +879,40 @@ let promotion_causes_check pos square =
 let causes_discovery pos from_sqr to_sqr =
   mv_and_chck pos from_sqr to_sqr (get_turn pos)
 
+let update_pos_promote pos from_sqr to_sqr move piece move_lst =
+  {
+    pos with
+    wpieces =
+      ( if pos.turn then pos.wpieces
+      else update_pieces true pos.wpieces None piece );
+    bpieces =
+      ( if pos.turn then update_pieces false pos.bpieces None piece
+      else pos.bpieces );
+    checked =
+      promotion_causes_check { pos with turn = not pos.turn } to_sqr
+      || causes_discovery pos from_sqr to_sqr;
+    move_stack = { move with promotion = piece } :: move_lst;
+  }
+
 (**[promote square pos piece] promotes the pawn on [square] in [pos] to
    [piece]. Requires: the piece on [square] is a pawn, [square] is
    inbounds, piece is not a king or pawn*)
 let promote square pos piece =
-  match square with
-  | rank, col ->
-      if (get_turn pos && col = 0) || ((not (get_turn pos)) && col = 7)
-      then
-        match piece with
-        | None ->
-            raise
-              (IllegalMove
-                 "Must promote when moving to final rank with a pawn")
-        | Some k -> (
-            pos.board.(rank).(col) <- piece;
-            match pos.move_stack with
-            | [] -> pos
-            | ( { from_sqr; to_sqr; capture; ep; castle; promotion } as
-              move )
-              :: t ->
-                {
-                  pos with
-                  wpieces =
-                    ( if pos.turn then pos.wpieces
-                    else update_pieces true pos.wpieces None piece );
-                  bpieces =
-                    ( if pos.turn then
-                      update_pieces false pos.bpieces None piece
-                    else pos.bpieces );
-                  checked =
-                    promotion_causes_check
-                      { pos with turn = not pos.turn }
-                      to_sqr
-                    || causes_discovery pos from_sqr to_sqr;
-                  move_stack = { move with promotion = piece } :: t;
-                } )
-      else pos
+  let rank, col = square in
+  if (get_turn pos && col = 0) || ((not (get_turn pos)) && col = 7) then
+    match piece with
+    | None ->
+        raise
+          (IllegalMove
+             "Must promote when moving to final rank with a pawn")
+    | Some k -> (
+        pos.board.(rank).(col) <- piece;
+        match pos.move_stack with
+        | [] -> pos
+        | ({ from_sqr; to_sqr; capture; ep; castle; promotion } as move)
+          :: t ->
+            update_pos_promote pos from_sqr to_sqr move piece t )
+  else pos
 
 (**[pawn_double_move_helper pos from_sqr to_sqr] moves the pawn on
    [from_sqr] to [to_sqr] and updates the en passant square*)
@@ -931,33 +928,33 @@ let pawn_double_move_helper pos from_sqr to_sqr =
       else raise (IllegalMove "Illegal move for a pawn")
   | Some k -> raise (IllegalMove "Illegal move for a pawn")
 
+let pawn_capture_ep pos from_sqr to_sqr =
+  match get_piece_internal to_sqr pos with
+  | None ->
+      if to_sqr = pos.ep then move_en_passant pos from_sqr to_sqr
+      else raise (IllegalMove "Illegal move for a pawn")
+  | Some k -> move_normal_piece pos from_sqr to_sqr true false
+
 (**[pawn_valid_helper pos from_sqr to_sqr] verifies that the move
    (from_sqr, to_sqr) is a legal move for a pawn and executes it,
    returning the new state. Throws: IllegalMove if the move is illegal
    Requires: from_sqr is a pawn*)
 let pawn_valid_helper pos from_sqr to_sqr new_p =
   let next_pos =
-    match (from_sqr, to_sqr) with
-    | (frank, fcol), (trank, tcol) ->
-        if
-          (get_turn pos && tcol - fcol = 1)
-          || ((not (get_turn pos)) && tcol - fcol = -1)
-        then
-          if frank <> trank then
-            match get_piece_internal to_sqr pos with
-            | None ->
-                if to_sqr = pos.ep then
-                  move_en_passant pos from_sqr to_sqr
-                else raise (IllegalMove "Illegal move for a pawn")
-            | Some k -> move_normal_piece pos from_sqr to_sqr true false
-          else if get_piece_internal to_sqr pos = None then
-            move_normal_piece pos from_sqr to_sqr true false
-          else raise (IllegalMove "Pawn cannot take vertically")
-        else if
-          (get_turn pos && tcol - fcol = 2 && fcol = 1)
-          || ((not (get_turn pos)) && tcol - fcol = -2 && fcol = 6)
-        then pawn_double_move_helper pos from_sqr to_sqr
-        else raise (IllegalMove "Illegal move for a pawn")
+    let (frank, fcol), (trank, tcol) = (from_sqr, to_sqr) in
+    if
+      (get_turn pos && tcol - fcol = 1)
+      || ((not (get_turn pos)) && tcol - fcol = -1)
+    then
+      if frank <> trank then pawn_capture_ep pos from_sqr to_sqr
+      else if get_piece_internal to_sqr pos = None then
+        move_normal_piece pos from_sqr to_sqr true false
+      else raise (IllegalMove "Pawn cannot take vertically")
+    else if
+      (get_turn pos && tcol - fcol = 2 && fcol = 1)
+      || ((not (get_turn pos)) && tcol - fcol = -2 && fcol = 6)
+    then pawn_double_move_helper pos from_sqr to_sqr
+    else raise (IllegalMove "Illegal move for a pawn")
   in
   promote to_sqr next_pos new_p
 
@@ -969,40 +966,42 @@ let set_castles2 pos =
   if get_turn pos then { pos.castling with wq = false }
   else { pos.castling with bq = false }
 
+let cstl_move pos final_pos from_sqr to_sqr rrank rook_to_rank =
+  let frank, fcol = from_sqr in
+  let trank, tcol = to_sqr in
+  let curr_piece = pos.board.(frank).(fcol) in
+  let rook = pos.board.(rrank).(fcol) in
+  pos.board.(frank).(fcol) <- None;
+  pos.board.(trank).(tcol) <- curr_piece;
+  pos.board.(rrank).(fcol) <- None;
+  pos.board.(rook_to_rank).(fcol) <- rook;
+  add_move final_pos from_sqr to_sqr true false None None true false
+    pos.castling
+
 (**[possibly_castle pos from_sqr to_sqr] moves the king normally or
    castles depending on the call.*)
 let possibly_castle pos from_sqr to_sqr =
   let capture = get_piece_internal to_sqr pos in
   let next_pos = { pos with castling = set_castles1 pos } in
   let final_pos = { pos with castling = set_castles2 next_pos } in
-  let frank = fst from_sqr in
-  let trank = fst to_sqr in
-  let fcol = snd from_sqr in
-  let tcol = snd to_sqr in
+  let frank, fcol = from_sqr in
+  let trank, tcol = to_sqr in
   if fcol <> tcol || abs (frank - trank) <> 2 then (
     let curr_piece = pos.board.(frank).(fcol) in
     pos.board.(frank).(fcol) <- None;
     pos.board.(trank).(tcol) <- curr_piece;
     add_move final_pos from_sqr to_sqr true false None capture false
       false pos.castling )
-  else
-    let curr_piece = pos.board.(frank).(fcol) in
-    if frank > trank then (
-      let rook = pos.board.(0).(fcol) in
-      pos.board.(frank).(fcol) <- None;
-      pos.board.(trank).(tcol) <- curr_piece;
-      pos.board.(0).(fcol) <- None;
-      pos.board.(3).(fcol) <- rook;
-      add_move final_pos from_sqr to_sqr true false None None true false
-        pos.castling )
-    else
-      let rook = pos.board.(7).(fcol) in
-      pos.board.(frank).(fcol) <- None;
-      pos.board.(trank).(tcol) <- curr_piece;
-      pos.board.(7).(fcol) <- None;
-      pos.board.(5).(tcol) <- rook;
-      add_move final_pos from_sqr to_sqr true false None None true false
-        pos.castling
+  else if frank > trank then cstl_move pos final_pos from_sqr to_sqr 0 3
+  else cstl_move pos final_pos from_sqr to_sqr 7 5
+
+(**[checked_normal pos from_sqr to_sqr] is true if moving the piece on
+   [from_sqr] to [to_sqr] would place the player to move in check.
+   Requires: the piece on [from_sqr] is not a king*)
+let checked_normal pos from_sqr to_sqr =
+  if attacked_square pos from_sqr (not (get_turn pos)) None then
+    mv_and_chck pos from_sqr to_sqr (get_turn pos)
+  else false
 
 (**[will_be_checked pos from_sqr to_sqr] checks whether the player's
    move would put themself in check*)
@@ -1015,10 +1014,34 @@ let will_be_checked pos from_sqr to_sqr =
           attacked_square pos to_sqr
             (not (get_turn pos))
             (get_piece_internal from_sqr pos)
-      | _ ->
-          if attacked_square pos from_sqr (not (get_turn pos)) None then
-            mv_and_chck pos from_sqr to_sqr (get_turn pos)
-          else false )
+      | _ -> checked_normal pos from_sqr to_sqr )
+
+let chk_move_rook pos from_sqr to_sqr =
+  if rook_valid_helper pos from_sqr to_sqr then
+    move_normal_piece pos from_sqr to_sqr false false
+  else raise (IllegalMove "Illegal move for a rook")
+
+let chk_move_bishop pos from_sqr to_sqr =
+  if bishop_valid_helper pos from_sqr to_sqr then
+    move_normal_piece pos from_sqr to_sqr false false
+  else raise (IllegalMove "Illegal move for a bishop")
+
+let chk_move_knight pos from_sqr to_sqr =
+  if knight_valid_helper pos from_sqr to_sqr then
+    move_normal_piece pos from_sqr to_sqr false false
+  else raise (IllegalMove "Illegal move for a knight")
+
+let chk_move_queen pos from_sqr to_sqr =
+  if queen_valid_helper pos from_sqr to_sqr then
+    move_normal_piece pos from_sqr to_sqr false false
+  else raise (IllegalMove "Illegal move for a queen")
+
+let chk_move_king pos from_sqr to_sqr =
+  if king_valid_helper pos from_sqr to_sqr then
+    if not (will_be_checked pos from_sqr to_sqr) then
+      possibly_castle pos from_sqr to_sqr
+    else raise (IllegalMove "Cannot move yourself into check")
+  else raise (IllegalMove "Illegal move for a king")
 
 (**[check_and_move piece pos from_sqr to_sqr] moves the piece [piece]
    from [from_sqr] to [to_sqr] in [pos] if it is a legal move for
@@ -1029,28 +1052,11 @@ let will_be_checked pos from_sqr to_sqr =
 let check_and_move piece pos from_sqr to_sqr new_p =
   match Piece.get_piece piece with
   | Pawn -> pawn_valid_helper pos from_sqr to_sqr new_p
-  | Knight ->
-      if knight_valid_helper pos from_sqr to_sqr then
-        move_normal_piece pos from_sqr to_sqr false false
-      else raise (IllegalMove "Illegal move for a knight")
-  | Bishop ->
-      if bishop_valid_helper pos from_sqr to_sqr then
-        move_normal_piece pos from_sqr to_sqr false false
-      else raise (IllegalMove "Illegal move for a bishop")
-  | Rook ->
-      if rook_valid_helper pos from_sqr to_sqr then
-        move_normal_piece pos from_sqr to_sqr false false
-      else raise (IllegalMove "Illegal move for a rook")
-  | Queen ->
-      if queen_valid_helper pos from_sqr to_sqr then
-        move_normal_piece pos from_sqr to_sqr false false
-      else raise (IllegalMove "Illegal move for a queen")
-  | King ->
-      if king_valid_helper pos from_sqr to_sqr then
-        if not (will_be_checked pos from_sqr to_sqr) then
-          possibly_castle pos from_sqr to_sqr
-        else raise (IllegalMove "Cannot move yourself into check")
-      else raise (IllegalMove "Illegal move for a king")
+  | Knight -> chk_move_knight pos from_sqr to_sqr
+  | Bishop -> chk_move_bishop pos from_sqr to_sqr
+  | Rook -> chk_move_rook pos from_sqr to_sqr
+  | Queen -> chk_move_queen pos from_sqr to_sqr
+  | King -> chk_move_king pos from_sqr to_sqr
 
 (**[is_king piece] returns true if the option piece is a king,else false*)
 let is_king piece =
@@ -1061,12 +1067,12 @@ let is_king piece =
    returns the new state if the move is legal, else returns [pos]
    Precondition: [piece] is owned by the current player of [pos], the
    current player of [pos] is in check *)
-let checked_move piece pos from_sqr to_sqr new_p : t =
-  let a =
+let checked_move piece pos from_sqr to_sqr new_p =
+  let can_move =
     if is_king piece then not (will_be_checked pos from_sqr to_sqr)
     else not (mv_and_chck pos from_sqr to_sqr (get_turn pos))
   in
-  if a then check_and_move piece pos from_sqr to_sqr new_p
+  if can_move then check_and_move piece pos from_sqr to_sqr new_p
   else raise (IllegalMove "Invalid move, you are in check!")
 
 (**[move_helper piece pos from_sqr to_sqr] moves the piece [piece] from
@@ -1113,12 +1119,8 @@ let move str promote_str pos =
            "Cannot move piece to the square it is currently at")
     else
       let piece = get_piece_internal from_sqr pos in
-      match piece with
-      | None ->
-          raise
-            (IllegalMove
-               (trm_str ^ " does not contain a valid from square"))
-      | Some k -> move_helper k pos from_sqr to_sqr new_p
+      let pc = extract_opt piece in
+      move_helper pc pos from_sqr to_sqr new_p
   else
     raise
       (IllegalMove

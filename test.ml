@@ -1071,7 +1071,7 @@ let general_move_tests =
     move_throws "moving piece to its current square throws" qpin8 "g6g6"
       "Cannot move piece to the square it is currently at";
     move_throws "trying to move from an empty square throws" qpin8
-      "a8b8" "a8b8 does not contain a valid from square";
+      "a8b8" "Illegal from square";
     move_throws "Can't move any piece but the king" checked_state "e8e7"
       "Invalid move, you are in check!";
     check_false "Pawn moving forward shouldn't check king"
