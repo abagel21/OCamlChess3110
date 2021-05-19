@@ -1139,19 +1139,44 @@ let letter chr =
    string, a partially constructed position, and the index where the
    castling rights string ends and returns a boolean array of length 4
    storing the castling rights*)
-let fen_parse_castling str pos =
-  let castling = { wk = false; wq = false; bk = false; bq = false } in
-  let rec castling_parser str castling num =
-    if num = -1 then castling
-    else
-      match str.[num] with
-      | 'K' -> castling_parser str { castling with wk = true } (num - 1)
-      | 'Q' -> castling_parser str { castling with wq = true } (num - 1)
-      | 'q' -> castling_parser str { castling with bq = true } (num - 1)
-      | 'k' -> castling_parser str { castling with bk = true } (num - 1)
-      | _ -> castling_parser str castling (num - 1)
-  in
-  castling_parser str castling (String.length str - 1)
+let fen_parse_castling split_lst pos =
+  match split_lst with
+  | [] -> raise (IllegalFen "FEN does not contain castling information")
+  | cstl :: t ->
+      let castling =
+        { wk = false; wq = false; bk = false; bq = false }
+      in
+      let rec castling_parser str castling num =
+        if num = -1 then castling
+        else
+          match str.[num] with
+          | 'K' ->
+              castling_parser str { castling with wk = true } (num - 1)
+          | 'Q' ->
+              castling_parser str { castling with wq = true } (num - 1)
+          | 'q' ->
+              castling_parser str { castling with bq = true } (num - 1)
+          | 'k' ->
+              castling_parser str { castling with bk = true } (num - 1)
+          | _ -> castling_parser str castling (num - 1)
+      in
+      castling_parser cstl castling (String.length cstl - 1)
+
+let fen_parse_ep splt_lst pos =
+  match splt_lst with
+  | cstl :: ep :: t -> if ep = "-" then (-1, -1) else sqr_from_str ep
+  | _ ->
+      raise (IllegalFen "FEN does not contain en passant information")
+
+let fen_parse_halfmove splt_lst pos =
+  match splt_lst with
+  | cstl :: ep :: hlfmv :: t -> int_of_string hlfmv
+  | _ -> raise (IllegalFen "FEN does not contain halfmove clock")
+
+let fen_parse_fullmove splt_lst pos =
+  match splt_lst with
+  | cstl :: ep :: hlfmv :: fllmv :: t -> int_of_string fllmv
+  | _ -> raise (IllegalFen "FEN does not contain fullmove clock")
 
 (**[fen_parse_other str pos] takes in a position with board array parsed
    from [str] and adds the en passant, castling, and turn information*)
@@ -1160,40 +1185,42 @@ let fen_parse_other str pos =
   let split =
     String.split_on_char ' ' (String.sub str 2 (String.length str - 2))
   in
-  match split with
-  | [] -> raise (IllegalFen "FEN does not contain castling information")
-  | h :: t -> (
-      let castling = fen_parse_castling h pos in
-      match t with
-      | [] ->
-          raise
-            (IllegalFen "FEN does not contain en passant information")
-      | h :: t ->
-          let ep = if h = "-" then (-1, -1) else sqr_from_str h in
-          let hlfmove =
-            match t with
-            | [] ->
-                raise (IllegalFen "FEN does not contain halfmove clock")
-            | h :: t -> int_of_string h
-          in
-          let fullmove =
-            match t with
-            | h :: h2 :: t -> int_of_string h2
-            | _ ->
-                raise (IllegalFen "FEN does not contain fullmove clock")
-          in
-          {
-            pos with
-            turn;
-            castling;
-            ep;
-            checked =
-              attacked_square pos
-                (if turn then pos.wking else pos.bking)
-                (not turn) None;
-            halfmove_clock = hlfmove;
-            fullmove_clock = fullmove;
-          } )
+  let castling = fen_parse_castling split pos in
+  let ep = fen_parse_ep split pos in
+  let hlfmove = fen_parse_halfmove split pos in
+  let fullmove = fen_parse_fullmove split pos in
+  {
+    pos with
+    turn;
+    castling;
+    ep;
+    checked =
+      attacked_square pos
+        (if turn then pos.wking else pos.bking)
+        (not turn) None;
+    halfmove_clock = hlfmove;
+    fullmove_clock = fullmove;
+  }
+
+let inc_piece pos color pc =
+  let wpieces, bpieces = (pos.wpieces, pos.bpieces) in
+  match Piece.get_piece pc with
+  | Pawn ->
+      if color then { wpieces with pawns = pos.wpieces.pawns + 1 }
+      else { bpieces with pawns = pos.bpieces.pawns + 1 }
+  | Knight ->
+      if color then { wpieces with knights = pos.wpieces.knights + 1 }
+      else { bpieces with knights = pos.bpieces.knights + 1 }
+  | Bishop ->
+      if color then { wpieces with bishops = pos.wpieces.bishops + 1 }
+      else { bpieces with bishops = pos.bpieces.bishops + 1 }
+  | Rook ->
+      if color then { wpieces with rooks = pos.wpieces.rooks + 1 }
+      else { bpieces with rooks = pos.bpieces.rooks + 1 }
+  | Queen ->
+      if color then { wpieces with queens = pos.wpieces.queens + 1 }
+      else { bpieces with queens = pos.bpieces.queens + 1 }
+  | King -> if color then wpieces else bpieces
 
 let adjust_pieces pos piece =
   let pc =
@@ -1201,28 +1228,16 @@ let adjust_pieces pos piece =
     | None -> raise (IllegalFen "A piece was none")
     | Some k -> k
   in
-  let c = Piece.get_color pc in
-  let pieces =
-    match Piece.get_piece pc with
-    | Pawn ->
-        if c then { pos.wpieces with pawns = pos.wpieces.pawns + 1 }
-        else { pos.bpieces with pawns = pos.bpieces.pawns + 1 }
-    | Knight ->
-        if c then { pos.wpieces with knights = pos.wpieces.knights + 1 }
-        else { pos.bpieces with knights = pos.bpieces.knights + 1 }
-    | Bishop ->
-        if c then { pos.wpieces with bishops = pos.wpieces.bishops + 1 }
-        else { pos.bpieces with bishops = pos.bpieces.bishops + 1 }
-    | Rook ->
-        if c then { pos.wpieces with rooks = pos.wpieces.rooks + 1 }
-        else { pos.bpieces with rooks = pos.bpieces.rooks + 1 }
-    | Queen ->
-        if c then { pos.wpieces with queens = pos.wpieces.queens + 1 }
-        else { pos.bpieces with queens = pos.bpieces.queens + 1 }
-    | King -> if c then pos.wpieces else pos.bpieces
-  in
-  if c then { pos with wpieces = pieces }
+  let color = Piece.get_color pc in
+  let pieces = inc_piece pos color pc in
+  if color then { pos with wpieces = pieces }
   else { pos with bpieces = pieces }
+
+let adj_king color is_king king_color nk king (rank, col) =
+  is_king := true;
+  king_color := color;
+  nk := (rank, col);
+  king
 
 (**[load_fen_helper str pos rank col ind] is a recursive helper for
    turning a FEN string into a board. It returns a new position with the
@@ -1249,49 +1264,40 @@ let rec load_fen_helper str pos rank col ind =
              ( Char.escaped str.[ind]
              ^ " is not a valid FEN number or symbol" ))
 
-and letter_fen_matching str pos rank col prevind nextind =
+and letter_fen_matching str pos rank col prev_ind next_ind =
   let nk = ref (-1, -1) in
   let king_color = ref false in
   let is_king = ref false in
+  let chr = str.[prev_ind] in
+  let err = Char.escaped chr ^ " is not a valid FEN letter" in
   let piece =
-    match str.[prevind] with
-    | 'p' -> bpawn
-    | 'r' -> brook
-    | 'n' -> bknight
-    | 'b' -> bbishop
-    | 'q' -> bqueen
+    match Char.lowercase_ascii chr with
+    | 'p' -> if chr = 'p' then bpawn else wpawn
+    | 'r' -> if chr = 'r' then brook else wrook
+    | 'n' -> if chr = 'n' then bknight else wknight
+    | 'b' -> if chr = 'b' then bbishop else wbishop
+    | 'q' -> if chr = 'q' then bqueen else wqueen
     | 'k' ->
-        is_king := true;
-        king_color := false;
-        nk := (rank, col);
-        blking
-    | 'P' -> wpawn
-    | 'R' -> wrook
-    | 'N' -> wknight
-    | 'B' -> wbishop
-    | 'Q' -> wqueen
-    | 'K' ->
-        is_king := true;
-        king_color := true;
-        nk := (rank, col);
-        whking
-    | _ ->
-        raise
-          (IllegalFen
-             (Char.escaped str.[prevind] ^ " is not a valid FEN letter"))
+        if chr = 'k' then
+          adj_king false is_king king_color nk blking (rank, col)
+        else adj_king true is_king king_color nk whking (rank, col)
+    | _ -> raise (IllegalFen err)
   in
+  letter_helper pos piece (rank, col) is_king king_color nk str next_ind
+
+and letter_helper pos piece (rank, col) is_king king_c nk str n_ind =
   add_piece pos piece (rank, col);
   let temp_pos = adjust_pieces pos piece in
   let new_pos =
     if !is_king then
       {
         temp_pos with
-        bking = (if !king_color then pos.bking else !nk);
-        wking = (if !king_color then !nk else pos.wking);
+        bking = (if !king_c then pos.bking else !nk);
+        wking = (if !king_c then !nk else pos.wking);
       }
     else temp_pos
   in
-  load_fen_helper str new_pos (rank + 1) col nextind
+  load_fen_helper str new_pos (rank + 1) col n_ind
 
 let load_fen fen =
   let pos = init_empty () in
@@ -1302,31 +1308,38 @@ let rec move_list moves board =
   | [] -> board
   | (a, b) :: k -> move_list k (move a b board)
 
-(* let undo_prev pos = let flip = List.rev pos.move_stack in match flip
-   with | h :: k -> move_list (List.rev k) (init ()) | _ -> init () *)
+let undo_pos pos f_sqr cpt prmt prev_chk hlfmv prev_cstl ep new_lst k_mv
+    =
+  let prev_turn = not (get_turn pos) in
+  {
+    pos with
+    castling = prev_cstl;
+    ep;
+    turn = prev_turn;
+    checked = prev_chk;
+    wking = (if prev_turn && k_mv then f_sqr else pos.wking);
+    bking = (if get_turn pos && k_mv then f_sqr else pos.bking);
+    wpieces = update_pieces_undo true pos.wpieces prmt cpt;
+    bpieces = update_pieces_undo false pos.bpieces prmt cpt;
+    move_stack = new_lst;
+    halfmove_clock = hlfmv;
+    fullmove_clock =
+      (if prev_turn then pos.fullmove_clock else pos.fullmove_clock - 1);
+  }
 
-(**[undo_normal_move pos from_sqr to_sqr capture] reverts the move
-   [from_sqr] [to_sqr]. Requires: the move did not involve castling or
-   en passant *)
-let undo_normal_move
-    pos
-    from_sqr
-    to_sqr
-    capture
-    promotion
-    was_checked
-    hlf_clock
-    prev_castling
-    ep_sqr
-    new_list =
-  let pc = get_piece_internal to_sqr pos in
+(**[undo_normal_move pos f_sqr t_sqr cpt prmt prev_chk hlfmv prev_cstl
+   ep new_lst] reverts the move [from_sqr] [to_sqr]. Requires: the move
+   did not involve castling or en passant *)
+let undo_mv pos f_sqr t_sqr cpt prmt prev_chk hlfmv prev_cstl ep new_lst
+    =
+  let pc = get_piece_internal t_sqr pos in
   let pc =
-    match promotion with
+    match prmt with
     | None -> pc
     | Some k -> if get_turn pos then bpawn else wpawn
   in
-  pos.board.(fst from_sqr).(snd from_sqr) <- pc;
-  pos.board.(fst to_sqr).(snd to_sqr) <- capture;
+  pos.board.(fst f_sqr).(snd f_sqr) <- pc;
+  pos.board.(fst t_sqr).(snd t_sqr) <- cpt;
   let king_moved =
     match pc with
     | None ->
@@ -1336,56 +1349,44 @@ let undo_normal_move
     | Some k -> (
         match Piece.get_piece k with King -> true | _ -> false )
   in
-  let prev_turn = not (get_turn pos) in
-  {
-    pos with
-    castling = prev_castling;
-    ep = ep_sqr;
-    turn = prev_turn;
-    checked = was_checked;
-    wking = (if prev_turn && king_moved then from_sqr else pos.wking);
-    bking = (if get_turn pos && king_moved then from_sqr else pos.bking);
-    wpieces = update_pieces_undo true pos.wpieces promotion capture;
-    bpieces = update_pieces_undo false pos.bpieces promotion capture;
-    move_stack = new_list;
-    halfmove_clock = hlf_clock;
-    fullmove_clock =
-      (if prev_turn then pos.fullmove_clock else pos.fullmove_clock - 1);
-  }
+  undo_pos pos f_sqr cpt prmt prev_chk hlfmv prev_cstl ep new_lst
+    king_moved
+
+let undo_cstl_helper
+    pos
+    (frank, fcol)
+    (trank, tcol)
+    curr_piece
+    rrank
+    erank =
+  let rook = pos.board.(rrank).(fcol) in
+  pos.board.(trank).(tcol) <- None;
+  pos.board.(frank).(fcol) <- curr_piece;
+  pos.board.(erank).(fcol) <- rook;
+  pos.board.(rrank).(fcol) <- None
 
 (**[undo_castling] undos the move [from_sqr] [to_sqr] in [pos] given
    that it was a castling move *)
 let undo_castling pos from_sqr to_sqr prev_castling ep_sqr new_list =
   let prev_turn = not (get_turn pos) in
-  match (from_sqr, to_sqr) with
-  | (frank, fcol), (trank, tcol) ->
-      (let curr_piece = pos.board.(trank).(tcol) in
-       if frank > trank then (
-         let rook = pos.board.(3).(fcol) in
-         pos.board.(trank).(tcol) <- None;
-         pos.board.(frank).(fcol) <- curr_piece;
-         pos.board.(0).(fcol) <- rook;
-         pos.board.(3).(fcol) <- None )
-       else
-         let rook = pos.board.(5).(fcol) in
-         pos.board.(trank).(tcol) <- None;
-         pos.board.(frank).(fcol) <- curr_piece;
-         pos.board.(7).(fcol) <- rook;
-         pos.board.(5).(tcol) <- None);
-      {
-        pos with
-        castling = prev_castling;
-        ep = ep_sqr;
-        turn = prev_turn;
-        checked = false;
-        wking = (if prev_turn then from_sqr else pos.wking);
-        bking = (if prev_turn then pos.bking else from_sqr);
-        move_stack = new_list;
-        halfmove_clock = pos.halfmove_clock - 1;
-        fullmove_clock =
-          ( if prev_turn then pos.fullmove_clock
-          else pos.fullmove_clock - 1 );
-      }
+  let (frank, fcol), (trank, tcol) = (from_sqr, to_sqr) in
+  let curr_piece = pos.board.(trank).(tcol) in
+  if frank > trank then
+    undo_cstl_helper pos (frank, fcol) (trank, tcol) curr_piece 3 0
+  else undo_cstl_helper pos (frank, fcol) (trank, tcol) curr_piece 5 7;
+  {
+    pos with
+    castling = prev_castling;
+    ep = ep_sqr;
+    turn = prev_turn;
+    checked = false;
+    wking = (if prev_turn then from_sqr else pos.wking);
+    bking = (if prev_turn then pos.bking else from_sqr);
+    move_stack = new_list;
+    halfmove_clock = pos.halfmove_clock - 1;
+    fullmove_clock =
+      (if prev_turn then pos.fullmove_clock else pos.fullmove_clock - 1);
+  }
 
 let add_pawn pieces =
   match pieces with
@@ -1393,8 +1394,8 @@ let add_pawn pieces =
       { pawns = pawns + 1; knights; bishops; rooks; queens }
 
 let undo_ep pos from_sqr to_sqr was_checked hlf_clock ep_sqr new_list =
-  let pc = get_piece_internal to_sqr pos in
-  pos.board.(fst from_sqr).(snd from_sqr) <- pc;
+  pos.board.(fst from_sqr).(snd from_sqr) <-
+    get_piece_internal to_sqr pos;
   pos.board.(fst to_sqr).(snd to_sqr) <- None;
   pos.board.(fst ep_sqr).(snd from_sqr) <-
     (if pos.turn then wpawn else bpawn);
@@ -1411,13 +1412,12 @@ let undo_ep pos from_sqr to_sqr was_checked hlf_clock ep_sqr new_list =
     bpieces = (if prev_turn then add_pawn pos.bpieces else pos.bpieces);
     move_stack = new_list;
     halfmove_clock = hlf_clock;
-    fullmove_clock =
-      (if prev_turn then pos.fullmove_clock else pos.fullmove_clock - 1);
+    fullmove_clock = (pos.fullmove_clock - if prev_turn then 0 else 1);
   }
 
 let undo_prev pos =
   match pos.move_stack with
-  | [] -> pos
+  | [] -> raise EmptyMoveStack
   | {
       from_sqr;
       to_sqr;
@@ -1436,8 +1436,8 @@ let undo_prev pos =
       else if ep then
         undo_ep pos from_sqr to_sqr was_checked halfmove_clock ep_sqr t
       else
-        undo_normal_move pos from_sqr to_sqr capture promotion
-          was_checked halfmove_clock prev_castling ep_sqr t
+        undo_mv pos from_sqr to_sqr capture promotion was_checked
+          halfmove_clock prev_castling ep_sqr t
 
 let revert_prev pos turn =
   let rec rev_helper pos turn =
