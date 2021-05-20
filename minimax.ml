@@ -61,9 +61,8 @@ let point_aux pos =
     + pieces.pawns
   in
   calc_aux w_pieces + calc_aux b_pieces
-(**arbitrary to be determined*)
-
-(* + if is_in_check pos then -5 else 0 *)
+  + if is_in_check pos then -5 else 0
+(* arbitrary to be determined *)
 
 (** [point_calc m pos] calculates the piece value difference between
     White and Black if move [m] is taken on board [pos]. *)
