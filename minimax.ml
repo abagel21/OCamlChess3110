@@ -62,6 +62,7 @@ let point_aux pos =
   in
   calc_aux w_pieces + calc_aux b_pieces
   + if is_in_check pos then -5 else 0
+
 (* arbitrary to be determined *)
 
 (** [point_calc m pos] calculates the piece value difference between
@@ -93,10 +94,10 @@ let heuristic pos =
 (** [max_turn pos depth] determines the best value for the maximizing
     player on a board [pos] until the search has reached [depth]. *)
 let rec max_turn pos depth =
-  let max_val = ref min_int in
-  let actions = Board.move_generator pos in
   if depth = 0 || Board.checkmate pos then heuristic pos
   else
+    let max_val = ref min_int in
+    let actions = Board.move_generator pos in
     let best = ref (List.hd actions) in
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
@@ -127,10 +128,10 @@ let rec max_turn pos depth =
 (** [min_turn pos depth] determines the best value for the minimizing
     player on a board [pos] until the search has reached [depth]. *)
 and min_turn pos depth =
-  let min_val = ref max_int in
-  let actions = Board.move_generator pos in
   if depth = 0 || Board.checkmate pos then heuristic pos
   else
+    let min_val = ref max_int in
+    let actions = Board.move_generator pos in
     let best = ref (List.hd actions) in
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
