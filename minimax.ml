@@ -61,7 +61,9 @@ let point_aux pos =
     + pieces.pawns
   in
   calc_aux w_pieces + calc_aux b_pieces
-  + if is_in_check pos then -5 else 0 (**arbitrary to be determined*)
+(**arbitrary to be determined*)
+
+(* + if is_in_check pos then -5 else 0 *)
 
 (** [point_calc m pos] calculates the piece value difference between
     White and Black if move [m] is taken on board [pos]. *)
@@ -84,20 +86,18 @@ let heuristic pos =
     ("", if w_turn then Int.max_int else Int.min_int)
   else
     let moves = Board.move_generator pos in
-    List.hd
+    List.hd (* list never empty *)
       (List.sort
-         (fun (a, b) (c, d) -> compare d b)
+         (fun (_, b) (_, d) -> compare d b)
          (List.map (fun a -> (a, eval a pos)) moves))
-
-(* list never empty *)
 
 (** [max_turn pos depth] determines the best value for the maximizing
     player on a board [pos] until the search has reached [depth]. *)
 let rec max_turn pos depth =
+  let max_val = ref min_int in
+  let actions = Board.move_generator pos in
   if depth = 0 || Board.checkmate pos then heuristic pos
   else
-    let actions = Board.move_generator pos in
-    let max_val = ref 0 in
     let best = ref (List.hd actions) in
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
@@ -128,10 +128,10 @@ let rec max_turn pos depth =
 (** [min_turn pos depth] determines the best value for the minimizing
     player on a board [pos] until the search has reached [depth]. *)
 and min_turn pos depth =
+  let min_val = ref max_int in
+  let actions = Board.move_generator pos in
   if depth = 0 || Board.checkmate pos then heuristic pos
   else
-    let actions = Board.move_generator pos in
-    let min_val = ref 0 in
     let best = ref (List.hd actions) in
     for a = 0 to List.length actions - 1 do
       let temp_move = List.nth actions a in
