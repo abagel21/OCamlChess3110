@@ -3,12 +3,20 @@ If you do not have these packages installed in OPAM, run the following command:
 
 `opam install ounit2 && opam install ansiterminal && opam install graphics`
 
-In order to run the graphics, install XMing from https://sourceforge.net/projects/xming/. 
+In order to run the graphics, you need an X11 graphics server for the Linux 
+version you are running. 
+
+If you are on windows: 
+Install XMing from https://sourceforge.net/projects/xming/. 
 It should begin running in the bottom right of your taskbar; if it does not, 
 start it running. It is possible at this point you will need to install XMing 
 fonts: https://sourceforge.net/projects/xming/files/Xming-fonts/. 
 This will require a restart to show up. Once XMing is fully installed and 
 running, go into the project directory.
+
+If you are on mac:
+You should already have xquartz installed with the Mac X11 package. Make sure 
+xquartz is running, then continue with the instructions (assuming you've downloaded the OCaml libraries)
 
 In order to run the project, first run
 
