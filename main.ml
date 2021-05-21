@@ -95,10 +95,9 @@ and game_end_bot board =
   else if draw board then check_draw_bot board
 
 and check_checkmate_bot board =
-  if not (checkmate board) then (
+  if not (checkmate board) then
     ANSITerminal.print_string [ ANSITerminal.red ]
-      (turn board ^ " is in check\n");
-    play_bot board () )
+      (turn board ^ " is in check\n")
   else (
     ANSITerminal.print_string [ ANSITerminal.red ]
       (turn board ^ " has been checkmated! \n");
