@@ -64,8 +64,8 @@ let point_aux pos =
   + if is_in_check pos then -5 else 0
 (* arbitrary to be determined *)
 
-(** [point_calc pos] calculates the piece value difference between White
-    and Black if move [m] is taken on board [pos]. *)
+(** [point_calc m pos] calculates the piece value difference between
+    White and Black if move [m] is taken on board [pos]. *)
 let point_calc m pos =
   let orig = point_aux pos in
   let next_board = Board.move m "Q" pos in
@@ -73,7 +73,17 @@ let point_calc m pos =
   Board.undo_prev next_board;
   orig - points
 
-let eval = point_calc
+(** [pesto_aux m pos] calculates the score of a board [pos'] if move [m]
+    is taken on board [pos]. *)
+let pesto_aux m pos =
+  let next_board = Board.move m "Q" pos in
+  let score = Pestocaml.eval next_board in
+  Board.undo_prev next_board;
+  score
+
+(** [eval m pos] is any evaluation function that returns the value of a
+    board [pos'] if move [m] is taken on a board [pos]. *)
+let eval = pesto_aux
 
 (** [heuristic pos] returns a pair with the move that maximizes the
     point values obtained by the current player on a board [pos], and
@@ -90,22 +100,10 @@ let heuristic pos =
          (fun (_, b) (_, d) -> compare d b)
          (List.map (fun a -> (a, eval a pos)) moves))
 
-let heuristic' pos =
-  let w_turn = Board.get_turn pos in
-  if Board.checkmate pos then
-    (* checkmate gives highest int if white, lowest if black *)
-    ("", if w_turn then Int.max_int else Int.min_int)
-  else
-    let moves = Board.move_generator pos in
-    List.hd (* list never empty *)
-      (List.sort
-         (fun (_, b) (_, d) -> compare b d)
-         (List.map (fun a -> (a, Pestocaml.eval pos)) moves))
-
 (** [max_turn pos depth] determines the best value for the maximizing
     player on a board [pos] until the search has reached [depth]. *)
 let rec max_turn pos depth =
-  if depth = 0 || Board.checkmate pos then heuristic' pos
+  if depth = 0 || Board.checkmate pos then heuristic pos
   else
     let max_val = ref 0 in
     let actions = Board.move_generator pos in
@@ -139,7 +137,7 @@ let rec max_turn pos depth =
     player on a board [pos] until the search has reached [depth]. *)
 and min_turn pos depth =
   if depth = 0 || Board.checkmate pos then
-    match heuristic' pos with a, b -> (a, -b)
+    match heuristic pos with a, b -> (a, -b)
   else
     let min_val = ref 0 in
     let actions = Board.move_generator pos in
