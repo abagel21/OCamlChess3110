@@ -1,4 +1,4 @@
-MODULES=piece board minimax main
+MODULES=piece board minimax main pestocaml
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
