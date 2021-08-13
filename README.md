@@ -1,1 +1,2 @@
-# cs3110-final-proj
+# OCamlChess
+OCamlChess is a chess engine coded in OCaml for a final project in CS3110 at Cornell. It contains a fully functional and playable game state manipulable with a wide array of class functions, with an alpha-beta minimax engine layered on top bolstered by a strong piece-table evaluation function. This was developed over the course of three sprints in the second half of the Spring 2021 semester interspersed between other large project assignments.
